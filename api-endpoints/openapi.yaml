@@ -2,7 +2,8 @@ openapi: 3.0.3
 
 info:
   title: ft_transcendence
-  description: Common API endpoints for all project services.
+  version: 1.0.0
+  description: Common API endpoints for all Django services.
 
 servers:
   - url: /api
@@ -13,384 +14,527 @@ paths:
   # AUTH SERVICE
   # ==========================================
 
-  /auth/register:
+  /auth/register/:
     post:
       summary: Register a user
       responses:
-        '200':
-          description: OK
+        '201':
+          description: User created
 
-  /auth/login:
+  /auth/login/:
     post:
       summary: Login
       responses:
         '200':
-          description: OK
+          description: Login successful
 
-  /auth/logout:
+  /auth/logout/:
     post:
       summary: Logout
       responses:
         '200':
-          description: OK
+          description: Logout successful
 
-  /auth/me:
+  /auth/me/:
     get:
       summary: Get current user
       responses:
         '200':
-          description: OK
+          description: Current user
 
   # ==========================================
   # USERS
   # ==========================================
 
-  /users:
+  /users/:
     get:
       summary: Get users
       responses:
         '200':
-          description: OK
+          description: Users retrieved
 
-  /users/{id}:
+  /users/{id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get user
       responses:
         '200':
-          description: OK
+          description: User retrieved
 
     patch:
       summary: Update user information
       responses:
         '200':
-          description: OK
+          description: User updated
 
     delete:
       summary: Delete user
       responses:
-        '200':
-          description: OK
+        '204':
+          description: User deleted
 
-  /users/{id}/role:
+  /users/{id}/role/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     patch:
       summary: Update user role
       responses:
         '200':
-          description: OK
+          description: Role updated
 
   # ==========================================
   # ORGANIZATIONS
   # ==========================================
 
-  /organizations:
+  /organizations/:
     get:
       summary: Get organizations
       responses:
         '200':
-          description: OK
+          description: Organizations retrieved
 
     post:
       summary: Create organization
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Organization created
 
-  /organizations/{id}:
+  /organizations/{id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get organization
       responses:
         '200':
-          description: OK
+          description: Organization retrieved
 
     patch:
       summary: Update organization
       responses:
         '200':
-          description: OK
+          description: Organization updated
 
     delete:
       summary: Delete organization
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Organization deleted
 
-  /organizations/{id}/members:
+  /organizations/{id}/members/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get organization members
       responses:
         '200':
-          description: OK
+          description: Members retrieved
 
     post:
       summary: Add organization member
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Member added
 
-  /organizations/{id}/members/{user_id}:
+  /organizations/{id}/members/{user_id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     delete:
       summary: Remove organization member
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Member removed
 
   # ==========================================
-  # PROJECTS
+  # PROJECT SERVICE
   # ==========================================
 
-  /projects:
+  /projects/:
     get:
       summary: Get projects
       responses:
         '200':
-          description: OK
+          description: Projects retrieved
 
     post:
       summary: Create project
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Project created
 
-  /projects/{id}:
+  /projects/{id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get project
       responses:
         '200':
-          description: OK
+          description: Project retrieved
 
     patch:
       summary: Update project
       responses:
         '200':
-          description: OK
+          description: Project updated
 
     delete:
       summary: Delete project
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Project deleted
 
-  /projects/{id}/members:
+  /projects/{id}/members/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get project members
       responses:
         '200':
-          description: OK
+          description: Members retrieved
 
     post:
       summary: Add project member
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Member added
 
-  /projects/{id}/members/{user_id}:
+  /projects/{id}/members/{user_id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     delete:
       summary: Remove project member
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Member removed
 
   # ==========================================
-  # TASKS
+  # TASK SERVICE
   # ==========================================
 
-  /projects/{project_id}/tasks:
+  /projects/{project_id}/tasks/:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get project tasks
       responses:
         '200':
-          description: OK
+          description: Tasks retrieved
 
     post:
       summary: Create task
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Task created
 
-  /tasks/{id}:
+  /tasks/{id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get task
       responses:
         '200':
-          description: OK
+          description: Task retrieved
 
     patch:
       summary: Update task
       responses:
         '200':
-          description: OK
+          description: Task updated
 
     delete:
       summary: Delete task
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Task deleted
 
-  /tasks/{id}/status:
+  /tasks/{id}/status/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     patch:
       summary: Update task status
       responses:
         '200':
-          description: OK
+          description: Status updated
 
-  /tasks/{id}/assignee:
+  /tasks/{id}/assignee/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     patch:
       summary: Assign task to member
       responses:
         '200':
-          description: OK
+          description: Assignee updated
 
-  /users/me/tasks:
+  /users/me/tasks/:
     get:
       summary: Get my assigned tasks
       responses:
         '200':
-          description: OK
+          description: Tasks retrieved
 
   # ==========================================
   # CHAT SERVICE
   # ==========================================
 
-  /conversations:
+  /conversations/:
     get:
       summary: Get conversations
       responses:
         '200':
-          description: OK
+          description: Conversations retrieved
 
     post:
       summary: Create conversation
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Conversation created
 
-  /conversations/{id}/messages:
+  /conversations/{id}/messages/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get conversation messages
       responses:
         '200':
-          description: OK
+          description: Messages retrieved
 
     post:
       summary: Send message
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Message sent
 
-  /messages/{id}:
+  /messages/{id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     patch:
       summary: Edit message
       responses:
         '200':
-          description: OK
+          description: Message updated
 
     delete:
       summary: Delete message
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Message deleted
 
   # ==========================================
   # NOTIFICATIONS
   # ==========================================
 
-  /notifications:
+  /notifications/:
     get:
       summary: Get my notifications
       responses:
         '200':
-          description: OK
+          description: Notifications retrieved
 
-  /notifications/{id}/read:
+  /notifications/{id}/read/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     patch:
       summary: Mark notification as read
       responses:
         '200':
-          description: OK
+          description: Notification updated
 
   # ==========================================
   # DOCUMENT SERVICE
   # ==========================================
 
-  /projects/{project_id}/documents:
+  /projects/{project_id}/documents/:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get project documents
       responses:
         '200':
-          description: OK
+          description: Documents retrieved
 
     post:
       summary: Upload document
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Document uploaded
 
-  /documents/{id}:
+  /documents/{id}/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get document information
       responses:
         '200':
-          description: OK
+          description: Document retrieved
 
     delete:
       summary: Delete document
       responses:
-        '200':
-          description: OK
+        '204':
+          description: Document deleted
 
-  /documents/{id}/download:
+  /documents/{id}/download/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Download document
       responses:
         '200':
-          description: OK
+          description: Document downloaded
 
   # ==========================================
   # AI SERVICE
   # ==========================================
 
-  /ai/chat:
+  /ai/chat/:
     post:
       summary: Chat with AI assistant
       responses:
         '200':
-          description: OK
+          description: AI response generated
 
-  /ai/generate:
+  /ai/generate/:
     post:
       summary: Generate AI content
       responses:
         '200':
-          description: OK
+          description: Content generated
 
-  /ai/rag/query:
+  /ai/rag/query/:
     post:
       summary: Ask questions about project documents
       responses:
         '200':
-          description: OK
+          description: Answer generated
 
-  /ai/interactions:
+  /ai/interactions/:
     get:
       summary: Get my AI interactions
       responses:
         '200':
-          description: OK
+          description: Interactions retrieved
 
   # ==========================================
   # ANALYTICS
   # ==========================================
 
-  /projects/{id}/analytics:
+  /projects/{id}/analytics/:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
     get:
       summary: Get project analytics
       responses:
         '200':
-          description: OK
+          description: Analytics retrieved
 
-  /users/me/activity:
+  /users/me/activity/:
     get:
       summary: Get my activity
       responses:
         '200':
-          description: OK
+          description: Activity retrieved
