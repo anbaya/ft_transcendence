@@ -1,0 +1,111 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: database
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      logstash:
+        condition: service_healthy
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - transcendence_net
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "tcp://127.0.0.1:5000"
+        syslog-format: rfc5424
+
+  api-gateway:
+    build:
+      context: ./srcs/api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    restart: always
+    ports:
+      - "443:443"
+    depends_on:
+      db:
+        condition: service_started
+      logstash:
+        condition: service_healthy
+    networks:
+      - transcendence_net
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "tcp://127.0.0.1:5000"
+        syslog-format: rfc5424
+
+  elasticsearch:
+    build:
+      context: ./srcs/logging/elasticsearch
+      dockerfile: Dockerfile
+    container_name: elasticsearch
+    restart: always
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - transcendence_net
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  logstash:
+    build:
+      context: ./srcs/logging/logstash
+      dockerfile: Dockerfile
+    container_name: logstash
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/5000'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  kibana:
+    build:
+      context: ./srcs/logging/kibana
+      dockerfile: Dockerfile
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - transcendence_net
+
+volumes:
+  db_data:
+    name: transcendence_db_data
+  elasticsearch-data:
+    name: transcendence_es_data
+
+networks:
+  transcendence_net:
+    name: transcendence_internal_network
+    driver: bridge

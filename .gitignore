@@ -1,0 +1,21 @@
+# Environment Variables
+.env
+
+# Dependencies
+node_modules/
+vendor/
+
+# OS and IDE files
+.DS_Store
+.idea/
+.vscode/
+
+# Logs and databases
+*.log
+data/
+elasticsearch-data/
+postgres-data/
+
+# Secrets and Certificates
+secrets/
+certs/
