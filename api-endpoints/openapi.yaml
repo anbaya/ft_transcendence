@@ -1,0 +1,396 @@
+openapi: 3.0.3
+
+info:
+  title: ft_transcendence
+  description: Common API endpoints for all project services.
+
+servers:
+  - url: /api
+
+paths:
+
+  # ==========================================
+  # AUTH SERVICE
+  # ==========================================
+
+  /auth/register:
+    post:
+      summary: Register a user
+      responses:
+        '200':
+          description: OK
+
+  /auth/login:
+    post:
+      summary: Login
+      responses:
+        '200':
+          description: OK
+
+  /auth/logout:
+    post:
+      summary: Logout
+      responses:
+        '200':
+          description: OK
+
+  /auth/me:
+    get:
+      summary: Get current user
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # USERS
+  # ==========================================
+
+  /users:
+    get:
+      summary: Get users
+      responses:
+        '200':
+          description: OK
+
+  /users/{id}:
+    get:
+      summary: Get user
+      responses:
+        '200':
+          description: OK
+
+    patch:
+      summary: Update user information
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete user
+      responses:
+        '200':
+          description: OK
+
+  /users/{id}/role:
+    patch:
+      summary: Update user role
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # ORGANIZATIONS
+  # ==========================================
+
+  /organizations:
+    get:
+      summary: Get organizations
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create organization
+      responses:
+        '200':
+          description: OK
+
+  /organizations/{id}:
+    get:
+      summary: Get organization
+      responses:
+        '200':
+          description: OK
+
+    patch:
+      summary: Update organization
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete organization
+      responses:
+        '200':
+          description: OK
+
+  /organizations/{id}/members:
+    get:
+      summary: Get organization members
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Add organization member
+      responses:
+        '200':
+          description: OK
+
+  /organizations/{id}/members/{user_id}:
+    delete:
+      summary: Remove organization member
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # PROJECTS
+  # ==========================================
+
+  /projects:
+    get:
+      summary: Get projects
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create project
+      responses:
+        '200':
+          description: OK
+
+  /projects/{id}:
+    get:
+      summary: Get project
+      responses:
+        '200':
+          description: OK
+
+    patch:
+      summary: Update project
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete project
+      responses:
+        '200':
+          description: OK
+
+  /projects/{id}/members:
+    get:
+      summary: Get project members
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Add project member
+      responses:
+        '200':
+          description: OK
+
+  /projects/{id}/members/{user_id}:
+    delete:
+      summary: Remove project member
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # TASKS
+  # ==========================================
+
+  /projects/{project_id}/tasks:
+    get:
+      summary: Get project tasks
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create task
+      responses:
+        '200':
+          description: OK
+
+  /tasks/{id}:
+    get:
+      summary: Get task
+      responses:
+        '200':
+          description: OK
+
+    patch:
+      summary: Update task
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete task
+      responses:
+        '200':
+          description: OK
+
+  /tasks/{id}/status:
+    patch:
+      summary: Update task status
+      responses:
+        '200':
+          description: OK
+
+  /tasks/{id}/assignee:
+    patch:
+      summary: Assign task to member
+      responses:
+        '200':
+          description: OK
+
+  /users/me/tasks:
+    get:
+      summary: Get my assigned tasks
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # CHAT SERVICE
+  # ==========================================
+
+  /conversations:
+    get:
+      summary: Get conversations
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Create conversation
+      responses:
+        '200':
+          description: OK
+
+  /conversations/{id}/messages:
+    get:
+      summary: Get conversation messages
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Send message
+      responses:
+        '200':
+          description: OK
+
+  /messages/{id}:
+    patch:
+      summary: Edit message
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete message
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # NOTIFICATIONS
+  # ==========================================
+
+  /notifications:
+    get:
+      summary: Get my notifications
+      responses:
+        '200':
+          description: OK
+
+  /notifications/{id}/read:
+    patch:
+      summary: Mark notification as read
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # DOCUMENT SERVICE
+  # ==========================================
+
+  /projects/{project_id}/documents:
+    get:
+      summary: Get project documents
+      responses:
+        '200':
+          description: OK
+
+    post:
+      summary: Upload document
+      responses:
+        '200':
+          description: OK
+
+  /documents/{id}:
+    get:
+      summary: Get document information
+      responses:
+        '200':
+          description: OK
+
+    delete:
+      summary: Delete document
+      responses:
+        '200':
+          description: OK
+
+  /documents/{id}/download:
+    get:
+      summary: Download document
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # AI SERVICE
+  # ==========================================
+
+  /ai/chat:
+    post:
+      summary: Chat with AI assistant
+      responses:
+        '200':
+          description: OK
+
+  /ai/generate:
+    post:
+      summary: Generate AI content
+      responses:
+        '200':
+          description: OK
+
+  /ai/rag/query:
+    post:
+      summary: Ask questions about project documents
+      responses:
+        '200':
+          description: OK
+
+  /ai/interactions:
+    get:
+      summary: Get my AI interactions
+      responses:
+        '200':
+          description: OK
+
+  # ==========================================
+  # ANALYTICS
+  # ==========================================
+
+  /projects/{id}/analytics:
+    get:
+      summary: Get project analytics
+      responses:
+        '200':
+          description: OK
+
+  /users/me/activity:
+    get:
+      summary: Get my activity
+      responses:
+        '200':
+          description: OK
