@@ -1,0 +1,51 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute';
+import { MainLayout } from '@/components/layout/MainLayout';
+
+import { AuthLayout } from '@/components/layout/AuthLayout';
+
+// Auth Pages
+import LoginPage from '@/pages/auth/LoginPage';
+import RegisterPage from '@/pages/auth/RegisterPage';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import UnauthorizedPage from '@/pages/auth/UnauthorizedPage';
+
+// Protected Pages
+import DashboardPage from '@/pages/dashboard/DashboardPage';
+import ProjectsPage from '@/pages/projects/ProjectsPage';
+import TasksPage from '@/pages/tasks/TasksPage';
+import ChatPage from '@/pages/chat/ChatPage';
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public Routes with AuthLayout */}
+      <Route element={<AuthLayout />}>
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/register" element={<RegisterPage />} />
+        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+      </Route>
+
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<MainLayout />}>
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* Core feature routes */}
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+        </Route>
+      </Route>
+
+      {/* Fallback / 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
