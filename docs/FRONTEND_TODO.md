@@ -1,19 +1,19 @@
 # Frontend Roadmap
 
 ## UI/UX
-- [ ] Define sitemap
-- [ ] Create design system
-- [ ] Design authentication
-- [ ] Design dashboard
-- [ ] Design projects/tasks
-- [ ] Design chat
-- [ ] Design documents
-- [ ] Design AI/RAG
-- [ ] Design analytics
-- [ ] Design responsive layouts
+- [x] Define sitemap
+- [x] Create design system
+- [x] Design authentication
+- [x] Design dashboard
+- [x] Design projects/tasks
+- [x] Design chat
+- [x] Design documents
+- [x] Design AI/RAG
+- [x] Design analytics
+- [x] Design responsive layouts
 
 ## Development
-- [ ] Setup frontend architecture
+- [/] Setup frontend architecture
 - [ ] Build reusable components
 - [ ] Build authentication
 - [ ] Build dashboard
