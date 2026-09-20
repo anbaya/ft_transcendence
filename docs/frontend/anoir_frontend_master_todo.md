@@ -281,34 +281,34 @@ src/
 
 # Phase 8 — Dashboard
 
-- [ ] Dashboard layout
-- [ ] Welcome section
-- [ ] Project summary
-- [ ] Task summary
-- [ ] Upcoming deadlines
-- [ ] Recent activity
-- [ ] Notifications
-- [ ] Loading states
-- [ ] Empty states
+- [x] Dashboard layout
+- [x] Welcome section
+- [x] Project summary
+- [x] Task summary
+- [x] Upcoming deadlines
+- [x] Recent activity
+- [x] Notifications
+- [x] Loading states
+- [x] Empty states
 
 ---
 
 # Phase 9 — Organizations
 
 ## Organization List
-- [ ] Display organizations
-- [ ] Create organization
-- [ ] Organization card
-- [ ] Search/filter if needed
-- [ ] Empty state
+- [x] Display organizations
+- [x] Create organization
+- [x] Organization card
+- [x] Search/filter if needed
+- [x] Empty state
 
 ## Organization Details
-- [ ] Organization information
-- [ ] Members
-- [ ] Member roles
-- [ ] Add member
-- [ ] Remove member
-- [ ] Permission-based actions
+- [x] Organization information
+- [x] Members
+- [x] Member roles
+- [x] Add member
+- [x] Remove member
+- [x] Permission-based actions
 
 ---
 

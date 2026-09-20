@@ -14,8 +14,12 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-  Hexagon
+  Hexagon,
+  ChevronsUpDown,
+  Building2,
+  Plus
 } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Badge } from '@/components/ui/Badge';
 
 const mainNavigation = [
@@ -87,18 +91,58 @@ export function Sidebar() {
       )}
     >
       {/* Brand & Organization */}
-      <div className="flex h-16 shrink-0 items-center px-4 border-b border-border">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-white">
-            <Hexagon className="h-5 w-5" />
-          </div>
-          {isSidebarExpanded && (
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-primary leading-tight">Astra</span>
-              <span className="text-xs text-muted truncate">Acme Corp</span>
+      <div className="flex h-16 shrink-0 items-center px-3 border-b border-border">
+        {isSidebarExpanded ? (
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button className="flex w-full items-center justify-between rounded-md p-1.5 hover:bg-slate-50 outline-none transition-colors">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-white">
+                    <Hexagon className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col items-start truncate">
+                    <span className="text-sm font-bold text-primary leading-tight">Astra</span>
+                    <span className="text-xs text-muted truncate">Acme Corp</span>
+                  </div>
+                </div>
+                <ChevronsUpDown className="h-4 w-4 text-muted shrink-0 ml-1" />
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content align="start" className="w-[220px] z-50 bg-white rounded-md p-1 shadow-md border border-border animate-in fade-in-80">
+                <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted">
+                  Organizations
+                </DropdownMenu.Label>
+                <DropdownMenu.Item className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm">
+                  <div className="h-4 w-4 bg-secondary rounded-sm mr-2" />
+                  <span className="flex-1 truncate">Acme Corp</span>
+                  <Badge variant="default" className="text-[10px] py-0 px-1 ml-2">Active</Badge>
+                </DropdownMenu.Item>
+                <DropdownMenu.Item className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm text-muted">
+                  <div className="h-4 w-4 bg-indigo-200 rounded-sm mr-2" />
+                  <span className="flex-1 truncate">Startup Inc</span>
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="h-px bg-border my-1" />
+                <NavLink to="/organizations" className="block outline-none">
+                  <DropdownMenu.Item className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm">
+                    <Building2 className="mr-2 h-4 w-4 text-muted" />
+                    Manage Organizations
+                  </DropdownMenu.Item>
+                </NavLink>
+                <DropdownMenu.Item className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm">
+                  <Plus className="mr-2 h-4 w-4 text-muted" />
+                  Create Organization
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        ) : (
+          <div className="flex w-full items-center justify-center pt-1">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-white">
+              <Hexagon className="h-5 w-5" />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}

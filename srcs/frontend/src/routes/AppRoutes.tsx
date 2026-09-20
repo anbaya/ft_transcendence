@@ -16,6 +16,8 @@ import DashboardPage from '@/pages/dashboard/DashboardPage';
 import ProjectsPage from '@/pages/projects/ProjectsPage';
 import TasksPage from '@/pages/tasks/TasksPage';
 import ChatPage from '@/pages/chat/ChatPage';
+import OrganizationListPage from '@/pages/organizations/OrganizationListPage';
+import OrganizationDetailsPage from '@/pages/organizations/OrganizationDetailsPage';
 
 export default function AppRoutes() {
   return (
@@ -38,6 +40,8 @@ export default function AppRoutes() {
           
           {/* Core feature routes */}
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/organizations" element={<OrganizationListPage />} />
+          <Route path="/organizations/:id" element={<OrganizationDetailsPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/chat" element={<ChatPage />} />
