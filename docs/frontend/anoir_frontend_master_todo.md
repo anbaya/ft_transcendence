@@ -330,32 +330,32 @@ src/
 # Phase 11 — Tasks
 
 ## Task List
-- [ ] Task table/list
-- [ ] Search
-- [ ] Filter
-- [ ] Sort
-- [ ] Status filter
-- [ ] Priority filter
-- [ ] Deadline filter
-- [ ] Assignee filter
+- [x] Task table/list
+- [x] Search
+- [x] Filter
+- [x] Sort
+- [x] Status filter
+- [x] Priority filter
+- [x] Deadline filter
+- [x] Assignee filter
 
 ## Task Creation
-- [ ] Create task modal/page
-- [ ] Title
-- [ ] Description
-- [ ] Priority
-- [ ] Status
-- [ ] Deadline
-- [ ] Assignee
+- [x] Create task modal/page
+- [x] Title
+- [x] Description
+- [x] Priority
+- [x] Status
+- [x] Deadline
+- [x] Assignee
 
 ## Task Details
-- [ ] Task information
-- [ ] Edit task
-- [ ] Change status
-- [ ] Change priority
-- [ ] Change deadline
-- [ ] Change assignee
-- [ ] Delete task
+- [x] Task information
+- [x] Edit task
+- [x] Change status
+- [x] Change priority
+- [x] Change deadline
+- [x] Change assignee
+- [x] Delete task
 
 ---
 
