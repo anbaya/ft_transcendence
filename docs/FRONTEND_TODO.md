@@ -13,13 +13,13 @@
 - [x] Design responsive layouts
 
 ## Development
-- [/] Setup frontend architecture
-- [ ] Build reusable components
-- [ ] Build authentication
-- [ ] Build dashboard
-- [ ] Build organizations
-- [ ] Build projects
-- [ ] Build tasks
+- [x] Setup frontend architecture
+- [x] Build reusable components
+- [x] Build authentication
+- [x] Build dashboard
+- [x] Build organizations
+- [x] Build projects
+- [x] Build tasks
 - [ ] Build chat
 - [ ] Build notifications
 - [ ] Build documents
