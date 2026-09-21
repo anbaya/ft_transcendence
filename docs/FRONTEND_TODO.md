@@ -20,9 +20,9 @@
 - [x] Build organizations
 - [x] Build projects
 - [x] Build tasks
-- [ ] Build chat
-- [ ] Build notifications
-- [ ] Build documents
+- [x] Build chat
+- [x] Build notifications
+- [x] Build documents
 - [ ] Build AI/RAG
 - [ ] Build analytics
 

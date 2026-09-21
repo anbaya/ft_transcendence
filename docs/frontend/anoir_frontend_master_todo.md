@@ -401,15 +401,15 @@ src/
 # Phase 14 — Documents
 
 ## UI
-- [ ] Document list
-- [ ] Upload button
-- [ ] Drag & drop
-- [ ] Upload progress
-- [ ] File information
-- [ ] Download
-- [ ] Delete
-- [ ] Upload error
-- [ ] Empty state
+- [x] Document list
+- [x] Upload button
+- [x] Drag & drop
+- [x] Upload progress
+- [x] File information
+- [x] Download
+- [x] Delete
+- [x] Upload error
+- [x] Empty state
 
 ## Integration
 - [ ] Connect upload API
