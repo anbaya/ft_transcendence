@@ -314,16 +314,16 @@ src/
 
 # Phase 10 — Projects
 
-- [ ] Project list
-- [ ] Create project
-- [ ] Edit project
-- [ ] Delete project
-- [ ] Project details
-- [ ] Project members
-- [ ] Add project member
-- [ ] Remove project member
-- [ ] Project overview
-- [ ] Project navigation
+- [x] Project list
+- [x] Create project
+- [x] Edit project
+- [x] Delete project
+- [x] Project details
+- [x] Project members
+- [x] Add project member
+- [x] Remove project member
+- [x] Project overview
+- [x] Project navigation
 
 ---
 

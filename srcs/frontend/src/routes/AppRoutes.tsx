@@ -14,6 +14,7 @@ import UnauthorizedPage from '@/pages/auth/UnauthorizedPage';
 // Protected Pages
 import DashboardPage from '@/pages/dashboard/DashboardPage';
 import ProjectsPage from '@/pages/projects/ProjectsPage';
+import ProjectDetailsPage from '@/pages/projects/ProjectDetailsPage';
 import TasksPage from '@/pages/tasks/TasksPage';
 import ChatPage from '@/pages/chat/ChatPage';
 import OrganizationListPage from '@/pages/organizations/OrganizationListPage';
@@ -43,6 +44,7 @@ export default function AppRoutes() {
           <Route path="/organizations" element={<OrganizationListPage />} />
           <Route path="/organizations/:id" element={<OrganizationDetailsPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/chat" element={<ChatPage />} />
         </Route>
