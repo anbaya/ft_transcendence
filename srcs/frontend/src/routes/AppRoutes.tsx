@@ -20,6 +20,7 @@ import ChatPage from '@/pages/chat/ChatPage';
 import OrganizationListPage from '@/pages/organizations/OrganizationListPage';
 import OrganizationDetailsPage from '@/pages/organizations/OrganizationDetailsPage';
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
+import { DocumentsPage } from '@/pages/documents/DocumentsPage';
 
 export default function AppRoutes() {
   return (
@@ -49,6 +50,7 @@ export default function AppRoutes() {
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
         </Route>
       </Route>
 
