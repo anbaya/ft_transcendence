@@ -362,16 +362,16 @@ src/
 # Phase 12 — Real-Time Chat
 
 ## UI
-- [ ] Conversation list
-- [ ] Conversation search
-- [ ] Chat window
-- [ ] Message bubbles
-- [ ] Message input
-- [ ] Send button
-- [ ] Timestamp
-- [ ] User avatar
-- [ ] Empty conversation state
-- [ ] Loading state
+- [x] Conversation list
+- [x] Conversation search
+- [x] Chat window
+- [x] Message bubbles
+- [x] Message input
+- [x] Send button
+- [x] Timestamp
+- [x] User avatar
+- [x] Empty conversation state
+- [x] Loading state
 
 ## WebSocket
 - [ ] Connect WebSocket
@@ -387,14 +387,14 @@ src/
 
 # Phase 13 — Notifications
 
-- [ ] Notification icon
-- [ ] Notification counter
-- [ ] Notification dropdown/page
-- [ ] Mark as read
-- [ ] Mark all as read
+- [x] Notification icon
+- [x] Notification counter
+- [x] Notification dropdown/page
+- [x] Mark as read
+- [x] Mark all as read
 - [ ] Real-time notification
-- [ ] Notification loading
-- [ ] Empty notifications
+- [x] Notification loading
+- [x] Empty notifications
 
 ---
 
