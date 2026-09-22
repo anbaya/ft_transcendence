@@ -1,41 +1,35 @@
 openapi: 3.0.3
-
 info:
   title: ft_transcendence
-  version: 1.0.0
+  version: 1.1.0
   description: Common API endpoints for all Django services.
 
 servers:
-  - url: /api
+  - url: /
 
 paths:
-
   # ==========================================
   # AUTH SERVICE
   # ==========================================
-
-  /auth/register/:
+  /api/auth/register/:
     post:
       summary: Register a user
       responses:
         '201':
           description: User created
-
-  /auth/login/:
+  /api/auth/login/:
     post:
       summary: Login
       responses:
         '200':
           description: Login successful
-
-  /auth/logout/:
+  /api/auth/logout/:
     post:
       summary: Logout
       responses:
         '200':
           description: Logout successful
-
-  /auth/me/:
+  /api/auth/me/:
     get:
       summary: Get current user
       responses:
@@ -43,471 +37,606 @@ paths:
           description: Current user
 
   # ==========================================
-  # USERS
+  # USER SERVICE
   # ==========================================
-
-  /users/:
+  /api/users/:
     get:
       summary: Get users
       responses:
         '200':
           description: Users retrieved
-
-  /users/{id}/:
+  /api/users/{id}/:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
       summary: Get user
       responses:
         '200':
           description: User retrieved
-
     patch:
       summary: Update user information
       responses:
         '200':
           description: User updated
-
     delete:
       summary: Delete user
       responses:
         '204':
           description: User deleted
-
-  /users/{id}/role/:
+  /api/users/{id}/role/:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     patch:
       summary: Update user role
       responses:
         '200':
           description: Role updated
-
-  # ==========================================
-  # ORGANIZATIONS
-  # ==========================================
-
-  /organizations/:
-    get:
-      summary: Get organizations
-      responses:
-        '200':
-          description: Organizations retrieved
-
-    post:
-      summary: Create organization
-      responses:
-        '201':
-          description: Organization created
-
-  /organizations/{id}/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    get:
-      summary: Get organization
-      responses:
-        '200':
-          description: Organization retrieved
-
-    patch:
-      summary: Update organization
-      responses:
-        '200':
-          description: Organization updated
-
-    delete:
-      summary: Delete organization
-      responses:
-        '204':
-          description: Organization deleted
-
-  /organizations/{id}/members/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    get:
-      summary: Get organization members
-      responses:
-        '200':
-          description: Members retrieved
-
-    post:
-      summary: Add organization member
-      responses:
-        '201':
-          description: Member added
-
-  /organizations/{id}/members/{user_id}/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    delete:
-      summary: Remove organization member
-      responses:
-        '204':
-          description: Member removed
-
-  # ==========================================
-  # PROJECT SERVICE
-  # ==========================================
-
-  /projects/:
-    get:
-      summary: Get projects
-      responses:
-        '200':
-          description: Projects retrieved
-
-    post:
-      summary: Create project
-      responses:
-        '201':
-          description: Project created
-
-  /projects/{id}/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    get:
-      summary: Get project
-      responses:
-        '200':
-          description: Project retrieved
-
-    patch:
-      summary: Update project
-      responses:
-        '200':
-          description: Project updated
-
-    delete:
-      summary: Delete project
-      responses:
-        '204':
-          description: Project deleted
-
-  /projects/{id}/members/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    get:
-      summary: Get project members
-      responses:
-        '200':
-          description: Members retrieved
-
-    post:
-      summary: Add project member
-      responses:
-        '201':
-          description: Member added
-
-  /projects/{id}/members/{user_id}/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    delete:
-      summary: Remove project member
-      responses:
-        '204':
-          description: Member removed
-
-  # ==========================================
-  # TASK SERVICE
-  # ==========================================
-
-  /projects/{project_id}/tasks/:
-    parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    get:
-      summary: Get project tasks
-      responses:
-        '200':
-          description: Tasks retrieved
-
-    post:
-      summary: Create task
-      responses:
-        '201':
-          description: Task created
-
-  /tasks/{id}/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    get:
-      summary: Get task
-      responses:
-        '200':
-          description: Task retrieved
-
-    patch:
-      summary: Update task
-      responses:
-        '200':
-          description: Task updated
-
-    delete:
-      summary: Delete task
-      responses:
-        '204':
-          description: Task deleted
-
-  /tasks/{id}/status/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    patch:
-      summary: Update task status
-      responses:
-        '200':
-          description: Status updated
-
-  /tasks/{id}/assignee/:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
-    patch:
-      summary: Assign task to member
-      responses:
-        '200':
-          description: Assignee updated
-
-  /users/me/tasks/:
+  /api/users/me/tasks/:
     get:
       summary: Get my assigned tasks
       responses:
         '200':
           description: Tasks retrieved
+  /api/users/me/activity/:
+    get:
+      summary: Get my activity
+      responses:
+        '200':
+          description: Activity retrieved
+
+  # ==========================================
+  # PROJECT SERVICE
+  # ==========================================
+  /api/projects/:
+    get:
+      summary: Get projects
+      responses:
+        '200':
+          description: Projects retrieved
+    post:
+      summary: Create project
+      responses:
+        '201':
+          description: Project created
+        '400':
+          description: Invalid project data
+  /api/projects/{id}/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get project
+      responses:
+        '200':
+          description: Project retrieved
+        '404':
+          description: Project not found
+    put:
+      summary: Replace project
+      responses:
+        '200':
+          description: Project updated
+        '400':
+          description: Invalid project data
+        '404':
+          description: Project not found
+    patch:
+      summary: Update project
+      responses:
+        '200':
+          description: Project updated
+        '400':
+          description: Invalid project data
+        '404':
+          description: Project not found
+    delete:
+      summary: Delete project and associated resources
+      responses:
+        '204':
+          description: Project and associated resources deleted
+        '404':
+          description: Project not found
+        '503':
+          description: Downstream deletion failed; project retained, retry possible
+  /api/projects/{project_id}/members/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get project members
+      responses:
+        '200':
+          description: Members retrieved
+        '404':
+          description: Project not found
+    post:
+      summary: Add project member
+      responses:
+        '201':
+          description: Member added
+        '400':
+          description: Invalid data or member already exists
+        '404':
+          description: Project not found
+  /api/projects/{project_id}/members/{id}/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: Remove project membership by membership ID
+      responses:
+        '204':
+          description: Member removed
+        '404':
+          description: Project or membership not found
+
+  # ==========================================
+  # ORGANIZATION (PROJECT SERVICE)
+  # ==========================================
+  /api/organizations/:
+    get:
+      summary: Get organizations
+      responses:
+        '200':
+          description: Organizations retrieved
+    post:
+      summary: Create organization
+      responses:
+        '201':
+          description: Organization created
+        '400':
+          description: Invalid organization data
+  /api/organizations/{id}/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get organization
+      responses:
+        '200':
+          description: Organization retrieved
+        '404':
+          description: Organization not found
+    put:
+      summary: Replace organization
+      responses:
+        '200':
+          description: Organization updated
+        '400':
+          description: Invalid organization data
+        '404':
+          description: Organization not found
+    patch:
+      summary: Update organization
+      responses:
+        '200':
+          description: Organization updated
+        '400':
+          description: Invalid organization data
+        '404':
+          description: Organization not found
+    delete:
+      summary: Delete organization (blocked if linked projects exist)
+      responses:
+        '204':
+          description: Organization deleted
+        '404':
+          description: Organization not found
+        '409':
+          description: Planned conflict response when linked projects exist; error handler not yet verified
+  /api/organizations/{organization_id}/members/:
+    parameters:
+    - name: organization_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get organization members
+      responses:
+        '200':
+          description: Members retrieved
+        '404':
+          description: Organization not found
+    post:
+      summary: Add organization member
+      responses:
+        '201':
+          description: Member added
+        '400':
+          description: Invalid data or member already exists
+        '404':
+          description: Organization not found
+  /api/organizations/{organization_id}/members/{id}/:
+    parameters:
+    - name: organization_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: Remove organization membership by membership ID
+      responses:
+        '204':
+          description: Member removed
+        '404':
+          description: Organization or membership not found
+
+  # ==========================================
+  # TASK SERVICE
+  # ==========================================
+  /api/projects/{project_id}/tasks/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get project tasks
+      responses:
+        '200':
+          description: Tasks retrieved
+    post:
+      summary: Create task
+      responses:
+        '201':
+          description: Task created
+        '400':
+          description: Invalid task data
+  /api/tasks/{id}/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get task
+      responses:
+        '200':
+          description: Task retrieved
+        '404':
+          description: Task not found
+    patch:
+      summary: Update task
+      responses:
+        '200':
+          description: Task updated
+        '404':
+          description: Task not found
+        '400':
+          description: Invalid data
+    delete:
+      summary: Delete task
+      responses:
+        '204':
+          description: Task deleted
+        '404':
+          description: Task not found
+  /api/tasks/{id}/status/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update task status
+      responses:
+        '200':
+          description: Status updated
+        '400':
+          description: Invalid status
+        '404':
+          description: Task not found
+  /api/tasks/{id}/assignee/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Assign task to member
+      responses:
+        '200':
+          description: Assignee updated
+        '400':
+          description: assignee_id is required
+        '404':
+          description: Task not found
+  /internal/projects/{project_id}/tasks/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: 'Internal: delete all tasks of a project'
+      responses:
+        '204':
+          description: Tasks deleted or already absent
 
   # ==========================================
   # CHAT SERVICE
   # ==========================================
-
-  /conversations/:
-    get:
-      summary: Get conversations
-      responses:
-        '200':
-          description: Conversations retrieved
-
-    post:
-      summary: Create conversation
-      responses:
-        '201':
-          description: Conversation created
-
-  /conversations/{id}/messages/:
+  /api/conversations/{conversation_id}/messages/:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: conversation_id
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
-      summary: Get conversation messages
+      summary: List conversation messages
       responses:
         '200':
           description: Messages retrieved
-
+        '404':
+          description: Conversation not found
     post:
-      summary: Send message
+      summary: Send a message
       responses:
         '201':
-          description: Message sent
-
-  /messages/{id}/:
+          description: Message created
+        '404':
+          description: Conversation not found
+  /api/conversations/projects/{project_id}/:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get conversation for project
+      responses:
+        '200':
+          description: Conversation retrieved
+        '404':
+          description: Conversation not found
+  /api/conversations/messages/{id}/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     patch:
       summary: Edit message
       responses:
         '200':
           description: Message updated
-
+        '404':
+          description: Message not found
     delete:
       summary: Delete message
       responses:
         '204':
           description: Message deleted
+        '404':
+          description: Message not found
+  /api/conversations/internal/projects/{project_id}/conversation/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: 'Internal: create or retrieve project conversation'
+      parameters:
+      - name: X-Internal-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Conversation created
+        '200':
+          description: Conversation already exists
+        '403':
+          description: Invalid or missing internal token
+  /api/conversations/internal/projects/{project_id}/conversation/delete/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: 'Internal: delete project conversation'
+      parameters:
+      - name: X-Internal-Token
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Conversation deleted or already absent
+        '403':
+          description: Invalid or missing internal token
 
   # ==========================================
-  # NOTIFICATIONS
+  # NOTIFICATION SERVICE
   # ==========================================
-
-  /notifications/:
+  /api/notifications/:
     get:
-      summary: Get my notifications
+      summary: Get notifications
       responses:
         '200':
           description: Notifications retrieved
-
-  /notifications/{id}/read/:
-    parameters:
-      - name: id
-        in: path
-        required: true
+      parameters:
+      - name: user_id
+        in: query
+        required: false
         schema:
           type: integer
-
+  /api/notifications/{id}/read/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     patch:
       summary: Mark notification as read
       responses:
         '200':
           description: Notification updated
+        '404':
+          description: Notification not found
 
   # ==========================================
   # DOCUMENT SERVICE
   # ==========================================
-
-  /projects/{project_id}/documents/:
+  /api/projects/{project_id}/documents/:
     parameters:
-      - name: project_id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
       summary: Get project documents
       responses:
         '200':
           description: Documents retrieved
-
     post:
       summary: Upload document
       responses:
         '201':
           description: Document uploaded
-
-  /documents/{id}/:
-    parameters:
-      - name: id
-        in: path
+        '400':
+          description: Invalid document data
+      requestBody:
         required: true
-        schema:
-          type: integer
-
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                uploaded_by_id:
+                  type: integer
+                  description: Temporary until Auth integration
+                name:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+              required:
+              - uploaded_by_id
+              - name
+              - file
+  /api/documents/{id}/:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
       summary: Get document information
       responses:
         '200':
           description: Document retrieved
-
+        '404':
+          description: Document not found
     delete:
       summary: Delete document
       responses:
         '204':
           description: Document deleted
-
-  /documents/{id}/download/:
+        '404':
+          description: Document not found
+  /api/documents/{id}/download/:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
       summary: Download document
       responses:
         '200':
           description: Document downloaded
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Document or physical file not found
+  /internal/projects/{project_id}/documents/:
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: 'Internal: delete all project documents'
+      responses:
+        '204':
+          description: Documents deleted or already absent
 
   # ==========================================
   # AI SERVICE
   # ==========================================
-
-  /ai/chat/:
+  /api/ai/chat/:
     post:
       summary: Chat with AI assistant
       responses:
         '200':
           description: AI response generated
-
-  /ai/generate/:
+  /api/ai/generate/:
     post:
       summary: Generate AI content
       responses:
         '200':
           description: Content generated
-
-  /ai/rag/query/:
+  /api/ai/rag/query/:
     post:
       summary: Ask questions about project documents
       responses:
         '200':
           description: Answer generated
-
-  /ai/interactions/:
+  /api/ai/interactions/:
     get:
       summary: Get my AI interactions
       responses:
@@ -517,24 +646,16 @@ paths:
   # ==========================================
   # ANALYTICS
   # ==========================================
-
-  /projects/{id}/analytics/:
+  /api/projects/{id}/analytics/:
     parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
     get:
       summary: Get project analytics
       responses:
         '200':
           description: Analytics retrieved
 
-  /users/me/activity/:
-    get:
-      summary: Get my activity
-      responses:
-        '200':
-          description: Activity retrieved
