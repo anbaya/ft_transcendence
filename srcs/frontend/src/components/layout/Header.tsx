@@ -4,6 +4,7 @@ import { Search, Bot, Menu } from 'lucide-react';
 import { UserNav } from './UserNav';
 import { NotificationNav } from './NotificationNav';
 import { useLayoutStore } from '@/stores/layoutStore';
+import { useAIStore } from '@/stores/aiStore';
 
 export function Header() {
   const location = useLocation();
@@ -50,7 +51,13 @@ export function Header() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2 sm:gap-4">
-        <button className="hidden sm:flex h-9 w-9 items-center justify-center rounded-md text-muted hover:bg-indigo-50 hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition-colors">
+        <button 
+          onClick={() => {
+            const { togglePanel } = useAIStore.getState();
+            togglePanel();
+          }}
+          className="hidden sm:flex h-9 w-9 items-center justify-center rounded-md text-muted hover:bg-indigo-50 hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition-colors"
+        >
           <Bot className="h-5 w-5" />
           <span className="sr-only">AI Assistant</span>
         </button>
