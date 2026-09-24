@@ -22,7 +22,7 @@ All auth screens use a **split layout**: left side is a branding panel, right si
 |   |    the noise."            |  |   Email                 |  |
 |   |                           |  |   [___________________] |  |
 |   |   Subtle gradient bg      |  |                         |  |
-|   |   #F8FAFC → #EEF2FF      |  |   Password              |  |
+|   |   #F8FAFC → #EEF2FF   |  |   Password              |  |
 |   |                           |  |   [___________________] |  |
 |   |                           |  |                         |  |
 |   |                           |  |   [ ] Remember me       |  |
