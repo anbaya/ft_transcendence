@@ -23,6 +23,7 @@ import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { DocumentsPage } from '@/pages/documents/DocumentsPage';
 import AIAssistantPage from '@/pages/ai/AIAssistantPage';
 import AnalyticsPage from '@/pages/analytics/AnalyticsPage';
+import ProfilePage from '@/pages/profile/ProfilePage';
 
 export default function AppRoutes() {
   return (
@@ -55,6 +56,7 @@ export default function AppRoutes() {
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/ai" element={<AIAssistantPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 

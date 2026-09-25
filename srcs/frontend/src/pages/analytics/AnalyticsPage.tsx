@@ -59,8 +59,8 @@ const PROJECT_PROGRESS = [
 
 export default function AnalyticsPage() {
   const [dateRange] = useState('Last 30d');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isEmpty, setIsEmpty] = useState(false);
+  const [isLoading] = useState(false);
+  const [isEmpty] = useState(false);
 
   // Simulated data loading
   // useEffect(() => {

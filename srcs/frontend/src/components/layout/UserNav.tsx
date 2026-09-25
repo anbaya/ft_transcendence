@@ -56,12 +56,18 @@ export function UserNav() {
             </div>
           </div>
 
-          <DropdownMenu.Item className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-primary outline-none focus:bg-slate-100">
+          <DropdownMenu.Item 
+            onClick={() => navigate('/profile')}
+            className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-primary outline-none focus:bg-slate-100"
+          >
             <User className="mr-2 h-4 w-4 text-muted" />
             My Profile
           </DropdownMenu.Item>
 
-          <DropdownMenu.Item className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-primary outline-none focus:bg-slate-100">
+          <DropdownMenu.Item 
+            onClick={() => navigate('/profile')}
+            className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-primary outline-none focus:bg-slate-100"
+          >
             <Settings className="mr-2 h-4 w-4 text-muted" />
             Account Settings
           </DropdownMenu.Item>

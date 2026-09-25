@@ -470,13 +470,13 @@ src/
 
 # Phase 17 — Profile
 
-- [ ] Profile page
-- [ ] User information
-- [ ] Edit profile
-- [ ] Avatar
-- [ ] Change password
-- [ ] Role display
-- [ ] Logout
+- [x] Profile page
+- [x] User information
+- [x] Edit profile
+- [x] Avatar
+- [x] Change password
+- [x] Role display
+- [x] Logout
 
 ---
 
