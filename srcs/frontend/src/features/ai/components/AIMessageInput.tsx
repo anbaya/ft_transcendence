@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, CornerDownLeft, Sparkles } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import { useAIStore } from '@/stores/aiStore';
 import { cn } from '@/utils/cn';
 

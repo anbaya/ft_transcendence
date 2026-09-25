@@ -3,6 +3,7 @@ import { ArrowUpDown, CheckCircle2, MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useAuthStore } from '@/stores/authStore';
 import type { Task } from '@/types/task';
 
 interface TaskTableProps {
@@ -16,6 +17,8 @@ type SortField = 'title' | 'status' | 'priority' | 'deadline';
 type SortOrder = 'asc' | 'desc';
 
 export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableProps) {
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   const [sortField, setSortField] = useState<SortField>('deadline');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
@@ -163,19 +166,23 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
                       >
                         View Details
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item 
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
-                        onClick={() => onEdit && onEdit(task)}
-                      >
-                        Edit Task
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
-                      <DropdownMenu.Item 
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
-                        onClick={() => onDelete && onDelete(task)}
-                      >
-                        Delete
-                      </DropdownMenu.Item>
+                      {canManage && (
+                        <>
+                          <DropdownMenu.Item 
+                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
+                            onClick={() => onEdit && onEdit(task)}
+                          >
+                            Edit Task
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
+                          <DropdownMenu.Item 
+                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
+                            onClick={() => onDelete && onDelete(task)}
+                          >
+                            Delete
+                          </DropdownMenu.Item>
+                        </>
+                      )}
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>

@@ -54,7 +54,7 @@ const mockDocs: Document[] = [
   }
 ];
 
-export const useDocumentStore = create<DocumentState>((set, get) => ({
+export const useDocumentStore = create<DocumentState>((set) => ({
   documents: mockDocs,
   isUploading: false,
   uploadProgress: 0,
@@ -98,7 +98,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     }));
   },
 
-  fetchDocuments: async (projectId?: string) => {
+  fetchDocuments: async () => {
     // Mock fetch
     await new Promise(resolve => setTimeout(resolve, 500));
     set({ documents: mockDocs });

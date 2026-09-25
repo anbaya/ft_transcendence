@@ -4,6 +4,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Avatar from '@radix-ui/react-avatar';
 import { Building2, Settings, ArrowLeft, MoreHorizontal, UserPlus, Trash2, User } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -25,6 +26,8 @@ const mockMembers: Member[] = [
 
 export default function OrganizationDetailsPage() {
   const { id } = useParams();
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   
   // Modal state
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
@@ -58,10 +61,12 @@ export default function OrganizationDetailsPage() {
             </p>
           </div>
         </div>
-        <Button variant="secondary" className="shrink-0">
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Button>
+        {canManage && (
+          <Button variant="secondary" className="shrink-0">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -79,21 +84,25 @@ export default function OrganizationDetailsPage() {
           >
             Projects
           </Tabs.Trigger>
-          <Tabs.Trigger
-            value="settings"
-            className="flex h-11 items-center justify-center bg-transparent px-5 text-sm font-medium text-muted hover:text-primary data-[state=active]:border-b-2 data-[state=active]:border-secondary data-[state=active]:text-secondary outline-none transition-colors"
-          >
-            Settings
-          </Tabs.Trigger>
+          {canManage && (
+            <Tabs.Trigger
+              value="settings"
+              className="flex h-11 items-center justify-center bg-transparent px-5 text-sm font-medium text-muted hover:text-primary data-[state=active]:border-b-2 data-[state=active]:border-secondary data-[state=active]:text-secondary outline-none transition-colors"
+            >
+              Settings
+            </Tabs.Trigger>
+          )}
         </Tabs.List>
 
         <Tabs.Content value="members" className="py-6 outline-none">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
             <h2 className="text-lg font-semibold text-primary">Members ({mockMembers.length})</h2>
-            <Button onClick={() => setIsAddMemberOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Member
-            </Button>
+            {canManage && (
+              <Button onClick={() => setIsAddMemberOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Member
+              </Button>
+            )}
           </div>
 
           <div className="rounded-lg border border-border bg-white shadow-sm overflow-hidden text-sm">
@@ -140,14 +149,18 @@ export default function OrganizationDetailsPage() {
                             <User className="mr-2 h-4 w-4 text-muted" />
                             View Profile
                           </DropdownMenu.Item>
-                          <DropdownMenu.Separator className="h-px bg-border my-1" />
-                          <DropdownMenu.Item 
-                            className="flex items-center px-2 py-1.5 text-sm text-error outline-none cursor-pointer hover:bg-red-50 hover:text-red-700 rounded-sm"
-                            onSelect={() => setMemberToRemove(member)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Remove Member
-                          </DropdownMenu.Item>
+                          {canManage && (
+                            <>
+                              <DropdownMenu.Separator className="h-px bg-border my-1" />
+                              <DropdownMenu.Item 
+                                className="flex items-center px-2 py-1.5 text-sm text-error outline-none cursor-pointer hover:bg-red-50 hover:text-red-700 rounded-sm"
+                                onSelect={() => setMemberToRemove(member)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove Member
+                              </DropdownMenu.Item>
+                            </>
+                          )}
                         </DropdownMenu.Content>
                       </DropdownMenu.Portal>
                     </DropdownMenu.Root>
@@ -168,13 +181,15 @@ export default function OrganizationDetailsPage() {
           />
         </Tabs.Content>
 
-        <Tabs.Content value="settings" className="py-6 outline-none">
-          <EmptyState
-            icon={Settings}
-            title="Organization Settings"
-            description="Manage your organization's preferences, billing, and global settings here."
-          />
-        </Tabs.Content>
+        {canManage && (
+          <Tabs.Content value="settings" className="py-6 outline-none">
+            <EmptyState
+              icon={Settings}
+              title="Organization Settings"
+              description="Manage your organization's preferences, billing, and global settings here."
+            />
+          </Tabs.Content>
+        )}
       </Tabs.Root>
       
       {/* Modals */}

@@ -1,4 +1,3 @@
-import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, FileText, Download, Trash2, Calendar, HardDrive, User, Tag } from 'lucide-react';
 import type { Document } from '@/types/document';

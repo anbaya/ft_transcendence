@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Building2, Plus, ArrowRight } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 
@@ -18,6 +19,9 @@ const mockOrgs: Organization[] = [
 ];
 
 export default function OrganizationListPage() {
+  const { user } = useAuthStore();
+  const canCreate = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -25,10 +29,12 @@ export default function OrganizationListPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">Organizations</h1>
           <p className="text-sm text-muted mt-1">Manage your teams and workspaces</p>
         </div>
-        <Button className="shrink-0">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Organization
-        </Button>
+        {canCreate && (
+          <Button className="shrink-0">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Organization
+          </Button>
+        )}
       </div>
 
       {mockOrgs.length > 0 ? (
@@ -69,10 +75,12 @@ export default function OrganizationListPage() {
           <p className="mt-2 text-sm text-muted max-w-sm">
             You don't belong to any organizations yet. Create one to start collaborating.
           </p>
-          <Button className="mt-6">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Organization
-          </Button>
+          {canCreate && (
+            <Button className="mt-6">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Organization
+            </Button>
+          )}
         </div>
       )}
     </div>

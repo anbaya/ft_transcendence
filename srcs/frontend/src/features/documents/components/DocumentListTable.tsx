@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
 import type { Document } from '@/types/document';
 import { formatDistanceToNow } from 'date-fns';
 import { FileText, Image as ImageIcon, MoreHorizontal, Download, Eye, Trash2 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { cn } from '@/utils/cn';
 
 interface DocumentListTableProps {
   documents: Document[];

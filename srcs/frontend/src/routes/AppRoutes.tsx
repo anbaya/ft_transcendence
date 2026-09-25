@@ -24,6 +24,9 @@ import { DocumentsPage } from '@/pages/documents/DocumentsPage';
 import AIAssistantPage from '@/pages/ai/AIAssistantPage';
 import AnalyticsPage from '@/pages/analytics/AnalyticsPage';
 import ProfilePage from '@/pages/profile/ProfilePage';
+import AdminRoute from './AdminRoute';
+import AdminUsersPage from '@/pages/admin/AdminUsersPage';
+import AdminRolesPage from '@/pages/admin/AdminRolesPage';
 
 export default function AppRoutes() {
   return (
@@ -57,6 +60,12 @@ export default function AppRoutes() {
           <Route path="/ai" element={<AIAssistantPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          
+          {/* Admin Routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/roles" element={<AdminRolesPage />} />
+          </Route>
         </Route>
       </Route>
 

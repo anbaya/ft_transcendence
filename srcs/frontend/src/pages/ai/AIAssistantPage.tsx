@@ -1,4 +1,3 @@
-import React from 'react';
 import { AIChat } from '@/features/ai/components/AIChat';
 
 export default function AIAssistantPage() {

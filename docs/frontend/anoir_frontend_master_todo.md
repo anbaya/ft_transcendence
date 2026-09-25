@@ -483,24 +483,24 @@ src/
 # Phase 18 — Role-Based UI / Permissions
 
 ## Administrator
-- [ ] Admin navigation
-- [ ] User management
-- [ ] Role management
-- [ ] Permission management
+- [x] Admin navigation
+- [x] User management
+- [x] Role management
+- [x] Permission management
 
 ## Project Manager
-- [ ] Organization management
-- [ ] Project management
-- [ ] Create tasks
-- [ ] Assign tasks
-- [ ] Manage members
+- [x] Organization management
+- [x] Project management
+- [x] Create tasks
+- [x] Assign tasks
+- [x] Manage members
 
 ## Member
-- [ ] View assigned tasks
-- [ ] Update task status
-- [ ] Chat
-- [ ] Documents
-- [ ] AI assistant
+- [x] View assigned tasks
+- [x] Update task status
+- [x] Chat
+- [x] Documents
+- [x] AI assistant
 
 ---
 

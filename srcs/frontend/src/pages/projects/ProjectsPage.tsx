@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FolderKanban, Plus } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ProjectCard } from '@/features/projects/components/ProjectCard';
@@ -38,6 +39,8 @@ const mockProjects: Project[] = [
 ];
 
 export default function ProjectsPage() {
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   const [search, setSearch] = useState('');
   
   // Modals state
@@ -67,10 +70,12 @@ export default function ProjectsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">Projects</h1>
           <p className="text-sm text-muted mt-1">Manage and track your team's projects</p>
         </div>
-        <Button className="shrink-0" onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Project
-        </Button>
+        {canManage && (
+          <Button className="shrink-0" onClick={() => setIsCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Project
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
@@ -101,10 +106,12 @@ export default function ProjectsPage() {
           <p className="mt-2 text-sm text-muted max-w-sm">
             You don't have any projects matching your search, or haven't created any yet.
           </p>
-          <Button className="mt-6" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Project
-          </Button>
+          {canManage && (
+            <Button className="mt-6" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Project
+            </Button>
+          )}
         </div>
       )}
 

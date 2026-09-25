@@ -11,6 +11,7 @@ import {
   Clock, 
   CheckCircle2 
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
@@ -39,6 +40,9 @@ const mockMembers: (ProjectMember & { user: { name: string; email: string }; rol
 ];
 
 export default function ProjectDetailsPage() {
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+
   // Modals
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -80,10 +84,12 @@ export default function ProjectDetailsPage() {
             </p>
           </div>
         </div>
-        <Button variant="secondary" className="shrink-0" onClick={() => setIsEditOpen(true)}>
-          <Settings className="mr-2 h-4 w-4" />
-          Edit Project
-        </Button>
+        {canManage && (
+          <Button variant="secondary" className="shrink-0" onClick={() => setIsEditOpen(true)}>
+            <Settings className="mr-2 h-4 w-4" />
+            Edit Project
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -168,10 +174,12 @@ export default function ProjectDetailsPage() {
         <Tabs.Content value="members" className="py-6 outline-none">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
             <h2 className="text-lg font-semibold text-primary">Team Members</h2>
-            <Button onClick={() => setIsAddMemberOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Member
-            </Button>
+            {canManage && (
+              <Button onClick={() => setIsAddMemberOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Member
+              </Button>
+            )}
           </div>
 
           <div className="rounded-lg border border-border bg-white shadow-sm overflow-hidden text-sm">
@@ -206,13 +214,15 @@ export default function ProjectDetailsPage() {
                   </div>
                   
                   <div className="col-span-6 sm:col-span-4 md:col-span-1 text-right">
-                    <Button 
-                      variant="ghost" 
-                      className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"
-                      onClick={() => setMemberToRemove(member.user.name)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canManage && (
+                      <Button 
+                        variant="ghost" 
+                        className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"
+                        onClick={() => setMemberToRemove(member.user.name)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

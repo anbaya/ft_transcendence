@@ -1,6 +1,7 @@
 
 import { NavLink } from 'react-router-dom';
 import { useLayoutStore } from '@/stores/layoutStore';
+import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/utils/cn';
 import {
   LayoutDashboard,
@@ -17,7 +18,8 @@ import {
   Hexagon,
   ChevronsUpDown,
   Building2,
-  Plus
+  Plus,
+  ShieldAlert
 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Badge } from '@/components/ui/Badge';
@@ -33,7 +35,8 @@ const mainNavigation = [
 ];
 
 const adminNavigation = [
-  { name: 'Admin Console', href: '/admin', icon: Settings },
+  { name: 'User Management', href: '/admin/users', icon: Settings },
+  { name: 'Role Management', href: '/admin/roles', icon: ShieldAlert },
 ];
 
 const helpNavigation = [
@@ -42,6 +45,7 @@ const helpNavigation = [
 
 export function Sidebar() {
   const { isSidebarExpanded, toggleSidebar } = useLayoutStore();
+  const { user } = useAuthStore();
 
   const renderNavItems = (items: typeof mainNavigation) => (
     <ul className="space-y-1">
@@ -156,14 +160,16 @@ export function Sidebar() {
           {renderNavItems(mainNavigation)}
         </div>
 
-        <div>
-          {isSidebarExpanded && (
-            <div className="mb-2 px-3 text-xs font-semibold tracking-wider text-muted/70">
-              ADMIN
-            </div>
-          )}
-          {renderNavItems(adminNavigation)}
-        </div>
+        {user?.role === 'ADMIN' && (
+          <div>
+            {isSidebarExpanded && (
+              <div className="mb-2 px-3 text-xs font-semibold tracking-wider text-muted/70">
+                ADMIN
+              </div>
+            )}
+            {renderNavItems(adminNavigation)}
+          </div>
+        )}
       </div>
 
       {/* Bottom Section */}

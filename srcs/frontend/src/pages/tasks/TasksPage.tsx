@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { TaskFilters } from '@/features/tasks/components/TaskFilters';
 import { TaskTable } from '@/features/tasks/components/TaskTable';
@@ -65,6 +66,8 @@ const mockTasks: Task[] = [
 ];
 
 export default function TasksPage() {
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
@@ -115,10 +118,12 @@ export default function TasksPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">Tasks</h1>
           <p className="text-sm text-muted mt-1">Manage and organize all your work items</p>
         </div>
-        <Button className="shrink-0" onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Task
-        </Button>
+        {canManage && (
+          <Button className="shrink-0" onClick={() => setIsCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Task
+          </Button>
+        )}
       </div>
 
       <TaskFilters 

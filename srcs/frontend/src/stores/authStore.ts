@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 
+export type UserRole = 'ADMIN' | 'PROJECT_MANAGER' | 'MEMBER';
+
 interface User {
   id: string;
   email: string;
   name: string;
-  role?: string;
+  role?: UserRole;
   avatar?: string;
 }
 

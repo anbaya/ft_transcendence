@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { X, Maximize2, Minimize2, MessageSquarePlus, Trash2, Bot } from 'lucide-react';
 import { useAIStore } from '@/stores/aiStore';
 import { AIMessageBubble } from './AIMessageBubble';

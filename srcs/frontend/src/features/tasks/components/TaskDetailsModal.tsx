@@ -1,7 +1,9 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { useAuthStore } from '@/stores/authStore';
 import type { Task } from '@/types/task';
 
 interface TaskDetailsModalProps {
@@ -13,6 +15,9 @@ interface TaskDetailsModalProps {
 }
 
 export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDeleteClick }: TaskDetailsModalProps) {
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+
   if (!task) return null;
 
   const getStatusVariant = (status: string) => {
@@ -42,7 +47,26 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
           <div className="flex items-start justify-between pb-6 border-b border-border">
             <div className="pr-8">
               <div className="flex items-center gap-2 mb-3">
-                <Badge variant={getStatusVariant(task.status)}>{task.status}</Badge>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger className="outline-none">
+                    <Badge variant={getStatusVariant(task.status)} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
+                      {task.status}
+                      <ChevronDown className="h-3 w-3" />
+                    </Badge>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content align="start" className="z-[60] min-w-[140px] overflow-hidden rounded-md border border-border bg-white p-1 shadow-md">
+                      {['Todo', 'In Progress', 'In Review', 'Done'].map((status) => (
+                        <DropdownMenu.Item
+                          key={status}
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100"
+                        >
+                          {status}
+                        </DropdownMenu.Item>
+                      ))}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
                 <Badge variant={getPriorityVariant(task.priority)}>{task.priority}</Badge>
               </div>
               <Dialog.Title className="text-xl font-bold tracking-tight text-primary">
@@ -112,18 +136,24 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
 
           {/* Footer Actions */}
           <div className="pt-6 border-t border-border flex items-center justify-between">
-            <Button variant="ghost" className="text-error hover:text-error hover:bg-error/10" onClick={onDeleteClick}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
+            <div>
+              {canManage && (
+                <Button variant="ghost" className="text-error hover:text-error hover:bg-error/10" onClick={onDeleteClick}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
-              <Button onClick={onEditClick}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Task
-              </Button>
+              {canManage && (
+                <Button onClick={onEditClick}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Task
+                </Button>
+              )}
             </div>
           </div>
         </Dialog.Content>
