@@ -23,8 +23,8 @@
 - [x] Build chat
 - [x] Build notifications
 - [x] Build documents
-- [ ] Build AI/RAG
-- [ ] Build analytics
+- [x] Build AI/RAG
+- [x] Build analytics
 
 ## Integration
 - [ ] Integrate authentication API
@@ -36,7 +36,7 @@
 
 ## Quality
 - [ ] Role-based permissions
-- [ ] Responsive design
+- [x] Responsive design
 - [ ] Error/loading states
 - [ ] Accessibility
 - [ ] Testing

@@ -22,6 +22,7 @@ import OrganizationDetailsPage from '@/pages/organizations/OrganizationDetailsPa
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { DocumentsPage } from '@/pages/documents/DocumentsPage';
 import AIAssistantPage from '@/pages/ai/AIAssistantPage';
+import AnalyticsPage from '@/pages/analytics/AnalyticsPage';
 
 export default function AppRoutes() {
   return (
@@ -53,6 +54,7 @@ export default function AppRoutes() {
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/ai" element={<AIAssistantPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
         </Route>
       </Route>
 

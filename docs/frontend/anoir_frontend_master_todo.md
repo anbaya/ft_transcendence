@@ -423,15 +423,15 @@ src/
 # Phase 15 — AI Assistant / RAG
 
 ## AI Interface
-- [ ] AI assistant page
-- [ ] Chat layout
-- [ ] User messages
-- [ ] AI messages
-- [ ] Message input
-- [ ] Send button
-- [ ] Loading/typing state
-- [ ] Error state
-- [ ] Conversation history
+- [x] AI assistant page
+- [x] Chat layout
+- [x] User messages
+- [x] AI messages
+- [x] Message input
+- [x] Send button
+- [x] Loading/typing state
+- [x] Error state
+- [x] Conversation history
 
 ## Project Context
 - [ ] Select project
@@ -453,18 +453,18 @@ src/
 
 # Phase 16 — Analytics
 
-- [ ] Analytics page
-- [ ] Project statistics
-- [ ] Task statistics
-- [ ] Completed tasks
-- [ ] Pending tasks
-- [ ] Overdue tasks
-- [ ] User activity
-- [ ] Charts
-- [ ] Filters
-- [ ] Date range
-- [ ] Loading states
-- [ ] Empty states
+- [x] Analytics page
+- [x] Project statistics
+- [x] Task statistics
+- [x] Completed tasks
+- [x] Pending tasks
+- [x] Overdue tasks
+- [x] User activity
+- [x] Charts
+- [x] Filters
+- [x] Date range
+- [x] Loading states
+- [x] Empty states
 
 ---
 
