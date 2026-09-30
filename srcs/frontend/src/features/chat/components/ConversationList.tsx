@@ -2,6 +2,7 @@ import { Search, MessageSquare } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import type { Conversation } from '@/types/chat';
 
+// Extended conversation model with UI-specific properties
 export interface ChatThread extends Conversation {
   name: string;
   avatarUrl?: string;
@@ -26,6 +27,7 @@ export function ConversationList({
   onSelect 
 }: ConversationListProps) {
   
+  // Filter conversations based on the search query
   const filtered = conversations.filter(c => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -57,6 +59,7 @@ export function ConversationList({
             <p className="text-sm">No conversations found</p>
           </div>
         ) : (
+          /* Render the filtered list of conversations */
           <ul className="divide-y divide-border">
             {filtered.map(conv => (
               <li key={conv.id}>

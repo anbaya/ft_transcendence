@@ -89,6 +89,7 @@ export function ChatWindow({
               </p>
             </div>
           ) : (
+            // Map through messages and render individual bubbles
             messages.map((msg, idx) => {
               const isCurrentUser = msg.sender_id === currentUserId;
               

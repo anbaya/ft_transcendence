@@ -19,6 +19,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
     }
   }, [content]);
 
+  // Trigger the send callback if the message is not empty
   const handleSend = () => {
     if (content.trim() && !disabled) {
       onSend(content.trim());
@@ -26,6 +27,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
     }
   };
 
+  // Submit message on Enter (without Shift for newlines)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -43,6 +45,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
           <Smile className="h-5 w-5" />
         </button>
         
+        {/* Auto-resizing message input field */}
         <textarea
           ref={textareaRef}
           value={content}

@@ -1,6 +1,7 @@
 import { Avatar } from '@/components/ui/Avatar';
 import type { Message } from '@/types/chat';
 
+// Props for defining a single chat message bubble
 interface MessageBubbleProps {
   message: Message;
   isCurrentUser: boolean;
@@ -17,9 +18,11 @@ export function MessageBubble({
   showAvatar = true
 }: MessageBubbleProps) {
   
+  // Format the timestamp for display (e.g., 10:30 AM)
   const formattedTime = new Date(message.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
+    // Align message to the right for the current user, left for others
     <div className={`flex w-full mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`flex max-w-[75%] sm:max-w-[65%] gap-3 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
         
