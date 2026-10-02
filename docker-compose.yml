@@ -1,4 +1,103 @@
 services:
+  frontend:
+    build:
+      context: ./srcs/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: always
+    networks:
+      - transcendence_net
+
+  auth-service:
+    build:
+      context: ./srcs/services
+      dockerfile: auth/Dockerfile
+    container_name: auth_service
+    restart: always
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  project-service:
+    build:
+      context: ./srcs/services
+      dockerfile: project/Dockerfile
+    container_name: project_service
+    restart: always
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  task-service:
+    build:
+      context: ./srcs/services
+      dockerfile: task/Dockerfile
+    container_name: task_service
+    restart: always
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  chat-service:
+    build:
+      context: ./srcs/services
+      dockerfile: chat/Dockerfile
+    container_name: chat_service
+    restart: always
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  document-service:
+    build:
+      context: ./srcs/services
+      dockerfile: document/Dockerfile
+    container_name: document_service
+    restart: always
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  ai-service:
+    build:
+      context: ./srcs/services
+      dockerfile: ai/Dockerfile
+    container_name: ai_service
+    restart: always
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
   db:
     image: mariadb:10.11
     container_name: database
@@ -6,22 +105,20 @@ services:
     env_file:
       - .env
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
-      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+      - db_root_password
     depends_on:
       logstash:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - db_data:/var/lib/mysql
     networks:
       - transcendence_net
-    logging:
-      driver: syslog
-      options:
-        syslog-address: "tcp://127.0.0.1:5000"
-        syslog-format: rfc5424
 
   api-gateway:
     build:
@@ -32,28 +129,87 @@ services:
     ports:
       - "443:443"
     depends_on:
+      frontend:
+        condition: service_started
+      auth-service:
+        condition: service_healthy
+      project-service:
+        condition: service_healthy
+      task-service:
+        condition: service_healthy
+      chat-service:
+        condition: service_healthy
+      document-service:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
       db:
         condition: service_started
       logstash:
+        condition: service_started
+    networks:
+      - transcendence_net
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: prometheus
+    restart: always
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./srcs/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./srcs/monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    networks:
+      - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: grafana
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./srcs/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./srcs/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
         condition: service_healthy
     networks:
       - transcendence_net
-    logging:
-      driver: syslog
-      options:
-        syslog-address: "tcp://127.0.0.1:5000"
-        syslog-format: rfc5424
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   elasticsearch:
     build:
       context: ./srcs/logging/elasticsearch
       dockerfile: Dockerfile
     container_name: elasticsearch
+    cgroup: host
     restart: always
     environment:
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      cluster.name: "transcendence-cluster"
+      discovery.type: "single-node"
+      network.host: "0.0.0.0"
+      xpack.security.enabled: "false"
+      xpack.ml.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m -XX:-UseContainerSupport -XX:ActiveProcessorCount=1 -Des.cgroups.hierarchy.override=/"
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     networks:
       - transcendence_net
     volumes:
@@ -63,7 +219,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
-      start_period: 20s
+      start_period: 30s
 
   logstash:
     build:
@@ -71,8 +227,10 @@ services:
       dockerfile: Dockerfile
     container_name: logstash
     restart: always
+    environment:
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m -XX:ActiveProcessorCount=1"
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -83,7 +241,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
-      start_period: 20s
+      start_period: 60s
 
   kibana:
     build:
@@ -92,20 +250,50 @@ services:
     container_name: kibana
     restart: always
     ports:
-      - "5601:5601"
+      - "127.0.0.1:5601:5601"
     depends_on:
       elasticsearch:
-        condition: service_healthy
+        condition: service_started
     networks:
       - transcendence_net
 
 volumes:
   db_data:
-    name: transcendence_db_data
+    name: transcendence_db_data_v2
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/mariadb
   elasticsearch-data:
-    name: transcendence_es_data
+    name: transcendence_es_data_v8_bind
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/elasticsearch
+  prometheus-data:
+    name: transcendence_prometheus_data_bind
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/prometheus
+  grafana-data:
+    name: transcendence_grafana_data_bind
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/grafana
 
 networks:
   transcendence_net:
     name: transcendence_internal_network
     driver: bridge
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  db_root_password:
+    file: ./secrets/db_root_password.txt

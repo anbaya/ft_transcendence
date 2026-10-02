@@ -1,0 +1,29 @@
+groups:
+  - name: transcendence-backend
+    rules:
+      - alert: BackendServiceDown
+        expr: up{job="backend-services"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend service is down"
+          description: "{{ $labels.instance }} has been unreachable for more than one minute."
+
+      - alert: BackendServiceRequestsMissing
+        expr: absent(service_requests_total{job="backend-services"})
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backend metrics are missing"
+          description: "Prometheus is not receiving request metrics from backend services."
+
+      - alert: ElasticsearchClusterNotGreen
+        expr: elasticsearch_cluster_health_status{color!="green"} == 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elasticsearch cluster is not green"
+          description: "Elasticsearch health requires attention."

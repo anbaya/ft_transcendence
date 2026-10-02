@@ -1,28 +1,34 @@
 NAME = ft_transcendence
 COMPOSE_FILE = docker-compose.yml
 COMPOSE = docker compose -f $(COMPOSE_FILE)
+DATA_DIR = $(PWD)/data
 
-all: up
+all: prepare up
+
+prepare:
+	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/elasticsearch $(DATA_DIR)/prometheus $(DATA_DIR)/grafana/dashboards
 
 up:
-	@echo "Démarrage des conteneurs..."
+	@echo "Starting containers..."
 	@$(COMPOSE) up -d --build
 
 down:
-	@echo "Arrêt des conteneurs..."
+	@echo "Stopping containers..."
 	@$(COMPOSE) down
 
 clean: down
-	@echo "Nettoyage des conteneurs, images et réseaux inutilisés..."
+	@echo "Cleaning up containers, unused images, and networks..."
 	@docker system prune -f
 
 fclean: clean
-	@echo "Suppression totale (y compris les volumes de données)..."
-	@docker volume rm transcendence_db_data || true
+	@echo "Full reset (including data volumes)..."
+	@$(COMPOSE) down -v --remove-orphans
+	@docker run --rm --user 0 -v $(DATA_DIR):/data alpine:3.20 sh -c 'find /data -mindepth 1 -maxdepth 1 -exec rm -rf {} +'
+	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/elasticsearch $(DATA_DIR)/prometheus $(DATA_DIR)/grafana/dashboards
 
 re: fclean all
 
 logs:
 	@$(COMPOSE) logs -f
 
-.PHONY: all up down clean fclean re logs
+.PHONY: all prepare up down clean fclean re logs

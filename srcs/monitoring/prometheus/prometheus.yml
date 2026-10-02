@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+
+  - job_name: backend-services
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - auth-service:3000
+          - project-service:3000
+          - task-service:3000
+          - chat-service:3000
+          - document-service:3000
+          - ai-service:3000
