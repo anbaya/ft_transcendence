@@ -1,661 +1,1266 @@
 openapi: 3.0.3
+
 info:
   title: ft_transcendence
-  version: 1.1.0
+  version: 2.0.0
   description: Common API endpoints for all Django services.
 
-servers:
-  - url: /
-
 paths:
-  # ==========================================
+
+  # ============================================================
   # AUTH SERVICE
-  # ==========================================
+  # ============================================================
+
   /api/auth/register/:
     post:
       summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [first_name, last_name, email, password]
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  format: password
       responses:
         '201':
-          description: User created
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid registration data
+
   /api/auth/login/:
     post:
       summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
       responses:
         '200':
           description: Login successful
-  /api/auth/logout/:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refresh:
+                    type: string
+                  access:
+                    type: string
+        '401':
+          description: Invalid credentials
+
+  /api/auth/refresh/:
     post:
-      summary: Logout
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh:
+                  type: string
       responses:
         '200':
-          description: Logout successful
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+        '401':
+          description: Invalid or expired refresh token
+
   /api/auth/me/:
     get:
       summary: Get current user
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Current user
-
-  # ==========================================
-  # USER SERVICE
-  # ==========================================
-  /api/users/:
-    get:
-      summary: Get users
-      responses:
-        '200':
-          description: Users retrieved
-  /api/users/{id}/:
-    parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
-    get:
-      summary: Get user
-      responses:
-        '200':
-          description: User retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Authentication required
     patch:
-      summary: Update user information
+      summary: Update current user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
       responses:
         '200':
           description: User updated
-    delete:
-      summary: Delete user
-      responses:
-        '204':
-          description: User deleted
-  /api/users/{id}/role/:
-    parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
-    patch:
-      summary: Update user role
-      responses:
-        '200':
-          description: Role updated
-  /api/users/me/tasks/:
-    get:
-      summary: Get my assigned tasks
-      responses:
-        '200':
-          description: Tasks retrieved
-  /api/users/me/activity/:
-    get:
-      summary: Get my activity
-      responses:
-        '200':
-          description: Activity retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid data
+        '401':
+          description: Authentication required
 
-  # ==========================================
+  /api/auth/logout/:
+    post:
+      summary: Logout
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh:
+                  type: string
+      responses:
+        '200':
+          description: Logout successful
+        '400':
+          description: Invalid refresh token
+
+  /api/auth/change-password/:
+    post:
+      summary: Change password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [old_password, new_password]
+              properties:
+                old_password:
+                  type: string
+                  format: password
+                new_password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Password changed
+        '400':
+          description: Invalid password data
+        '401':
+          description: Authentication required
+
+  # ============================================================
   # PROJECT SERVICE
-  # ==========================================
+  # ============================================================
+
   /api/projects/:
     get:
-      summary: Get projects
+      summary: Get accessible projects
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Projects retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
     post:
       summary: Create project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
       responses:
         '201':
           description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         '400':
           description: Invalid project data
+
   /api/projects/{id}/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     get:
       summary: Get project
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Project retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         '404':
           description: Project not found
     put:
       summary: Replace project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
       responses:
         '200':
           description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         '400':
           description: Invalid project data
         '404':
           description: Project not found
     patch:
       summary: Update project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
       responses:
         '200':
           description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         '400':
           description: Invalid project data
         '404':
           description: Project not found
     delete:
-      summary: Delete project and associated resources
+      summary: Delete project
+      security:
+        - bearerAuth: []
       responses:
         '204':
-          description: Project and associated resources deleted
+          description: Project deleted
         '404':
           description: Project not found
         '503':
-          description: Downstream deletion failed; project retained, retry possible
+          description: Associated service unavailable
+
   /api/projects/{project_id}/members/:
     parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/ProjectId'
     get:
       summary: Get project members
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Members retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectMember'
         '404':
           description: Project not found
     post:
       summary: Add project member
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id]
+              properties:
+                user_id:
+                  type: integer
       responses:
         '201':
           description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectMember'
         '400':
-          description: Invalid data or member already exists
+          description: Invalid user or member already exists
         '404':
           description: Project not found
+
   /api/projects/{project_id}/members/{id}/:
     parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/Id'
     delete:
-      summary: Remove project membership by membership ID
+      summary: Remove project member
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Member removed
         '404':
           description: Project or membership not found
 
-  # ==========================================
-  # ORGANIZATION (PROJECT SERVICE)
-  # ==========================================
+  # ============================================================
+  # ORGANIZATIONS - PROJECT SERVICE
+  # ============================================================
+
   /api/organizations/:
     get:
-      summary: Get organizations
+      summary: Get accessible organizations
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Organizations retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
     post:
       summary: Create organization
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
       responses:
         '201':
           description: Organization created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Invalid organization data
+
   /api/organizations/{id}/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     get:
       summary: Get organization
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Organization retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
         '404':
           description: Organization not found
     put:
       summary: Replace organization
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
       responses:
         '200':
           description: Organization updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Invalid organization data
         '404':
           description: Organization not found
     patch:
       summary: Update organization
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationInput'
       responses:
         '200':
           description: Organization updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Invalid organization data
         '404':
           description: Organization not found
     delete:
-      summary: Delete organization (blocked if linked projects exist)
+      summary: Delete organization
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Organization deleted
         '404':
           description: Organization not found
         '409':
-          description: Planned conflict response when linked projects exist; error handler not yet verified
+          description: Organization has linked projects
+
   /api/organizations/{organization_id}/members/:
     parameters:
-    - name: organization_id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/OrganizationId'
     get:
       summary: Get organization members
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Members retrieved
-        '404':
-          description: Organization not found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizationMember'
     post:
       summary: Add organization member
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id]
+              properties:
+                user_id:
+                  type: integer
       responses:
         '201':
           description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
         '400':
-          description: Invalid data or member already exists
-        '404':
-          description: Organization not found
+          description: Invalid user or member already exists
+
   /api/organizations/{organization_id}/members/{id}/:
     parameters:
-    - name: organization_id
-      in: path
-      required: true
-      schema:
-        type: integer
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/OrganizationId'
+      - $ref: '#/components/parameters/Id'
     delete:
-      summary: Remove organization membership by membership ID
+      summary: Remove organization member
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Member removed
         '404':
           description: Organization or membership not found
 
-  # ==========================================
+  # ============================================================
+  # ANALYTICS - PROJECT SERVICE
+  # ============================================================
+
+  /api/projects/{id}/analytics/:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      summary: Get project analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Analytics retrieved
+        '404':
+          description: Project not found
+        '503':
+          description: Task statistics unavailable
+
+  # ============================================================
   # TASK SERVICE
-  # ==========================================
+  # ============================================================
+
   /api/projects/{project_id}/tasks/:
     parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/ProjectId'
     get:
       summary: Get project tasks
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Tasks retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
     post:
       summary: Create task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
       responses:
         '201':
           description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
         '400':
           description: Invalid task data
+
   /api/tasks/{id}/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     get:
       summary: Get task
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Task retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
         '404':
           description: Task not found
     patch:
       summary: Update task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
       responses:
         '200':
           description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid task data
         '404':
           description: Task not found
-        '400':
-          description: Invalid data
     delete:
       summary: Delete task
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Task deleted
         '404':
           description: Task not found
+
   /api/tasks/{id}/status/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     patch:
       summary: Update task status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [TODO, IN_PROGRESS, COMPLETED]
       responses:
         '200':
-          description: Status updated
+          description: Task status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
         '400':
           description: Invalid status
         '404':
           description: Task not found
+
   /api/tasks/{id}/assignee/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     patch:
-      summary: Assign task to member
+      summary: Assign task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assignee_id]
+              properties:
+                assignee_id:
+                  type: integer
+                  nullable: true
       responses:
         '200':
           description: Assignee updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
         '400':
-          description: assignee_id is required
+          description: Invalid assignee
         '404':
           description: Task not found
-  /internal/projects/{project_id}/tasks/:
-    parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
-    delete:
-      summary: 'Internal: delete all tasks of a project'
-      responses:
-        '204':
-          description: Tasks deleted or already absent
 
-  # ==========================================
-  # CHAT SERVICE
-  # ==========================================
-  /api/conversations/{conversation_id}/messages/:
-    parameters:
-    - name: conversation_id
-      in: path
-      required: true
-      schema:
-        type: integer
+  /api/users/me/tasks/:
     get:
-      summary: List conversation messages
+      summary: Get my assigned tasks
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Messages retrieved
-        '404':
-          description: Conversation not found
-    post:
-      summary: Send a message
-      responses:
-        '201':
-          description: Message created
-        '404':
-          description: Conversation not found
+          description: Tasks retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
+  # ============================================================
+  # CHAT SERVICE
+  # ============================================================
+
   /api/conversations/projects/{project_id}/:
     parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/ProjectId'
     get:
-      summary: Get conversation for project
+      summary: Get project conversation
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Conversation retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
         '404':
           description: Conversation not found
+
+  /api/conversations/{conversation_id}/messages/:
+    parameters:
+      - name: conversation_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get conversation messages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Messages retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '404':
+          description: Conversation not found
+    post:
+      summary: Send message
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+      responses:
+        '201':
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid or empty message
+        '404':
+          description: Conversation not found
+
   /api/conversations/messages/{id}/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     patch:
-      summary: Edit message
+      summary: Edit own message
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  minLength: 1
       responses:
         '200':
           description: Message updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid content
         '404':
           description: Message not found
     delete:
-      summary: Delete message
+      summary: Delete own message
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Message deleted
         '404':
           description: Message not found
-  /api/conversations/internal/projects/{project_id}/conversation/:
-    parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
-    post:
-      summary: 'Internal: create or retrieve project conversation'
-      parameters:
-      - name: X-Internal-Token
-        in: header
-        required: true
-        schema:
-          type: string
-      responses:
-        '201':
-          description: Conversation created
-        '200':
-          description: Conversation already exists
-        '403':
-          description: Invalid or missing internal token
-  /api/conversations/internal/projects/{project_id}/conversation/delete/:
-    parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
-    delete:
-      summary: 'Internal: delete project conversation'
-      parameters:
-      - name: X-Internal-Token
-        in: header
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Conversation deleted or already absent
-        '403':
-          description: Invalid or missing internal token
 
-  # ==========================================
-  # NOTIFICATION SERVICE
-  # ==========================================
+  # ============================================================
+  # NOTIFICATIONS - CHAT SERVICE
+  # ============================================================
+
   /api/notifications/:
     get:
-      summary: Get notifications
+      summary: Get my notifications
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Notifications retrieved
-      parameters:
-      - name: user_id
-        in: query
-        required: false
-        schema:
-          type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+
   /api/notifications/{id}/read/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     patch:
       summary: Mark notification as read
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Notification updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
         '404':
           description: Notification not found
 
-  # ==========================================
+  # ============================================================
   # DOCUMENT SERVICE
-  # ==========================================
+  # ============================================================
+
   /api/projects/{project_id}/documents/:
     parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/ProjectId'
     get:
       summary: Get project documents
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Documents retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
     post:
       summary: Upload document
-      responses:
-        '201':
-          description: Document uploaded
-        '400':
-          description: Invalid document data
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
+              required: [name, file]
               properties:
-                uploaded_by_id:
-                  type: integer
-                  description: Temporary until Auth integration
                 name:
                   type: string
+                  maxLength: 255
                 file:
                   type: string
                   format: binary
-              required:
-              - uploaded_by_id
-              - name
-              - file
+                  description: PDF, DOCX, TXT, CSV or XLSX; maximum 10 MB
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Unsupported format, file too large, or invalid data
+
   /api/documents/{id}/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     get:
       summary: Get document information
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Document retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
         '404':
           description: Document not found
     delete:
       summary: Delete document
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Document deleted
         '404':
           description: Document not found
+
   /api/documents/{id}/download/:
     parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: '#/components/parameters/Id'
     get:
       summary: Download document
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Document downloaded
+          description: Document file
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
         '404':
-          description: Document or physical file not found
-  /internal/projects/{project_id}/documents/:
-    parameters:
-    - name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
-    delete:
-      summary: 'Internal: delete all project documents'
-      responses:
-        '204':
-          description: Documents deleted or already absent
+          description: Document or file not found
 
-  # ==========================================
+  # ============================================================
   # AI SERVICE
-  # ==========================================
-  /api/ai/chat/:
-    post:
-      summary: Chat with AI assistant
-      responses:
-        '200':
-          description: AI response generated
-  /api/ai/generate/:
-    post:
-      summary: Generate AI content
-      responses:
-        '200':
-          description: Content generated
-  /api/ai/rag/query/:
-    post:
-      summary: Ask questions about project documents
-      responses:
-        '200':
-          description: Answer generated
-  /api/ai/interactions/:
-    get:
-      summary: Get my AI interactions
-      responses:
-        '200':
-          description: Interactions retrieved
+  # ============================================================
 
-  # ==========================================
-  # ANALYTICS
-  # ==========================================
-  /api/projects/{id}/analytics/:
+  /api/ai/projects/{project_id}/ask/:
     parameters:
-    - name: id
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      summary: Ask the project AI assistant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question:
+                  type: string
+      responses:
+        '200':
+          description: AI answer generated
+        '400':
+          description: Invalid question
+        '404':
+          description: Project not found
+
+  /api/ai/projects/{project_id}/history/:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      summary: Get project AI interaction history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: AI history retrieved
+
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
       in: path
       required: true
       schema:
         type: integer
-    get:
-      summary: Get project analytics
-      responses:
-        '200':
-          description: Analytics retrieved
 
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    OrganizationId:
+      name: organization_id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+          readOnly: true
+        role:
+          type: string
+          enum: [ADMIN, USER]
+          readOnly: true
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        created_by:
+          type: integer
+        organization:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        chat_sync_status:
+          type: string
+          enum: [pending, ready, failed]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProjectInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        organization:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [planned, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high]
+
+    ProjectMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        project:
+          type: integer
+        user_id:
+          type: integer
+        joined_at:
+          type: string
+          format: date-time
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        owner_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    OrganizationInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+          nullable: true
+
+    OrganizationMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        organization:
+          type: integer
+        user_id:
+          type: integer
+        joined_at:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [TODO, IN_PROGRESS, COMPLETED]
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        project_id:
+          type: integer
+          readOnly: true
+        creator_id:
+          type: integer
+          readOnly: true
+        assignee_id:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    TaskInput:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [TODO, IN_PROGRESS, COMPLETED]
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        deadline:
+          type: string
+          format: date
+          nullable: true
+        assignee_id:
+          type: integer
+          nullable: true
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        project_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversation:
+          type: integer
+        sender_id:
+          type: integer
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      description: Notification returned for the authenticated user.
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project_id:
+          type: integer
+          readOnly: true
+        uploaded_by_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        file:
+          type: string
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
