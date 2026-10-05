@@ -21,12 +21,12 @@ Create the ignored local `.env` file with the required database and API values, 
 make up
 ```
 
-The main entrypoint is `https://localhost/`. The certificate is self-signed, so browsers may show a certificate warning during local development.
+The main entrypoint is `https://localhost:8443/`. The certificate is self-signed, so browsers may show a certificate warning during local development.
 
 ## Service endpoints
 
 - Frontend: `http://localhost:3000`
-- HTTPS gateway: `https://localhost`
+- HTTPS gateway: `https://localhost:8443`
 - Elasticsearch: `http://localhost:9200`
 - Logstash TCP input: `localhost:5000`
 - Kibana: `http://localhost:5601`
@@ -47,7 +47,7 @@ make down
 docker compose config --quiet
 docker compose ps
 docker compose logs --tail=100
-curl -k https://localhost/
+curl -k https://localhost:8443/
 curl http://localhost:9200/_cluster/health
 curl http://localhost:9090/-/ready
 curl http://localhost:3001/api/health

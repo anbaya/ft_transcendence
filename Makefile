@@ -1,14 +1,18 @@
 NAME = ft_transcendence
 COMPOSE_FILE = docker-compose.yml
 COMPOSE = docker compose -f $(COMPOSE_FILE)
-DATA_DIR = $(PWD)/data
+export DATA_DIR := $(PWD)/data
 
 all: prepare up
 
 prepare:
 	@mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/elasticsearch $(DATA_DIR)/prometheus $(DATA_DIR)/grafana/dashboards
+	@mkdir -p secrets
+	@test -f .env
+	@if [ ! -s secrets/db_password.txt ]; then grep '^DB_PASSWORD=' .env | cut -d= -f2- > secrets/db_password.txt; fi
+	@if [ ! -s secrets/db_root_password.txt ]; then grep '^DB_ROOT_PASSWORD=' .env | cut -d= -f2- > secrets/db_root_password.txt; fi
 
-up:
+up: prepare
 	@echo "Starting containers..."
 	@$(COMPOSE) up -d --build
 
