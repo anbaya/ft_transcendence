@@ -1,9 +1,22 @@
-FROM node:20-alpine
+FROM python:3.12-slim
 
 WORKDIR /app
-COPY shared/server.js ./server.js
 
-ENV SERVICE_NAME=auth-service
-ENV PORT=3000
-EXPOSE 3000
-CMD ["node", "server.js"]
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
