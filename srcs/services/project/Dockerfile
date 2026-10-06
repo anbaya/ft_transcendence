@@ -1,9 +1,20 @@
-FROM node:20-alpine
+FROM python:3.12-slim
 
 WORKDIR /app
-COPY shared/server.js ./server.js
 
-ENV SERVICE_NAME=project-service
-ENV PORT=3000
-EXPOSE 3000
-CMD ["node", "server.js"]
+COPY project/requirements.txt .
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        default-libmysqlclient-dev \
+        build-essential \
+        pkg-config \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apt-get purge -y --auto-remove build-essential pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY project/ .
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

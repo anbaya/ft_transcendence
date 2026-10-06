@@ -1,7 +1,0 @@
-Django
-djangorestframework
-djangorestframework-simplejwt
-mysqlclient
-python-dotenv
-requests
-python-dotenv
