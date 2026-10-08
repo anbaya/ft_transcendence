@@ -4,6 +4,7 @@
 # Dependencies
 node_modules/
 vendor/
+__pycache__/
 
 # OS and IDE files
 .DS_Store

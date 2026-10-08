@@ -1,9 +1,14 @@
-FROM node:20-alpine
+FROM python:3.12-slim
 
 WORKDIR /app
-COPY shared/server.js ./server.js
+COPY shared/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+COPY shared/manage.py ./manage.py
+COPY shared/service ./service
+COPY shared/start.sh ./start.sh
+COPY shared/migrate-and-exec.py ./migrate-and-exec.py
+RUN chmod +x ./start.sh
 
-ENV SERVICE_NAME=ai-service
-ENV PORT=3000
-EXPOSE 3000
-CMD ["node", "server.js"]
+ENV PORT=8000
+EXPOSE 8000
+CMD ["./start.sh"]

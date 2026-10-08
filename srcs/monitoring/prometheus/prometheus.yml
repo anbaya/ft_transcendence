@@ -15,9 +15,9 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - auth-service:3000
-          - project-service:3000
-          - task-service:3000
-          - chat-service:3000
-          - document-service:3000
-          - ai-service:3000
+          - auth-service:8000
+          - project-service:8000
+          - task-service:8000
+          - chat-service:8000
+          - document-service:8000
+          - ai-service:8000

@@ -14,10 +14,16 @@ services:
       dockerfile: auth/Dockerfile
     container_name: auth_service
     restart: always
+    env_file:
+      - .env
+      - ./srcs/services/auth/.env
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "python manage.py check"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -29,10 +35,16 @@ services:
       dockerfile: project/Dockerfile
     container_name: project_service
     restart: always
+    env_file:
+      - .env
+      - ./srcs/services/project/.env
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "python manage.py check"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -44,10 +56,16 @@ services:
       dockerfile: task/Dockerfile
     container_name: task_service
     restart: always
+    env_file:
+      - .env
+      - ./srcs/services/task/.env
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "python manage.py check"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -59,10 +77,16 @@ services:
       dockerfile: chat/Dockerfile
     container_name: chat_service
     restart: always
+    env_file:
+      - .env
+      - ./srcs/services/chat/.env
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "python manage.py check"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -74,10 +98,16 @@ services:
       dockerfile: document/Dockerfile
     container_name: document_service
     restart: always
+    env_file:
+      - .env
+      - ./srcs/services/document/.env
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "python manage.py check"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -89,26 +119,32 @@ services:
       dockerfile: ai/Dockerfile
     container_name: ai_service
     restart: always
+    env_file:
+      - .env
+      - ./srcs/services/ai/.env
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/health', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "python manage.py check"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 5s
 
   db:
-    image: mariadb:10.11
+    image: mysql:8.4
     container_name: database
     restart: always
     env_file:
       - .env
     environment:
-      MARIADB_DATABASE: ${DB_NAME}
-      MARIADB_USER: ${DB_USER}
-      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
-      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     secrets:
       - db_password
       - db_root_password
@@ -116,9 +152,15 @@ services:
       logstash:
         condition: service_started
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_mysql:/var/lib/mysql
     networks:
       - transcendence_net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u\"$${DB_USER}\" -p\"$${DB_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   api-gateway:
     build:
@@ -144,7 +186,7 @@ services:
       ai-service:
         condition: service_healthy
       db:
-        condition: service_started
+        condition: service_healthy
       logstash:
         condition: service_started
     networks:
@@ -258,13 +300,13 @@ services:
       - transcendence_net
 
 volumes:
-  db_data:
-    name: transcendence_db_data_v2
+  db_data_mysql:
+    name: transcendence_db_data_mysql
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ${DATA_DIR}/mariadb
+      device: ${DATA_DIR}/mysql
   elasticsearch-data:
     name: transcendence_es_data_v8_bind
     driver: local
