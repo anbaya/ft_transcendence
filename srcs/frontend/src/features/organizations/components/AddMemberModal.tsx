@@ -1,15 +1,33 @@
+import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useOrganizationStore } from '@/stores/organizationStore';
 
 interface AddMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  orgId: string;
   orgName: string;
 }
 
-export function AddMemberModal({ open, onOpenChange, orgName }: AddMemberModalProps) {
+export function AddMemberModal({ open, onOpenChange, orgId, orgName }: AddMemberModalProps) {
+  const { addOrganizationMember, isLoading } = useOrganizationStore();
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('Member');
+
+  const handleSubmit = async () => {
+    try {
+      await addOrganizationMember(orgId, { email, role });
+      onOpenChange(false);
+      setEmail('');
+      setRole('Member');
+    } catch (e) {
+      alert('Failed to add member');
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -29,16 +47,22 @@ export function AddMemberModal({ open, onOpenChange, orgName }: AddMemberModalPr
               label="Email address"
               placeholder="e.g. anas@mail.com"
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             
             <div className="space-y-1">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
                 Role
               </label>
-              <select className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50">
+              <select 
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 <option value="Admin">Admin</option>
                 <option value="PM">PM</option>
-                <option value="Member" selected>Member</option>
+                <option value="Member">Member</option>
               </select>
             </div>
           </div>
@@ -47,7 +71,7 @@ export function AddMemberModal({ open, onOpenChange, orgName }: AddMemberModalPr
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button>
+            <Button onClick={handleSubmit} isLoading={isLoading}>
               Add Member
             </Button>
           </div>

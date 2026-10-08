@@ -1,14 +1,29 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useProjectStore } from '@/stores/projectStore';
 
 interface DeleteProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectName: string;
+  projectId: string;
 }
 
-export function DeleteProjectModal({ open, onOpenChange, projectName }: DeleteProjectModalProps) {
+export function DeleteProjectModal({ open, onOpenChange, projectName, projectId }: DeleteProjectModalProps) {
+  const { deleteProject, isLoading } = useProjectStore();
+
+  const handleDelete = async () => {
+    try {
+      if (projectId) {
+        await deleteProject(projectId);
+        onOpenChange(false);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete project');
+    }
+  };
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -31,7 +46,7 @@ export function DeleteProjectModal({ open, onOpenChange, projectName }: DeletePr
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="destructive">
+            <Button variant="destructive" onClick={handleDelete} isLoading={isLoading}>
               Delete Project
             </Button>
           </div>

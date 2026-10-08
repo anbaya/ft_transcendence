@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
 import { 
   FolderKanban, 
@@ -19,20 +19,7 @@ import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveP
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
 import type { Project, ProjectMember } from '@/types/project';
 
-// Mock data
-const mockProject: Project = {
-  id: '1',
-  name: 'Website Redesign',
-  description: 'Overhaul the corporate website to improve UX and modern design standards.',
-  start_date: '2025-01-10T00:00:00Z',
-  organization_id: '1',
-  deadline: '2025-04-15T00:00:00Z',
-  status: 'Active',
-  priority: 'High',
-  created_at: '2025-01-01T00:00:00Z',
-  updated_at: '2025-01-15T00:00:00Z',
-  created_by: '1',
-};
+import { useProjectStore } from '@/stores/projectStore';
 
 const mockMembers: (ProjectMember & { user: { name: string; email: string }; role: string })[] = [
   { id: '1', joined_at: '2025-01-11T00:00:00Z', project_id: '1', user_id: '1', role: 'Lead', user: { name: 'Anoir Baya', email: 'anoir@mail.com' } },
@@ -40,6 +27,7 @@ const mockMembers: (ProjectMember & { user: { name: string; email: string }; rol
 ];
 
 export default function ProjectDetailsPage() {
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
   const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
 
@@ -48,8 +36,21 @@ export default function ProjectDetailsPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
 
-  // In a real app we'd fetch based on id.
-  const project = mockProject;
+  const { activeProject: project, fetchProject, isLoading } = useProjectStore();
+
+  useEffect(() => {
+    if (id) {
+      fetchProject(id);
+    }
+  }, [id]);
+
+  if (isLoading || !project) {
+    return (
+      <div className="flex justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

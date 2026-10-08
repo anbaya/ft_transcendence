@@ -1,40 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Avatar from '@radix-ui/react-avatar';
 import { Building2, Settings, ArrowLeft, MoreHorizontal, UserPlus, Trash2, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useOrganizationStore } from '@/stores/organizationStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { AddMemberModal } from '@/features/organizations/components/AddMemberModal';
 import { RemoveMemberModal } from '@/features/organizations/components/RemoveMemberModal';
 
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Admin' | 'PM' | 'Member';
-}
-
-const mockMembers: Member[] = [
-  { id: '1', name: 'Anoir Baya', email: 'anoir@mail.com', role: 'Admin' },
-  { id: '2', name: 'Douaa E.', email: 'douaa@mail.com', role: 'PM' },
-  { id: '3', name: 'Anas K.', email: 'anas@mail.com', role: 'Member' },
-];
-
 export default function OrganizationDetailsPage() {
   const { id } = useParams();
   const { user } = useAuthStore();
   const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   
+  const { activeOrganization, members, fetchOrganization, fetchOrganizationMembers, isLoading } = useOrganizationStore();
+
+  useEffect(() => {
+    if (id) {
+      fetchOrganization(id);
+      fetchOrganizationMembers(id);
+    }
+  }, [id]);
+
   // Modal state
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<any>(null);
 
-  // Mock org data based on ID
-  const orgName = id === '1' ? 'Acme Corp' : id === '2' ? 'Startup Inc' : 'Side Project';
+  if (isLoading || !activeOrganization) {
+    return (
+      <div className="flex justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const orgName = activeOrganization.name;
 
   return (
     <div className="space-y-6">
@@ -57,7 +61,7 @@ export default function OrganizationDetailsPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-primary">{orgName}</h1>
             <p className="text-sm text-muted mt-1">
-              Created Jan 2025 · {mockMembers.length} members · 5 projects
+              Created {new Date(activeOrganization.created_at).toLocaleDateString()} · {members.length} members
             </p>
           </div>
         </div>
@@ -96,7 +100,7 @@ export default function OrganizationDetailsPage() {
 
         <Tabs.Content value="members" className="py-6 outline-none">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-            <h2 className="text-lg font-semibold text-primary">Members ({mockMembers.length})</h2>
+            <h2 className="text-lg font-semibold text-primary">Members ({members.length})</h2>
             {canManage && (
               <Button onClick={() => setIsAddMemberOpen(true)}>
                 <UserPlus className="mr-2 h-4 w-4" />
@@ -116,23 +120,26 @@ export default function OrganizationDetailsPage() {
             
             {/* Table Body */}
             <div className="divide-y divide-border">
-              {mockMembers.map((member) => (
+              {members.map((member: any) => {
+                const displayName = member.user?.first_name ? `${member.user.first_name} ${member.user.last_name || ''}` : member.user?.email || 'Unknown';
+                const displayEmail = member.user?.email || '';
+                return (
                 <div key={member.id} className="grid grid-cols-[minmax(0,2fr)_minmax(0,2fr)_100px_60px] sm:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_150px_60px] gap-4 items-center px-6 py-4 hover:bg-slate-50/50 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar.Root className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-slate-100 hidden sm:flex items-center justify-center">
-                      <Avatar.Image className="h-full w-full object-cover" src={`https://api.dicebear.com/7.x/initials/svg?seed=${member.name}`} />
-                      <Avatar.Fallback className="text-xs font-medium text-primary">{member.name.charAt(0)}</Avatar.Fallback>
+                      <Avatar.Image className="h-full w-full object-cover" src={`https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`} />
+                      <Avatar.Fallback className="text-xs font-medium text-primary">{displayName.charAt(0)}</Avatar.Fallback>
                     </Avatar.Root>
-                    <span className="font-medium text-primary truncate">{member.name}</span>
+                    <span className="font-medium text-primary truncate">{displayName}</span>
                   </div>
                   
                   <div className="hidden sm:block text-muted truncate">
-                    {member.email}
+                    {displayEmail}
                   </div>
                   
                   <div>
                     <Badge variant={member.role === 'Admin' ? 'error' : member.role === 'PM' ? 'warning' : 'default'} className="text-xs font-medium">
-                      {member.role}
+                      {member.role || 'Member'}
                     </Badge>
                   </div>
                   
@@ -166,7 +173,8 @@ export default function OrganizationDetailsPage() {
                     </DropdownMenu.Root>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </Tabs.Content>
@@ -196,6 +204,7 @@ export default function OrganizationDetailsPage() {
       <AddMemberModal
         open={isAddMemberOpen}
         onOpenChange={setIsAddMemberOpen}
+        orgId={id || ''}
         orgName={orgName}
       />
       
@@ -203,7 +212,9 @@ export default function OrganizationDetailsPage() {
         <RemoveMemberModal
           open={!!memberToRemove}
           onOpenChange={(open) => !open && setMemberToRemove(null)}
-          memberName={memberToRemove.name}
+          orgId={id || ''}
+          memberId={memberToRemove.id}
+          memberName={memberToRemove.user?.first_name || memberToRemove.user?.email || 'Member'}
           orgName={orgName}
         />
       )}

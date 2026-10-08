@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import type { Project } from '@/types/project';
+import { useProjectStore } from '@/stores/projectStore';
+import type { Project, ProjectStatus, ProjectPriority } from '@/types/project';
 
 interface EditProjectModalProps {
   open: boolean;
@@ -11,7 +13,38 @@ interface EditProjectModalProps {
 }
 
 export function EditProjectModal({ open, onOpenChange, project }: EditProjectModalProps) {
+  const { updateProject, isLoading } = useProjectStore();
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    status: 'Planning' as ProjectStatus,
+    priority: 'Medium' as ProjectPriority,
+    deadline: '',
+  });
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        name: project.name,
+        description: project.description,
+        status: project.status,
+        priority: project.priority,
+        deadline: project.deadline?.split('T')[0] || '',
+      });
+    }
+  }, [project]);
+
   if (!project) return null;
+
+  const handleSubmit = async () => {
+    try {
+      await updateProject(project.id, formData);
+      onOpenChange(false);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to update project');
+    }
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -30,7 +63,8 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
           <div className="py-4 space-y-4">
             <Input
               label="Project Name"
-              defaultValue={project.name}
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
               type="text"
             />
 
@@ -39,7 +73,8 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
                 Description
               </label>
               <textarea
-                defaultValue={project.description}
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
                 className="flex min-h-[80px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
@@ -50,7 +85,8 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
                   Status
                 </label>
                 <select 
-                  defaultValue={project.status}
+                  value={formData.status}
+                  onChange={(e) => setFormData({...formData, status: e.target.value as ProjectStatus})}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="Planning">Planning</option>
@@ -64,7 +100,8 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
                   Priority
                 </label>
                 <select 
-                  defaultValue={project.priority}
+                  value={formData.priority}
+                  onChange={(e) => setFormData({...formData, priority: e.target.value as ProjectPriority})}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="Low">Low</option>
@@ -77,7 +114,8 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
 
             <Input
               label="Deadline"
-              defaultValue={project.deadline?.split('T')[0] || ''}
+              value={formData.deadline}
+              onChange={(e) => setFormData({...formData, deadline: e.target.value})}
               type="date"
             />
           </div>
@@ -86,7 +124,7 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button>
+            <Button onClick={handleSubmit} isLoading={isLoading}>
               Save Changes
             </Button>
           </div>

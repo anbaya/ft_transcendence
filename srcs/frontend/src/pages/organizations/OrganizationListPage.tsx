@@ -4,23 +4,17 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 
-interface Organization {
-  id: string;
-  name: string;
-  memberCount: number;
-  projectCount: number;
-  role: 'Admin' | 'PM' | 'Member';
-}
-
-const mockOrgs: Organization[] = [
-  { id: '1', name: 'Acme Corp', memberCount: 12, projectCount: 5, role: 'Admin' },
-  { id: '2', name: 'Startup Inc', memberCount: 4, projectCount: 2, role: 'Member' },
-  { id: '3', name: 'Side Project', memberCount: 2, projectCount: 1, role: 'PM' },
-];
+import { useEffect } from 'react';
+import { useOrganizationStore } from '@/stores/organizationStore';
 
 export default function OrganizationListPage() {
   const { user } = useAuthStore();
   const canCreate = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+  const { organizations, fetchOrganizations, isLoading } = useOrganizationStore();
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -37,23 +31,27 @@ export default function OrganizationListPage() {
         )}
       </div>
 
-      {mockOrgs.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center p-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : organizations.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockOrgs.map((org) => (
+          {organizations.map((org) => (
             <div key={org.id} className="flex flex-col justify-between rounded-lg border border-border bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group">
               <div>
                 <div className="flex items-start justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-secondary">
                     <Building2 className="h-6 w-6" />
                   </div>
-                  <Badge variant={org.role === 'Admin' ? 'error' : org.role === 'PM' ? 'warning' : 'default'} className="text-xs">
-                    {org.role}
+                  <Badge variant="default" className="text-xs">
+                    Org
                   </Badge>
                 </div>
                 
                 <h3 className="mt-4 text-lg font-semibold text-primary">{org.name}</h3>
                 <p className="mt-1 text-sm text-muted">
-                  {org.memberCount} members · {org.projectCount} projects
+                  {org.description || 'No description provided'}
                 </p>
               </div>
               

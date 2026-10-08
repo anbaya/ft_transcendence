@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import apiClient from '@/services/api/client';
 
 // 1. Define validation schema
 const loginSchema = z.object({
@@ -33,19 +34,24 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setGlobalError(null);
     try {
-      // Mock API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await apiClient.post('/api/auth/login/', data);
       
-      // Temporary: Simulate successful login for UI testing
-      // In production, this would be an axios.post('/api/auth/login', data)
+      // Typically Django Rest Framework SimpleJWT returns { access: '...', refresh: '...' }
+      // The user data might be included if it's a custom view, otherwise we'd fetch /api/auth/me/
+      const { access, user } = response.data;
+      
+      if (!access) {
+        throw new Error('No access token received');
+      }
+
       login(
-        { id: '1', email: data.email, name: 'Anoir Baya' },
-        'mock-jwt-token'
+        user || { id: 'unknown', email: data.email, first_name: data.email.split('@')[0], last_name: '' },
+        access
       );
       
       navigate('/dashboard');
-    } catch (err) {
-      setGlobalError('Invalid email or password.');
+    } catch (err: any) {
+      setGlobalError(err.response?.data?.detail || 'Invalid email or password.');
     }
   };
 

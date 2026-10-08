@@ -1,15 +1,29 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useOrganizationStore } from '@/stores/organizationStore';
 
 interface RemoveMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  orgId: string;
+  memberId: string;
   memberName: string;
   orgName: string;
 }
 
-export function RemoveMemberModal({ open, onOpenChange, memberName, orgName }: RemoveMemberModalProps) {
+export function RemoveMemberModal({ open, onOpenChange, orgId, memberId, memberName, orgName }: RemoveMemberModalProps) {
+  const { removeOrganizationMember, isLoading } = useOrganizationStore();
+
+  const handleRemove = async () => {
+    try {
+      await removeOrganizationMember(orgId, memberId);
+      onOpenChange(false);
+    } catch (e) {
+      alert('Failed to remove member');
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -31,7 +45,7 @@ export function RemoveMemberModal({ open, onOpenChange, memberName, orgName }: R
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="destructive">
+            <Button variant="destructive" onClick={handleRemove} isLoading={isLoading}>
               Remove Member
             </Button>
           </div>

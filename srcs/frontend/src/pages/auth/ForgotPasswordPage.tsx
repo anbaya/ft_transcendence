@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CheckCircle2 } from 'lucide-react';
+import apiClient from '@/services/api/client';
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -25,14 +26,13 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (_data: ForgotPasswordFormValues) => {
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     setGlobalError(null);
     try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await apiClient.post('/api/auth/forgot-password/', { email: data.email });
       setIsSuccess(true);
-    } catch (err) {
-      setGlobalError('Failed to send reset link. Please try again.');
+    } catch (err: any) {
+      setGlobalError(err.response?.data?.email?.[0] || err.response?.data?.detail || 'Failed to send reset link. Please try again.');
     }
   };
 

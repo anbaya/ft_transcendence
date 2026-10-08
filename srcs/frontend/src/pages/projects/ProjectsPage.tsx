@@ -9,40 +9,20 @@ import { EditProjectModal } from '@/features/projects/components/EditProjectModa
 import { DeleteProjectModal } from '@/features/projects/components/DeleteProjectModal';
 import type { Project } from '@/types/project';
 
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    name: 'Website Redesign',
-    description: 'Overhaul the corporate website to improve UX and modern design standards.',
-    start_date: '2025-01-10T00:00:00Z',
-    organization_id: '1',
-    deadline: '2025-04-15T00:00:00Z',
-    status: 'Active',
-    priority: 'High',
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-15T00:00:00Z',
-    created_by: '1',
-  },
-  {
-    id: '2',
-    name: 'Mobile App Launch',
-    description: 'Release the first version of our mobile application for iOS and Android.',
-    start_date: '2025-02-01T00:00:00Z',
-    organization_id: '1',
-    deadline: '2025-06-30T00:00:00Z',
-    status: 'Planning',
-    priority: 'Urgent',
-    created_at: '2025-01-20T00:00:00Z',
-    updated_at: '2025-01-20T00:00:00Z',
-    created_by: '2',
-  },
-];
+import { useEffect } from 'react';
+import { useProjectStore } from '@/stores/projectStore';
 
 export default function ProjectsPage() {
   const { user } = useAuthStore();
   const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   const [search, setSearch] = useState('');
   
+  const { projects, isLoading, fetchProjects } = useProjectStore();
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -59,7 +39,7 @@ export default function ProjectsPage() {
     setIsDeleteOpen(true);
   };
 
-  const filteredProjects = mockProjects.filter((p) =>
+  const filteredProjects = projects.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -88,7 +68,11 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {filteredProjects.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center p-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : filteredProjects.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredProjects.map((project) => (
             <ProjectCard 
@@ -127,6 +111,7 @@ export default function ProjectsPage() {
         open={isDeleteOpen} 
         onOpenChange={setIsDeleteOpen} 
         projectName={selectedProject?.name || ''} 
+        projectId={selectedProject?.id || ''}
       />
     </div>
   );

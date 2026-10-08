@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import apiClient from '@/services/api/client';
 
 const resetPasswordSchema = z
   .object({
@@ -21,6 +22,10 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export default function ResetPasswordPage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  const uid = searchParams.get('uid');
+  const token = searchParams.get('token');
 
   const {
     register,
@@ -30,15 +35,24 @@ export default function ResetPasswordPage() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  const onSubmit = async (_data: ResetPasswordFormValues) => {
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     setGlobalError(null);
+    
+    if (!uid || !token) {
+      setGlobalError('Invalid or missing password reset link.');
+      return;
+    }
+
     try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await apiClient.post('/api/auth/reset-password/', {
+        uid,
+        token,
+        new_password: data.password,
+      });
       // Navigate to login after successful reset
       navigate('/auth/login');
-    } catch (err) {
-      setGlobalError('Failed to reset password. Please try again.');
+    } catch (err: any) {
+      setGlobalError(err.response?.data?.non_field_errors?.[0] || 'Failed to reset password. Please try again.');
     }
   };
 

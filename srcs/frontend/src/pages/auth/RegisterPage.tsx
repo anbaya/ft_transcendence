@@ -5,10 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import apiClient from '@/services/api/client';
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
+    first_name: z.string().min(2, 'First name must be at least 2 characters'),
+    last_name: z.string().min(2, 'Last name must be at least 2 characters'),
     email: z.string().min(1, 'Email is required').email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
@@ -32,16 +34,21 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (_data: RegisterFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setGlobalError(null);
     try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await apiClient.post('/api/auth/register/', {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        password: data.password,
+      });
       
       // Navigate to login after successful registration
       navigate('/auth/login');
-    } catch (err) {
-      setGlobalError('Failed to create account. Please try again.');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.email?.[0] || err.response?.data?.detail || 'Failed to create account. Please try again.';
+      setGlobalError(errorMsg);
     }
   };
 
@@ -57,14 +64,24 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="Full name"
-          type="text"
-          placeholder="Anoir Baya"
-          autoComplete="name"
-          error={errors.name?.message}
-          {...register('name')}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="First name"
+            type="text"
+            placeholder="Anoir"
+            autoComplete="given-name"
+            error={errors.first_name?.message}
+            {...register('first_name')}
+          />
+          <Input
+            label="Last name"
+            type="text"
+            placeholder="Baya"
+            autoComplete="family-name"
+            error={errors.last_name?.message}
+            {...register('last_name')}
+          />
+        </div>
 
         <Input
           label="Email address"
