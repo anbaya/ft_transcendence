@@ -1,13 +1,28 @@
+import { useEffect } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Bell, Check, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
+import { wsClient } from '@/services/websocket/client';
+import { WS_EVENTS } from '@/services/websocket/events';
+import type { Notification } from '@/types/notification';
 
 export function NotificationNav() {
-  const { notifications, unreadCount, markAllAsRead, markAsRead } = useNotificationStore();
+  const { notifications, unreadCount, markAllAsRead, markAsRead, fetchNotifications, addNotification } = useNotificationStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchNotifications();
+    
+    wsClient.connect();
+    const unsubscribe = wsClient.on(WS_EVENTS.NOTIFICATION_CREATED, (payload: Notification) => {
+      addNotification(payload);
+    });
+
+    return () => unsubscribe();
+  }, [fetchNotifications, addNotification]);
 
   const handleNotificationClick = (id: string, link?: string) => {
     markAsRead(id);

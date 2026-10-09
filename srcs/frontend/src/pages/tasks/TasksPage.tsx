@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useTaskStore } from '@/stores/taskStore';
+import { useProjectStore } from '@/stores/projectStore';
 import { Button } from '@/components/ui/Button';
 import { TaskFilters } from '@/features/tasks/components/TaskFilters';
 import { TaskTable } from '@/features/tasks/components/TaskTable';
@@ -10,63 +12,12 @@ import { DeleteTaskModal } from '@/features/tasks/components/DeleteTaskModal';
 import { TaskDetailsModal } from '@/features/tasks/components/TaskDetailsModal';
 import type { Task } from '@/types/task';
 
-// Mock data
-const mockTasks: Task[] = [
-  {
-    id: '1',
-    project_id: '1',
-    title: 'Design UI Mockups',
-    description: 'Create high-fidelity mockups for the new dashboard layout.',
-    status: 'In Review',
-    priority: 'High',
-    created_by: '1',
-    assignee_id: '2',
-    deadline: '2025-02-15T00:00:00Z',
-    created_at: '2025-01-10T00:00:00Z',
-    updated_at: '2025-01-12T00:00:00Z',
-  },
-  {
-    id: '2',
-    project_id: '1',
-    title: 'Setup API Gateway',
-    description: 'Configure Kong API gateway with JWT authentication plugins.',
-    status: 'In Progress',
-    priority: 'Urgent',
-    created_by: '1',
-    assignee_id: '1',
-    deadline: '2025-02-01T00:00:00Z',
-    created_at: '2025-01-15T00:00:00Z',
-    updated_at: '2025-01-16T00:00:00Z',
-  },
-  {
-    id: '3',
-    project_id: '2',
-    title: 'Write Documentation',
-    description: 'Document the new API endpoints for the mobile team.',
-    status: 'Todo',
-    priority: 'Low',
-    created_by: '2',
-    deadline: '2025-03-01T00:00:00Z',
-    created_at: '2025-01-20T00:00:00Z',
-    updated_at: '2025-01-20T00:00:00Z',
-  },
-  {
-    id: '4',
-    project_id: '1',
-    title: 'Fix Login Bug',
-    description: 'Users report being logged out randomly after 5 minutes.',
-    status: 'Done',
-    priority: 'High',
-    created_by: '3',
-    assignee_id: '1',
-    deadline: '2025-01-25T00:00:00Z',
-    created_at: '2025-01-24T00:00:00Z',
-    updated_at: '2025-01-25T00:00:00Z',
-  }
-];
 
 export default function TasksPage() {
   const { user } = useAuthStore();
+  const { tasks, isLoading, fetchMyTasks, fetchProjectTasks, updateTaskStatus } = useTaskStore();
+  const { activeProject } = useProjectStore();
+  
   const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -97,9 +48,26 @@ export default function TasksPage() {
     setIsDeleteOpen(true);
   };
 
+  const handleStatusChange = async (taskId: string, newStatus: any) => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+    } catch (err) {
+      console.error('Failed to update status', err);
+    }
+  };
+
+  // Fetch tasks on mount
+  useEffect(() => {
+    if (activeProject?.id) {
+      fetchProjectTasks(activeProject.id);
+    } else {
+      fetchMyTasks();
+    }
+  }, [activeProject?.id]);
+
   // Filter logic
   const filteredTasks = useMemo(() => {
-    return mockTasks.filter(task => {
+    return tasks.filter(task => {
       const matchesSearch = 
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         task.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -135,12 +103,16 @@ export default function TasksPage() {
         onPriorityChange={setPriorityFilter}
       />
 
-      <TaskTable 
-        tasks={filteredTasks} 
-        onViewDetails={handleViewDetails}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {isLoading ? (
+        <div className="py-12 text-center text-muted">Loading tasks...</div>
+      ) : (
+        <TaskTable 
+          tasks={filteredTasks} 
+          onViewDetails={handleViewDetails}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
       
       {/* Modals */}
       <CreateTaskModal open={isCreateOpen} onOpenChange={setIsCreateOpen} />
@@ -151,6 +123,7 @@ export default function TasksPage() {
         task={selectedTask || undefined}
         onEditClick={() => selectedTask && handleEdit(selectedTask)}
         onDeleteClick={() => selectedTask && handleDelete(selectedTask)}
+        onStatusChange={handleStatusChange}
       />
       
       <EditTaskModal 

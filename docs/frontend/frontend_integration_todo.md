@@ -73,8 +73,8 @@
 
 ### 📋 To-Do
 - [x] **Create `src/stores/taskStore.ts`**: replace any hardcoded task data with real API calls.
-- [ ] **`src/pages/tasks/`**: use taskStore to display task lists, and wire the status-change toggle to `PATCH /api/tasks/tasks/<id>/status/`.
-- [ ] **`src/pages/dashboard/`**: use `GET /api/tasks/users/me/tasks/` to show "My Tasks" widget with real data.
+- [x] **`src/pages/tasks/`**: use taskStore to display task lists, and wire the status-change toggle to `PATCH /api/tasks/tasks/<id>/status/`.
+- [x] **`src/pages/dashboard/`**: use `GET /api/tasks/users/me/tasks/` to show "My Tasks" widget with real data.
 
 ---
 
@@ -90,10 +90,10 @@
 | GET | `/api/documents/documents/<id>/download/` | Download a file |
 
 ### 📋 To-Do
-- [ ] **`documentStore.ts` `fetchDocuments()`** (line 101–104): Replace mock with `apiClient.get('/api/documents/projects/${projectId}/documents/')`.
-- [ ] **`documentStore.ts` `uploadFile()`** (line 65–91): Replace the fake progress loop with a real `FormData` `multipart/form-data` POST to `/api/documents/projects/${projectId}/documents/`. Use `onUploadProgress` in axios to get real progress.
-- [ ] **`documentStore.ts` `deleteDocument()`** (line 93–98): Replace mock with `apiClient.delete('/api/documents/documents/${id}/')`.
-- [ ] **Wire the download button** in the documents page to `/api/documents/documents/<id>/download/`.
+- [x] **`documentStore.ts` `fetchDocuments()`** (line 101–104): Replace mock with `apiClient.get('/api/documents/projects/${projectId}/documents/')`.
+- [x] **`documentStore.ts` `uploadFile()`** (line 65–91): Replace the fake progress loop with a real `FormData` `multipart/form-data` POST to `/api/documents/projects/${projectId}/documents/`. Use `onUploadProgress` in axios to get real progress.
+- [x] **`documentStore.ts` `deleteDocument()`** (line 93–98): Replace mock with `apiClient.delete('/api/documents/documents/${id}/')`.
+- [x] **Wire the download button** in the documents page to `/api/documents/documents/<id>/download/`.
 
 ---
 
@@ -113,14 +113,14 @@
 | WebSocket | `wss://.../ws/` | Real-time messages & events |
 
 ### 📋 To-Do
-- [ ] **`src/services/websocket/client.ts`** (empty): Implement a WebSocket manager class. It should:
+- [x] **`src/services/websocket/client.ts`** (empty): Implement a WebSocket manager class. It should:
   - Connect to `wss://<host>/ws/` with the JWT token as a query param or header.
   - Auto-reconnect on disconnect.
   - Expose `send(event, payload)` and `on(event, callback)` methods.
-- [ ] **`src/services/websocket/events.ts`** (empty): Define all WebSocket event type constants (e.g., `'message.new'`, `'notification.created'`).
-- [ ] **`src/features/chat/`**: Use `apiClient.get('/api/conversations/projects/${id}/')` on page load to get the conversation ID, then use the WebSocket client to send/receive messages in real-time.
-- [ ] **`src/stores/notificationStore.ts` `fetchNotifications()`** (line 54–68): Replace mock with `apiClient.get('/api/notifications/')`.
-- [ ] **`notificationStore.ts` `markAsRead()`** (line 70–79): Add `apiClient.patch('/api/notifications/${id}/read/')` call alongside the local state update.
+- [x] **`src/services/websocket/events.ts`** (empty): Define all WebSocket event type constants (e.g., `'message.new'`, `'notification.created'`).
+- [x] **`src/features/chat/`**: Use `apiClient.get('/api/conversations/projects/${id}/')` on page load to get the conversation ID, then use the WebSocket client to send/receive messages in real-time.
+- [x] **`src/stores/notificationStore.ts` `fetchNotifications()`** (line 54–68): Replace mock with `apiClient.get('/api/notifications/')`.
+- [x] **`notificationStore.ts` `markAsRead()`** (line 70–79): Add `apiClient.patch('/api/notifications/${id}/read/')` call alongside the local state update.
 
 > ⚠️ **Note for DevOps:** Gateway is missing `/api/conversations/` and `/api/notifications/` HTTP routes. Add to `nginx.conf`.
 

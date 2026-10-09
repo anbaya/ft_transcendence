@@ -58,8 +58,17 @@ export const useTaskStore = create<TaskState>((set) => ({
   },
 
   updateTaskStatus: async (taskId: string, status: TaskStatus) => {
+    // Map UI statuses to backend enums
+    const statusMap: Record<TaskStatus, string> = {
+      'Todo': 'TODO',
+      'In Progress': 'IN_PROGRESS',
+      'In Review': 'IN_PROGRESS', // Backend doesn't have 'In Review', map to 'IN_PROGRESS'
+      'Done': 'COMPLETED'
+    };
+    const backendStatus = statusMap[status] || 'TODO';
+
     try {
-      const response = await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/status/`, { status });
+      const response = await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/status/`, { status: backendStatus });
       set((state) => ({
         tasks: state.tasks.map((t) => t.id === taskId ? response.data : t),
         myTasks: state.myTasks.map((t) => t.id === taskId ? response.data : t),

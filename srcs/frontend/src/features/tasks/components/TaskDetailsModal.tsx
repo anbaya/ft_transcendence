@@ -4,7 +4,7 @@ import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban, Che
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useAuthStore } from '@/stores/authStore';
-import type { Task } from '@/types/task';
+import type { Task, TaskStatus } from '@/types/task';
 
 interface TaskDetailsModalProps {
   open: boolean;
@@ -12,9 +12,10 @@ interface TaskDetailsModalProps {
   task?: Task;
   onEditClick: () => void;
   onDeleteClick: () => void;
+  onStatusChange?: (taskId: string, status: TaskStatus) => Promise<void>;
 }
 
-export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDeleteClick }: TaskDetailsModalProps) {
+export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDeleteClick, onStatusChange }: TaskDetailsModalProps) {
   const { user } = useAuthStore();
   const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
 
@@ -60,6 +61,11 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
                         <DropdownMenu.Item
                           key={status}
                           className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100"
+                          onClick={async () => {
+                            if (task.status !== status && onStatusChange) {
+                              await onStatusChange(task.id, status as TaskStatus);
+                            }
+                          }}
                         >
                           {status}
                         </DropdownMenu.Item>

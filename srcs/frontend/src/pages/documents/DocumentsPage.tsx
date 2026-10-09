@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, FileText, Search } from 'lucide-react';
 import { useDocumentStore } from '@/stores/documentStore';
+import { useProjectStore } from '@/stores/projectStore';
 import { DocumentListTable } from '@/features/documents/components/DocumentListTable';
 import { UploadModal } from '@/features/documents/components/UploadModal';
 import { DocumentDetailsPanel } from '@/features/documents/components/DocumentDetailsPanel';
@@ -10,11 +11,18 @@ import { cn } from '@/utils/cn';
 type FilterType = 'All' | 'PDF' | 'Images' | 'Other';
 
 export function DocumentsPage() {
-  const { documents, deleteDocument } = useDocumentStore();
+  const { documents, deleteDocument, fetchDocuments } = useDocumentStore();
+  const { activeProject } = useProjectStore();
   const [activeFilter, setActiveFilter] = useState<FilterType>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+
+  useEffect(() => {
+    if (activeProject?.id) {
+      fetchDocuments(String(activeProject.id));
+    }
+  }, [activeProject]);
 
   const filteredDocuments = documents.filter((doc) => {
     // Search matching
@@ -34,8 +42,8 @@ export function DocumentsPage() {
   });
 
   const handleDownload = (id: string) => {
-    // Mock download behavior
-    console.log(`Downloading document ${id}...`);
+    // Navigate to the download endpoint which triggers the browser to download the file
+    window.location.href = `/api/documents/documents/${id}/download/`;
   };
 
   return (
@@ -107,6 +115,7 @@ export function DocumentsPage() {
       <UploadModal 
         isOpen={isUploadOpen}
         onOpenChange={setIsUploadOpen}
+        projectId={activeProject ? String(activeProject.id) : undefined}
       />
 
       <DocumentDetailsPanel 
