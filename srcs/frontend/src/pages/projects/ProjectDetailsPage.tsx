@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
-import { 
-  FolderKanban, 
-  Settings, 
+import {
+  FolderKanban,
+  Settings,
   ArrowLeft, 
   UserPlus, 
   Trash2, 
@@ -17,14 +17,10 @@ import { Badge } from '@/components/ui/Badge';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
 import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveProjectMemberModal';
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
-import type { Project, ProjectMember } from '@/types/project';
 
 import { useProjectStore } from '@/stores/projectStore';
 
-const mockMembers: (ProjectMember & { user: { name: string; email: string }; role: string })[] = [
-  { id: '1', joined_at: '2025-01-11T00:00:00Z', project_id: '1', user_id: '1', role: 'Lead', user: { name: 'Anoir Baya', email: 'anoir@mail.com' } },
-  { id: '2', joined_at: '2025-01-12T00:00:00Z', project_id: '1', user_id: '2', role: 'Contributor', user: { name: 'Douaa E.', email: 'douaa@mail.com' } },
-];
+// Mock data removed in favor of activeProjectMembers from store
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,11 +32,12 @@ export default function ProjectDetailsPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
 
-  const { activeProject: project, fetchProject, isLoading } = useProjectStore();
+  const { activeProject: project, activeProjectMembers, fetchProject, fetchProjectMembers, isLoading } = useProjectStore();
 
   useEffect(() => {
     if (id) {
       fetchProject(id);
+      fetchProjectMembers(id);
     }
   }, [id]);
 
@@ -81,7 +78,7 @@ export default function ProjectDetailsPage() {
               </Badge>
             </div>
             <p className="text-sm text-muted">
-              Due {new Date(project.deadline).toLocaleDateString()} · {mockMembers.length} members
+              Due {new Date(project.deadline).toLocaleDateString()} · {activeProjectMembers.length} members
             </p>
           </div>
         </div>
@@ -144,7 +141,7 @@ export default function ProjectDetailsPage() {
                 <User className="h-5 w-5 mr-2 text-indigo-500" />
                 <h3 className="font-medium">Team Size</h3>
               </div>
-              <div className="text-2xl font-bold text-primary">{mockMembers.length}</div>
+              <div className="text-2xl font-bold text-primary">{activeProjectMembers.length}</div>
               <p className="text-sm text-muted mt-1">Active contributors</p>
             </div>
           </div>
@@ -192,21 +189,21 @@ export default function ProjectDetailsPage() {
             </div>
             
             <div className="divide-y divide-border">
-              {mockMembers.map((member) => (
+              {activeProjectMembers.map((member) => (
                 <div key={member.id} className="grid grid-cols-12 gap-4 items-center px-6 py-4 transition-colors hover:bg-slate-50/50">
                   <div className="col-span-6 sm:col-span-4 flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-semibold shrink-0">
-                      {member.user.name.charAt(0)}
+                      U
                     </div>
                     <div>
-                      <p className="font-medium text-primary truncate">{member.user.name}</p>
-                      <p className="text-xs text-muted truncate">{member.user.email}</p>
+                      <p className="font-medium text-primary truncate">User {member.user_id}</p>
+                      <p className="text-xs text-muted truncate">ID: {member.user_id}</p>
                     </div>
                   </div>
                   
                   <div className="col-span-4 hidden sm:block">
-                    <Badge variant={member.role === 'Lead' ? 'error' : 'default'}>
-                      {member.role}
+                    <Badge variant="default">
+                      Member
                     </Badge>
                   </div>
                   
@@ -219,7 +216,7 @@ export default function ProjectDetailsPage() {
                       <Button 
                         variant="ghost" 
                         className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"
-                        onClick={() => setMemberToRemove(member.user.name)}
+                        onClick={() => setMemberToRemove(member.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -236,14 +233,14 @@ export default function ProjectDetailsPage() {
       <AddProjectMemberModal 
         open={isAddMemberOpen} 
         onOpenChange={setIsAddMemberOpen} 
-        projectName={project.name}
+        projectId={project.id}
       />
 
       <RemoveProjectMemberModal 
         open={!!memberToRemove} 
         onOpenChange={(open) => !open && setMemberToRemove(null)} 
-        memberName={memberToRemove || ''}
-        projectName={project.name}
+        memberId={memberToRemove || ''}
+        projectId={project.id}
       />
       
       <EditProjectModal 

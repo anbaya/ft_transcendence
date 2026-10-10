@@ -1,15 +1,33 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useProjectStore } from '@/stores/projectStore';
+import { useState } from 'react';
 
 interface RemoveProjectMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  memberName: string;
-  projectName: string;
+  memberId: string;
+  projectId: string;
 }
 
-export function RemoveProjectMemberModal({ open, onOpenChange, memberName, projectName }: RemoveProjectMemberModalProps) {
+export function RemoveProjectMemberModal({ open, onOpenChange, memberId, projectId }: RemoveProjectMemberModalProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { removeProjectMember } = useProjectStore();
+
+  const handleRemove = async () => {
+    if (!memberId || !projectId) return;
+    setIsDeleting(true);
+    try {
+      await removeProjectMember(projectId, memberId);
+      onOpenChange(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -23,17 +41,17 @@ export function RemoveProjectMemberModal({ open, onOpenChange, memberName, proje
               </Dialog.Title>
             </div>
             <Dialog.Description className="text-sm text-muted">
-              Are you sure you want to remove <span className="font-medium text-primary">{memberName}</span> from <span className="font-medium text-primary">{projectName}</span>? 
+              Are you sure you want to remove the member with ID <span className="font-medium text-primary">{memberId}</span> from this project? 
               They will no longer have access to this project's tasks and documents.
             </Dialog.Description>
           </div>
           
           <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={isDeleting}>
               Cancel
             </Button>
-            <Button variant="destructive">
-              Remove Member
+            <Button variant="destructive" onClick={handleRemove} disabled={isDeleting}>
+              {isDeleting ? 'Removing...' : 'Remove Member'}
             </Button>
           </div>
           

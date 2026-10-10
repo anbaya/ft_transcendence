@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project } from '@/types/project';
+import type { Project, ProjectMember } from '@/types/project';
 import apiClient from '@/services/api/client';
 
 interface ProjectState {
@@ -13,11 +13,17 @@ interface ProjectState {
   createProject: (data: Partial<Project>) => Promise<Project>;
   updateProject: (id: string, data: Partial<Project>) => Promise<Project>;
   deleteProject: (id: string) => Promise<void>;
+
+  activeProjectMembers: ProjectMember[];
+  fetchProjectMembers: (projectId: string) => Promise<void>;
+  addProjectMember: (projectId: string, userId: string) => Promise<ProjectMember>;
+  removeProjectMember: (projectId: string, memberId: string) => Promise<void>;
 }
 
 export const useProjectStore = create<ProjectState>((set) => ({
   projects: [],
   activeProject: null,
+  activeProjectMembers: [],
   isLoading: false,
   error: null,
 
@@ -83,6 +89,45 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }));
     } catch (error: any) {
       set({ error: error.message || 'Failed to delete project', isLoading: false });
+      throw error;
+    }
+  },
+
+  fetchProjectMembers: async (projectId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.get<ProjectMember[]>(`/api/projects/${projectId}/members/`);
+      set({ activeProjectMembers: response.data, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch project members', isLoading: false });
+    }
+  },
+
+  addProjectMember: async (projectId: string, userId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.post<ProjectMember>(`/api/projects/${projectId}/members/`, { user_id: userId });
+      set((state) => ({
+        activeProjectMembers: [...state.activeProjectMembers, response.data],
+        isLoading: false
+      }));
+      return response.data;
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to add project member', isLoading: false });
+      throw error;
+    }
+  },
+
+  removeProjectMember: async (projectId: string, memberId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await apiClient.delete(`/api/projects/${projectId}/members/${memberId}/`);
+      set((state) => ({
+        activeProjectMembers: state.activeProjectMembers.filter((m) => m.id !== memberId),
+        isLoading: false
+      }));
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to remove project member', isLoading: false });
       throw error;
     }
   },

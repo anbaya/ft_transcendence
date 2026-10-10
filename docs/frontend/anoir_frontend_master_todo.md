@@ -374,14 +374,14 @@ src/
 - [x] Loading state
 
 ## WebSocket
-- [ ] Connect WebSocket
-- [ ] Authenticate WebSocket
-- [ ] Receive messages
-- [ ] Send messages
-- [ ] Update chat in real time
-- [ ] Handle disconnect
-- [ ] Reconnect
-- [ ] Handle connection errors
+- [x] Connect WebSocket
+- [x] Authenticate WebSocket
+- [x] Receive messages
+- [x] Send messages
+- [x] Update chat in real time
+- [x] Handle disconnect
+- [x] Reconnect
+- [x] Handle connection errors
 
 ---
 
@@ -392,7 +392,7 @@ src/
 - [x] Notification dropdown/page
 - [x] Mark as read
 - [x] Mark all as read
-- [ ] Real-time notification
+- [x] Real-time notification
 - [x] Notification loading
 - [x] Empty notifications
 
@@ -412,11 +412,11 @@ src/
 - [x] Empty state
 
 ## Integration
-- [ ] Connect upload API
-- [ ] Connect document list API
-- [ ] Connect delete API
-- [ ] Connect download API
-- [ ] Refresh document list
+- [x] Connect upload API
+- [x] Connect document list API
+- [x] Connect delete API
+- [x] Connect download API
+- [x] Refresh document list
 
 ---
 
@@ -506,17 +506,17 @@ src/
 
 # Phase 19 — API Integration
 
-- [ ] Authentication API
-- [ ] User API
-- [ ] Organization API
-- [ ] Member API
-- [ ] Project API
-- [ ] Task API
-- [ ] Chat API
-- [ ] Notification API
-- [ ] Document API
+- [x] Authentication API
+- [x] User API
+- [x] Organization API
+- [x] Member API
+- [x] Project API
+- [x] Task API
+- [x] Chat API
+- [x] Notification API
+- [x] Document API
 - [ ] AI API
-- [ ] Analytics API
+- [x] Analytics API
 
 ## For Every API
 - [ ] GET success

@@ -27,18 +27,18 @@
 - [x] Build analytics
 
 ## Integration
-- [ ] Integrate authentication API
-- [ ] Integrate project/task APIs
-- [ ] Integrate WebSockets
-- [ ] Integrate document API
-- [ ] Integrate AI/RAG API
-- [ ] Integrate analytics API
+- [x] Integrate authentication API
+- [x] Integrate project/task APIs
+- [x] Integrate WebSockets
+- [x] Integrate document API
+- [x] Integrate AI/RAG API
+- [x] Integrate analytics API
 
 ## Quality
-- [ ] Role-based permissions
+- [x] Role-based permissions
 - [x] Responsive design
-- [ ] Error/loading states
-- [ ] Accessibility
+- [x] Error/loading states
+- [x] Accessibility
 - [ ] Testing
 - [ ] Production build
 - [ ] Deployment
