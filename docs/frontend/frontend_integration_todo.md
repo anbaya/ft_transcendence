@@ -134,7 +134,7 @@
 | GET | `/api/projects/<id>/analytics/` | Get analytics data for a project |
 
 ### 📋 To-Do
-- [ ] **`src/pages/analytics/`**: Wire the analytics dashboard to `apiClient.get('/api/projects/${id}/analytics/')`.
+- [x] **`src/pages/analytics/`**: Wire the analytics dashboard to `apiClient.get('/api/projects/${id}/analytics/')`.
 
 > ⚠️ **Note for DevOps:** Gateway is missing `/api/analytics/`. Add to `nginx.conf`.
 
@@ -162,5 +162,5 @@ The `ai-service` is an **empty Dockerfile** with no code. The frontend cannot in
 | 3 | Tasks | ✅ Backend Ready | No |
 | 4 | Documents | ✅ Backend Ready | No |
 | 5 | Chat & Notifications | ✅ Backend Ready | ⚠️ DevOps: missing `/api/conversations/` & `/api/notifications/` in gateway |
-| 6 | Analytics | ✅ Backend Ready | ⚠️ DevOps: missing `/api/analytics/` in gateway |
+| 6 | Analytics | ✅ Complete | ✅ Complete |
 | 7 | AI | ❌ Backend Empty | Blocked — Backend must implement first |
