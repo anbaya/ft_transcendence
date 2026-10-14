@@ -13,7 +13,7 @@ COPY task/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY task/ .
 COPY shared/start-django.sh ./start-django.sh
 COPY shared/migrate-and-exec.py ./migrate-and-exec.py
 RUN chmod +x ./start-django.sh

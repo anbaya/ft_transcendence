@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 
 try:
     import MySQLdb
@@ -8,13 +9,20 @@ except ImportError:
     import pymysql as MySQLdb
 
 
-connection = MySQLdb.connect(
-    host=os.environ["DB_HOST"],
-    port=int(os.environ.get("DB_PORT", "3306")),
-    user=os.environ["DB_USER"],
-    passwd=os.environ["DB_PASSWORD"],
-    db=os.environ["DB_NAME"],
-)
+for attempt in range(60):
+    try:
+        connection = MySQLdb.connect(
+            host=os.environ["DB_HOST"],
+            port=int(os.environ.get("DB_PORT", "3306")),
+            user=os.environ["DB_USER"],
+            passwd=os.environ["DB_PASSWORD"],
+            db=os.environ["DB_NAME"],
+        )
+        break
+    except MySQLdb.OperationalError:
+        if attempt == 59:
+            raise
+        time.sleep(2)
 
 try:
     with connection.cursor() as cursor:

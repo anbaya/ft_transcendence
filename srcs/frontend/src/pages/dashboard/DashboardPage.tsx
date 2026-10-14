@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
-  const displayName = user?.name?.split(' ')[0] || 'there';
+  const displayName = user?.first_name || 'there';
 
   // Determine greeting based on time of day
   const hour = new Date().getHours();

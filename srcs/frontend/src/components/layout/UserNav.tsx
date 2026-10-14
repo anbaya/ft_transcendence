@@ -9,6 +9,7 @@ export function UserNav() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
+  const displayName = `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() || user?.email || 'User';
 
   const handleLogout = () => {
     logout();
@@ -24,11 +25,11 @@ export function UserNav() {
           <Avatar.Root className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
             <Avatar.Image
               className="h-full w-full object-cover"
-              src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
-              alt={user.name}
+              src={`https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`}
+              alt={displayName}
             />
             <Avatar.Fallback className="flex h-full w-full items-center justify-center bg-slate-200 text-xs font-medium text-primary">
-              {user.name.charAt(0)}
+              {displayName.charAt(0)}
             </Avatar.Fallback>
           </Avatar.Root>
         </button>
@@ -44,14 +45,14 @@ export function UserNav() {
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 overflow-hidden">
               <Avatar.Root>
                 <Avatar.Image
-                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
-                  alt={user.name}
+                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`}
+                  alt={displayName}
                 />
-                <Avatar.Fallback>{user.name.charAt(0)}</Avatar.Fallback>
+                <Avatar.Fallback>{displayName.charAt(0)}</Avatar.Fallback>
               </Avatar.Root>
             </div>
             <div className="flex flex-col space-y-0.5">
-              <span className="text-sm font-semibold text-primary">{user.name}</span>
+              <span className="text-sm font-semibold text-primary">{displayName}</span>
               <span className="text-xs text-muted">{user.email}</span>
             </div>
           </div>
