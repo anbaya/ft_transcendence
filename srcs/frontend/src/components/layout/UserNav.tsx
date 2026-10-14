@@ -1,4 +1,3 @@
-
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Avatar from '@radix-ui/react-avatar';
 import { useAuthStore } from '@/stores/authStore';
@@ -29,7 +28,7 @@ export function UserNav() {
               alt={displayName}
             />
             <Avatar.Fallback className="flex h-full w-full items-center justify-center bg-slate-200 text-xs font-medium text-primary">
-              {displayName.charAt(0)}
+              {displayName.charAt(0).toUpperCase()}
             </Avatar.Fallback>
           </Avatar.Root>
         </button>
@@ -48,7 +47,7 @@ export function UserNav() {
                   src={`https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`}
                   alt={displayName}
                 />
-                <Avatar.Fallback>{displayName.charAt(0)}</Avatar.Fallback>
+                <Avatar.Fallback>{displayName.charAt(0).toUpperCase()}</Avatar.Fallback>
               </Avatar.Root>
             </div>
             <div className="flex flex-col space-y-0.5">
@@ -57,30 +56,30 @@ export function UserNav() {
             </div>
           </div>
 
-          <DropdownMenu.Item 
+          <DropdownMenu.Item
             onClick={() => navigate('/profile')}
-            className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-primary outline-none focus:bg-slate-100"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-slate-50 rounded-sm cursor-pointer outline-none"
           >
-            <User className="mr-2 h-4 w-4 text-muted" />
-            My Profile
+            <User className="h-4 w-4 text-muted" />
+            <span>Profile</span>
           </DropdownMenu.Item>
 
-          <DropdownMenu.Item 
-            onClick={() => navigate('/profile')}
-            className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-primary outline-none focus:bg-slate-100"
+          <DropdownMenu.Item
+            onClick={() => navigate('/settings')}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-slate-50 rounded-sm cursor-pointer outline-none"
           >
-            <Settings className="mr-2 h-4 w-4 text-muted" />
-            Account Settings
+            <Settings className="h-4 w-4 text-muted" />
+            <span>Settings</span>
           </DropdownMenu.Item>
 
-          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Separator className="h-px bg-border my-1" />
 
           <DropdownMenu.Item
             onClick={handleLogout}
-            className="flex cursor-pointer items-center rounded-sm px-3 py-2 text-sm text-error outline-none focus:bg-red-50 focus:text-red-700"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer outline-none"
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            Log out
+            <LogOut className="h-4 w-4" />
+            <span>Log out</span>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

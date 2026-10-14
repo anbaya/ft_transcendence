@@ -11,6 +11,7 @@ interface OrganizationState {
 
   fetchOrganizations: () => Promise<void>;
   fetchOrganization: (id: string) => Promise<void>;
+  setActiveOrganization: (org: Organization | null) => void;
   createOrganization: (data: Partial<Organization>) => Promise<Organization>;
   updateOrganization: (id: string, data: Partial<Organization>) => Promise<Organization>;
   deleteOrganization: (id: string) => Promise<void>;
@@ -26,6 +27,8 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
   members: [],
   isLoading: false,
   error: null,
+
+  setActiveOrganization: (org) => set({ activeOrganization: org }),
 
   fetchOrganizations: async () => {
     set({ isLoading: true, error: null });

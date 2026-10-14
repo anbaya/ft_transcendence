@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -17,7 +17,7 @@ import {
   CheckCircle2, 
   AlertCircle, 
   ListTodo, 
-  Clock,
+  Clock, 
   BarChart2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
@@ -28,27 +28,14 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
+import { useTaskStore } from '@/stores/taskStore';
 
-// Mock Data for things not provided by the API yet
-const TREND_DATA = [
-  { name: 'Mon', completed: 12 },
-  { name: 'Tue', completed: 19 },
-  { name: 'Wed', completed: 15 },
-  { name: 'Thu', completed: 22 },
-  { name: 'Fri', completed: 28 },
-  { name: 'Sat', completed: 14 },
-  { name: 'Sun', completed: 8 },
-];
-
-const ACTIVITY_FEED = [
-  { id: 1, user: 'Anoir', action: 'completed', task: 'Fix nav', time: '2h ago', avatar: 'https://i.pravatar.cc/150?u=anoir' },
-  { id: 2, user: 'Douaa', action: 'created', task: 'New task', time: '3h ago', avatar: 'https://i.pravatar.cc/150?u=douaa' },
-  { id: 3, user: 'Mohammed', action: 'commented on', task: 'API Integration', time: '5h ago', avatar: 'https://i.pravatar.cc/150?u=mohammed' },
-  { id: 4, user: 'Fatima', action: 'moved', task: 'Design System', time: '1d ago', avatar: 'https://i.pravatar.cc/150?u=fatima' },
-];
+const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export default function AnalyticsPage() {
+  // Global state stores
   const { projects, fetchProjects } = useProjectStore();
+  const { tasks, fetchProjectTasks } = useTaskStore();
   const {
     data: analytics,
     isLoading,
@@ -60,35 +47,76 @@ export default function AnalyticsPage() {
     clearAnalytics,
   } = useAnalyticsStore();
 
-  // On mount: fetch all projects (needed for selector dropdown)
+  // 1. On mount: fetch all user projects for the dropdown selector
   useEffect(() => {
     if (projects.length === 0) {
       fetchProjects();
     }
   }, []);
 
-  // When projects load, auto-select the first one
+  // 2. Auto-select the first project once projects list is available
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
       setSelectedProjectId(String(projects[0].id));
     }
   }, [projects]);
 
-  // When a project is selected, fetch its analytics
+  // 3. Fetch analytics and tasks whenever the user switches the selected project
   useEffect(() => {
     if (selectedProjectId) {
       fetchAnalytics(selectedProjectId);
+      fetchProjectTasks(selectedProjectId);
     } else {
       clearAnalytics();
     }
   }, [selectedProjectId]);
 
-  const completionRate = analytics
-    ? analytics.tasks.total > 0
-      ? Math.round((analytics.tasks.completed / analytics.tasks.total) * 100)
-      : 0
+  // Compute live 7-day completion trend (Mon-Sun) from the project tasks
+  const trendData = useMemo(() => {
+    const counts: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    
+    tasks.forEach((task) => {
+      if (task.status === 'Done') {
+        const date = new Date(task.updated_at || task.created_at);
+        const dayIndex = (date.getDay() + 6) % 7; // Convert to Mon=0 ... Sun=6
+        const dayName = daysOfWeek[dayIndex];
+        if (dayName) counts[dayName] = (counts[dayName] || 0) + 1;
+      }
+    });
+
+    // Outer return: gives useMemo the array of 7 day items for the LineChart
+    return daysOfWeek.map((name) => ({
+      name,
+      completed: counts[name] || 0,
+    }));
+  }, [tasks]);
+
+  // Compute the 5 most recent task actions for the project's Activity Feed
+  const recentActivities = useMemo(() => {
+    // Outer return: gives useMemo the sorted & formatted top 5 tasks
+    return [...tasks]
+      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+      .slice(0, 5)
+      .map((task) => {
+        const isDone = task.status === 'Done';
+        const action = isDone ? 'completed' : task.status === 'In Progress' ? 'updated' : 'created';
+        // Inner return: transforms each individual task into an activity feed object
+        return {
+          id: task.id,
+          task: task.title,
+          action,
+          status: task.status,
+          time: new Date(task.updated_at || task.created_at).toLocaleDateString(),
+        };
+      });
+  }, [tasks]);
+
+  // Overall task completion percentage (returns 0 if data isn't loaded or total is 0)
+  const completionRate = analytics && analytics.tasks.total > 0
+    ? Math.round((analytics.tasks.completed / analytics.tasks.total) * 100)
     : 0;
 
+  // Format task counts by status for the Donut/Pie chart (filters out 0-task statuses)
   const statusChartData = analytics
     ? [
         { name: 'Completed', value: analytics.tasks.completed, color: '#10b981' },
@@ -100,6 +128,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+      {/* Page Header & Project Selector Dropdown */}
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Analytics</h2>
 
@@ -126,6 +155,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* Loading State: Pulsing skeleton cards */}
       {isLoading && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
@@ -142,6 +172,7 @@ export default function AnalyticsPage() {
         </div>
       )}
 
+      {/* Warning State: Task microservice is unreachable */}
       {isServiceUnavailable && !isLoading && (
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 mb-6">
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
@@ -152,6 +183,7 @@ export default function AnalyticsPage() {
         </div>
       )}
 
+      {/* Error State: Failed network request with retry option */}
       {error && !isLoading && !isServiceUnavailable && (
         <ErrorState
           title="Failed to load analytics"
@@ -160,6 +192,7 @@ export default function AnalyticsPage() {
         />
       )}
 
+      {/* Empty State: No projects created yet */}
       {!isLoading && !error && !analytics && projects.length === 0 && (
         <EmptyState
           icon={BarChart2}
@@ -168,6 +201,7 @@ export default function AnalyticsPage() {
         />
       )}
 
+      {/* Empty State: Project has 0 tasks */}
       {!isLoading && analytics && analytics.tasks.total === 0 && !isServiceUnavailable && (
         <EmptyState
           icon={BarChart2}
@@ -176,8 +210,10 @@ export default function AnalyticsPage() {
         />
       )}
 
+      {/* Main Content: Displayed when analytics data is loaded */}
       {!isLoading && analytics && (analytics.tasks.total > 0 || isServiceUnavailable) && (
         <>
+          {/* Top Row: 4 Key Metric Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -240,15 +276,17 @@ export default function AnalyticsPage() {
             </Card>
           </div>
 
+          {/* Middle Row: Trend Line Chart & Status Donut Chart */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            {/* 7-Day Completion Trend */}
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Task Completion Trend <span className="text-sm font-normal text-slate-400 ml-2">(Sample data)</span></CardTitle>
+                <CardTitle>Task Completion Trend</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={TREND_DATA} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <LineChart data={trendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
@@ -269,6 +307,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
+            {/* Task Status Distribution (Donut Chart) */}
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Tasks by Status</CardTitle>
@@ -324,7 +363,9 @@ export default function AnalyticsPage() {
             </Card>
           </div>
 
+          {/* Bottom Row: Project Progress & Recent Activity Feed */}
           <div className="grid gap-4 md:grid-cols-2">
+            {/* Overall Project Progress Bar */}
             <Card>
               <CardHeader>
                 <CardTitle>Project Progress</CardTitle>
@@ -348,26 +389,33 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
+            {/* Recent Task Activity Feed */}
             <Card>
               <CardHeader>
-                <CardTitle>Activity Feed <span className="text-sm font-normal text-slate-400 ml-2">(Sample data)</span></CardTitle>
-                <CardDescription>Recent actions across your projects.</CardDescription>
+                <CardTitle>Activity Feed</CardTitle>
+                <CardDescription>Recent task actions in this project.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {ACTIVITY_FEED.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-4">
-                      <Avatar src={activity.avatar} fallback={activity.user.charAt(0)} size="sm" />
-                      <div className="space-y-1 flex-1">
-                        <p className="text-sm leading-none">
-                          <span className="font-medium text-slate-900">{activity.user}</span>{' '}
-                          <span className="text-slate-500">{activity.action}</span>{' '}
-                          <span className="font-medium text-slate-900">"{activity.task}"</span>
-                        </p>
-                        <p className="text-xs text-slate-500">{activity.time}</p>
-                      </div>
+                  {recentActivities.length === 0 ? (
+                    <div className="py-8 text-center text-sm text-slate-500">
+                      No task activity recorded yet for this project.
                     </div>
-                  ))}
+                  ) : (
+                    recentActivities.map((activity) => (
+                      <div key={activity.id} className="flex items-start gap-4">
+                        <Avatar fallback={activity.task.charAt(0).toUpperCase()} size="sm" />
+                        <div className="space-y-1 flex-1">
+                          <p className="text-sm leading-none">
+                            <span className="font-medium text-slate-900">Task</span>{' '}
+                            <span className="text-slate-500">{activity.action}</span>{' '}
+                            <span className="font-medium text-slate-900">"{activity.task}"</span>
+                          </p>
+                          <p className="text-xs text-slate-500">{activity.time} &middot; {activity.status}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

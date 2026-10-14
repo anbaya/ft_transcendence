@@ -9,7 +9,8 @@ import {
   Trash2, 
   User, 
   Clock, 
-  CheckCircle2 
+  CheckCircle2,
+  Plus
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
@@ -17,29 +18,68 @@ import { Badge } from '@/components/ui/Badge';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
 import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveProjectMemberModal';
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
+import { TaskTable } from '@/features/tasks/components/TaskTable';
+import { CreateTaskModal } from '@/features/tasks/components/CreateTaskModal';
+import { EditTaskModal } from '@/features/tasks/components/EditTaskModal';
+import { DeleteTaskModal } from '@/features/tasks/components/DeleteTaskModal';
+import { TaskDetailsModal } from '@/features/tasks/components/TaskDetailsModal';
+import type { Task } from '@/types/task';
 
 import { useProjectStore } from '@/stores/projectStore';
-
-// Mock data removed in favor of activeProjectMembers from store
+import { useTaskStore } from '@/stores/taskStore';
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
   const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
 
-  // Modals
+  // Project Modals
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
 
+  // Task Modals & State
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
+  const [isDeleteTaskOpen, setIsDeleteTaskOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { activeProject: project, activeProjectMembers, fetchProject, fetchProjectMembers, isLoading } = useProjectStore();
+  const { tasks, fetchProjectTasks, updateTaskStatus } = useTaskStore();
 
   useEffect(() => {
     if (id) {
       fetchProject(id);
       fetchProjectMembers(id);
+      fetchProjectTasks(id);
     }
   }, [id]);
+
+  // Task Action Handlers
+  const handleViewTaskDetails = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDetailsOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDetailsOpen(false);
+    setIsEditTaskOpen(true);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDetailsOpen(false);
+    setIsDeleteTaskOpen(true);
+  };
+
+  const handleTaskStatusChange = async (taskId: string, newStatus: any) => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+    } catch (err) {
+      console.error('Failed to update status', err);
+    }
+  };
 
   if (isLoading || !project) {
     return (
@@ -48,6 +88,33 @@ export default function ProjectDetailsPage() {
       </div>
     );
   }
+
+  // Real task progress metrics
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t) => t.status === 'Done').length;
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // Real time remaining calculation
+  const calculateDaysRemaining = () => {
+    if (!project?.deadline) return { text: 'No deadline', isOverdue: false };
+    const deadlineDate = new Date(project.deadline);
+    const today = new Date();
+    deadlineDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { text: `${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'Day' : 'Days'} Overdue`, isOverdue: true };
+    }
+    if (diffDays === 0) {
+      return { text: 'Due Today', isOverdue: false };
+    }
+    return { text: `${diffDays} ${diffDays === 1 ? 'Day' : 'Days'}`, isOverdue: false };
+  };
+
+  const timeRemaining = calculateDaysRemaining();
 
   return (
     <div className="space-y-6">
@@ -103,13 +170,13 @@ export default function ProjectDetailsPage() {
             value="tasks"
             className="flex h-11 items-center justify-center bg-transparent px-5 text-sm font-medium text-muted hover:text-primary data-[state=active]:border-b-2 data-[state=active]:border-secondary data-[state=active]:text-secondary outline-none transition-colors"
           >
-            Tasks
+            Tasks ({totalTasks})
           </Tabs.Trigger>
           <Tabs.Trigger
             value="members"
             className="flex h-11 items-center justify-center bg-transparent px-5 text-sm font-medium text-muted hover:text-primary data-[state=active]:border-b-2 data-[state=active]:border-secondary data-[state=active]:text-secondary outline-none transition-colors"
           >
-            Members
+            Members ({activeProjectMembers.length})
           </Tabs.Trigger>
         </Tabs.List>
 
@@ -121,18 +188,26 @@ export default function ProjectDetailsPage() {
                 <CheckCircle2 className="h-5 w-5 mr-2 text-secondary" />
                 <h3 className="font-medium">Task Progress</h3>
               </div>
-              <div className="text-2xl font-bold text-primary">12 / 24</div>
-              <div className="mt-4 h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-secondary w-1/2 rounded-full"></div>
+              <div className="text-2xl font-bold text-primary">
+                {completedTasks} / {totalTasks}
               </div>
+              <div className="mt-4 h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-secondary rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted mt-2">{progressPercent}% completed</p>
             </div>
             
             <div className="rounded-lg border border-border bg-white p-5 shadow-sm">
               <div className="flex items-center text-muted mb-2">
-                <Clock className="h-5 w-5 mr-2 text-warning" />
+                <Clock className={`h-5 w-5 mr-2 ${timeRemaining.isOverdue ? 'text-red-500' : 'text-warning'}`} />
                 <h3 className="font-medium">Time Remaining</h3>
               </div>
-              <div className="text-2xl font-bold text-primary">90 Days</div>
+              <div className={`text-2xl font-bold ${timeRemaining.isOverdue ? 'text-red-600' : 'text-primary'}`}>
+                {timeRemaining.text}
+              </div>
               <p className="text-sm text-muted mt-1">Due {new Date(project.deadline).toLocaleDateString()}</p>
             </div>
             
@@ -148,24 +223,33 @@ export default function ProjectDetailsPage() {
           
           <div className="rounded-lg border border-border bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-primary mb-4">Project Description</h3>
-            <p className="text-muted whitespace-pre-wrap">{project.description}</p>
+            <p className="text-muted whitespace-pre-wrap">{project.description || 'No description provided.'}</p>
           </div>
         </Tabs.Content>
 
-        {/* Tasks Tab Placeholder */}
-        <Tabs.Content value="tasks" className="py-6 outline-none">
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center bg-white">
-            <CheckCircle2 className="mx-auto h-12 w-12 text-muted/50" />
-            <h3 className="mt-4 text-lg font-semibold text-primary">Task Management</h3>
-            <p className="mt-2 text-sm text-muted max-w-sm">
-              Tasks will be fully implemented in Phase 11.
-            </p>
-            <Link to="/tasks">
-              <Button className="mt-6" variant="secondary">
-                Go to Global Tasks
+        {/* Tasks Tab */}
+        <Tabs.Content value="tasks" className="py-6 outline-none space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-primary">Project Tasks</h2>
+              <p className="text-sm text-muted">
+                {totalTasks} {totalTasks === 1 ? 'task' : 'tasks'} · {completedTasks} completed
+              </p>
+            </div>
+            {canManage && (
+              <Button onClick={() => setIsCreateTaskOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Task
               </Button>
-            </Link>
+            )}
           </div>
+
+          <TaskTable 
+            tasks={tasks}
+            onViewDetails={handleViewTaskDetails}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+          />
         </Tabs.Content>
 
         {/* Members Tab */}
@@ -229,7 +313,7 @@ export default function ProjectDetailsPage() {
         </Tabs.Content>
       </Tabs.Root>
 
-      {/* Modals */}
+      {/* Project Modals */}
       <AddProjectMemberModal 
         open={isAddMemberOpen} 
         onOpenChange={setIsAddMemberOpen} 
@@ -247,6 +331,33 @@ export default function ProjectDetailsPage() {
         open={isEditOpen} 
         onOpenChange={setIsEditOpen} 
         project={project} 
+      />
+
+      {/* Task Modals */}
+      <CreateTaskModal 
+        open={isCreateTaskOpen} 
+        onOpenChange={setIsCreateTaskOpen} 
+      />
+
+      <TaskDetailsModal
+        open={isTaskDetailsOpen}
+        onOpenChange={setIsTaskDetailsOpen}
+        task={selectedTask || undefined}
+        onEditClick={() => selectedTask && handleEditTask(selectedTask)}
+        onDeleteClick={() => selectedTask && handleDeleteTask(selectedTask)}
+        onStatusChange={handleTaskStatusChange}
+      />
+
+      <EditTaskModal 
+        open={isEditTaskOpen} 
+        onOpenChange={setIsEditTaskOpen} 
+        task={selectedTask || undefined} 
+      />
+
+      <DeleteTaskModal 
+        open={isDeleteTaskOpen} 
+        onOpenChange={setIsDeleteTaskOpen} 
+        taskTitle={selectedTask?.title || ''} 
       />
     </div>
   );

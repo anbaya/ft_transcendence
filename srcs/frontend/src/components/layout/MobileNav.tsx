@@ -1,26 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLayoutStore } from '@/stores/layoutStore';
+import { useTaskStore } from '@/stores/taskStore';
 import { cn } from '@/utils/cn';
 import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, Settings, HelpCircle, Hexagon } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Projects', href: '/projects', icon: FolderKanban },
-  { name: 'Tasks', href: '/tasks', icon: CheckCircle2, count: 12 },
-  { name: 'Chat', href: '/chat', icon: MessageSquare, count: 3 },
-  { name: 'Documents', href: '/documents', icon: FileText },
-  { name: 'AI Assistant', href: '/ai', icon: Bot, isNew: true },
-  { name: 'Analytics', href: '/analytics', icon: BarChart2 },
-  { name: 'Admin Console', href: '/admin', icon: Settings },
-  { name: 'Help & Support', href: '/help', icon: HelpCircle },
-];
-
 export function MobileNav() {
   const { isMobileNavOpen, closeMobileNav } = useLayoutStore();
+  const { myTasks, fetchMyTasks } = useTaskStore();
 
-  // Close nav when route changes (optional, but good UX)
+  // Load user's tasks on mount to calculate dynamic pending badge
+  useEffect(() => {
+    if (myTasks.length === 0) {
+      fetchMyTasks();
+    }
+  }, []);
+
+  // Close nav when window is resized to desktop breakpoint
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) { // lg breakpoint
@@ -30,6 +27,29 @@ export function MobileNav() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [closeMobileNav]);
+
+  // Count uncompleted tasks for the current user
+  const pendingTasksCount = useMemo(() => {
+    return myTasks.filter((t) => t.status !== 'Done').length;
+  }, [myTasks]);
+
+  // Main navigation with real dynamic badges
+  const navigation = useMemo(() => [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Projects', href: '/projects', icon: FolderKanban },
+    { 
+      name: 'Tasks', 
+      href: '/tasks', 
+      icon: CheckCircle2, 
+      count: pendingTasksCount > 0 ? pendingTasksCount : undefined 
+    },
+    { name: 'Chat', href: '/chat', icon: MessageSquare },
+    { name: 'Documents', href: '/documents', icon: FileText },
+    { name: 'AI Assistant', href: '/ai', icon: Bot, isNew: true },
+    { name: 'Analytics', href: '/analytics', icon: BarChart2 },
+    { name: 'Admin Console', href: '/admin', icon: Settings },
+    { name: 'Help & Support', href: '/help', icon: HelpCircle },
+  ], [pendingTasksCount]);
 
   return (
     <>
@@ -86,7 +106,7 @@ export function MobileNav() {
               </div>
               
               <div className="flex items-center">
-                {item.count && (
+                {item.count !== undefined && (
                   <span className="text-xs font-semibold text-muted bg-slate-100 py-0.5 px-2 rounded-full group-hover:bg-slate-200">
                     {item.count}
                   </span>
