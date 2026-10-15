@@ -18,6 +18,11 @@ class ServiceJWTAuthentication(JWTAuthentication):
                 "Token contains an invalid role."
             )
 
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            pass
+
         class AuthenticatedUser:
             def __init__(self, user_id, role):
                 self.id = user_id

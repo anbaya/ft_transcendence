@@ -39,19 +39,18 @@ class ProjectDocumentListCreateView(generics.ListCreateAPIView):
             raise NotFound("Project not found.")
 
         
-        if role == "ADMIN" or project.get("created_by") == user_id:
+        if role == "ADMIN" or str(project.get("created_by")) == str(user_id):
             return Document.objects.filter(
                 project_id=project_id
             ).order_by('-uploaded_at')
 
-        
         members = get_project_members(project_id, access_token)
 
         if members is None:
             raise NotFound("Project not found.")
 
         is_member = any(
-            member.get("user_id") == user_id
+            str(member.get("user_id")) == str(user_id)
             for member in members
         )
 
@@ -64,7 +63,6 @@ class ProjectDocumentListCreateView(generics.ListCreateAPIView):
             project_id=project_id
         ).order_by('-uploaded_at')
 
-    
     def perform_create(self, serializer):
         project_id = self.kwargs['project_id']
         user_id = self.request.user.id
@@ -77,8 +75,7 @@ class ProjectDocumentListCreateView(generics.ListCreateAPIView):
         if project is None:
             raise NotFound("Project not found.")
 
-        
-        if role != "ADMIN" and project.get("created_by") != user_id:
+        if role != "ADMIN" and str(project.get("created_by")) != str(user_id):
 
             members = get_project_members(
                 project_id,
@@ -89,7 +86,7 @@ class ProjectDocumentListCreateView(generics.ListCreateAPIView):
                 raise NotFound("Project not found.")
 
             is_member = any(
-                member.get("user_id") == user_id
+                str(member.get("user_id")) == str(user_id)
                 for member in members
             )
 
@@ -143,13 +140,12 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
             raise NotFound("Project not found.")
 
         
-        if project.get("created_by") == user_id:
+        if str(project.get("created_by")) == str(user_id):
             return Response(
                 DocumentSerializer(document).data,
                 status=status.HTTP_200_OK
             )
 
-        
         members = get_project_members(
             document.project_id,
             access_token
@@ -159,7 +155,7 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
             raise NotFound("Project not found.")
 
         is_member = any(
-            member.get("user_id") == user_id
+            str(member.get("user_id")) == str(user_id)
             for member in members
         )
 
@@ -173,7 +169,6 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
             status=status.HTTP_200_OK
         )
 
-    
     def destroy(self, request, *args, **kwargs):
         document = self.get_object()
 
@@ -191,12 +186,11 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
             if project is None:
                 raise NotFound("Project not found.")
 
-            if project.get("created_by") != user_id:
+            if str(project.get("created_by")) != str(user_id):
                 raise PermissionDenied(
                     "Only the project creator or ADMIN can delete documents."
                 )
 
-       
         if document.file:
             document.file.delete(save=False)
 
@@ -216,7 +210,6 @@ class DocumentDownloadView(generics.GenericAPIView):
         user_id = request.user.id
         role = request.user.role
 
-        
         if role != "ADMIN":
             auth_header = request.headers.get("Authorization", "")
 
@@ -235,8 +228,7 @@ class DocumentDownloadView(generics.GenericAPIView):
             if project is None:
                 raise NotFound("Project not found.")
 
-            
-            if project.get("created_by") != user_id:
+            if str(project.get("created_by")) != str(user_id):
                 members = get_project_members(
                     document.project_id,
                     access_token
@@ -246,7 +238,7 @@ class DocumentDownloadView(generics.GenericAPIView):
                     raise NotFound("Project not found.")
 
                 is_member = any(
-                    member.get("user_id") == user_id
+                    str(member.get("user_id")) == str(user_id)
                     for member in members
                 )
 
@@ -287,3 +279,32 @@ class ProjectDocumentsDeleteView(generics.GenericAPIView):
         return Response(
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+class UserDocumentsListView(generics.ListAPIView):
+    serializer_class = DocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        auth_header = self.request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            raise PermissionDenied("Invalid authorization header.")
+        access_token = auth_header.split(" ", 1)[1]
+
+        role = getattr(self.request.user, "role", None)
+        if role == "ADMIN":
+            return Document.objects.all().order_by('-uploaded_at')
+
+        try:
+            import requests
+            from .project_service import PROJECT_SERVICE_URL
+            url = f"{PROJECT_SERVICE_URL}/api/projects/"
+            res = requests.get(url, headers={"Authorization": f"Bearer {access_token}"}, timeout=5)
+            if res.ok:
+                projects = res.json()
+                project_ids = [p['id'] for p in projects if 'id' in p]
+                return Document.objects.filter(project_id__in=project_ids).order_by('-uploaded_at')
+        except Exception:
+            pass
+
+        return Document.objects.none()
