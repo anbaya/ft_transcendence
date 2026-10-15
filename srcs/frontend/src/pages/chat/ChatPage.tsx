@@ -1,81 +1,105 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ConversationList, type ChatThread } from '@/features/chat/components/ConversationList';
 import { ChatWindow } from '@/features/chat/components/ChatWindow';
 import type { Message, Conversation } from '@/types/chat';
 import { useAuthStore } from '@/stores/authStore';
-import { useProjectStore } from '@/stores/projectStore';
 import apiClient from '@/services/api/client';
-import { wsClient } from '@/services/websocket/client';
-import { WS_EVENTS } from '@/services/websocket/events';
+import { createProjectWebSocket, ProjectWebSocketClient } from '@/services/websocket/client';
 
 export default function ChatPage() {
   const { user } = useAuthStore();
-  const { activeProject } = useProjectStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
-  
+  const [conversations, setConversations] = useState<ChatThread[]>([]);
+  const [selectedConvId, setSelectedConvId] = useState<string | number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversation, setConversation] = useState<ChatThread | null>(null);
 
-  // 1. Fetch project conversation when activeProject changes
+  const wsRef = useRef<ProjectWebSocketClient | null>(null);
+
+  // 1. Fetch user's active conversations on mount
   useEffect(() => {
-    async function loadProjectChat() {
-      if (!activeProject?.id) {
-        setConversation(null);
-        setMessages([]);
-        return;
-      }
+    async function loadMyConversations() {
       try {
-        const convRes = await apiClient.get<Conversation>(`/api/conversations/projects/${activeProject.id}/`);
-        const convData = convRes.data;
-        const thread: ChatThread = {
-          ...convData,
-          name: `${activeProject.name} Chat`,
-        };
-        setConversation(thread);
-        setSelectedConvId(thread.id);
-
-        // Fetch messages
-        const msgRes = await apiClient.get<Message[]>(`/api/conversations/${thread.id}/messages/`);
-        setMessages(msgRes.data);
+        const response = await apiClient.get<Conversation[]>('/api/conversations/my/');
+        const threads: ChatThread[] = response.data.map((conv) => ({
+          ...conv,
+          id: String(conv.id),
+          name: conv.project_name ? `${conv.project_name} Chat` : `Project #${conv.project_id} Chat`,
+        }));
+        setConversations(threads);
+        if (threads.length > 0 && !selectedConvId) {
+          setSelectedConvId(threads[0].id);
+        }
       } catch (err) {
-        console.error('Failed to load chat:', err);
+        console.error('Failed to load conversations:', err);
       }
     }
-    loadProjectChat();
-  }, [activeProject]);
-
-  // 2. Connect to WebSocket and subscribe to messages
-  useEffect(() => {
-    wsClient.connect();
-
-    const unsubscribe = wsClient.on(WS_EVENTS.MESSAGE_NEW, (payload: Message) => {
-      setMessages(prev => {
-        // Prevent duplicate messages in case we already have it
-        if (prev.some(m => m.id === payload.id)) return prev;
-        return [...prev, payload];
-      });
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    loadMyConversations();
   }, []);
 
-  const handleSendMessage = async (content: string) => {
-    if (!selectedConvId || !user?.id) return;
-    try {
-      // Actually send to backend via API
-      await apiClient.post(`/api/conversations/${selectedConvId}/messages/`, {
-        content
+  // 2. When selected conversation changes, load messages & connect its WebSocket
+  const selectedConversation = conversations.find((c) => String(c.id) === String(selectedConvId)) || null;
+
+  useEffect(() => {
+    if (!selectedConversation) {
+      setMessages([]);
+      return;
+    }
+
+    const currentConv = selectedConversation;
+    let isMounted = true;
+
+    // Load message history
+    async function loadMessages() {
+      try {
+        const msgRes = await apiClient.get<Message[]>(`/api/conversations/${currentConv.id}/messages/`);
+        if (isMounted) {
+          setMessages(msgRes.data);
+        }
+      } catch (err) {
+        console.error('Failed to load conversation messages:', err);
+      }
+    }
+    loadMessages();
+
+    // Connect WebSocket for this project
+    const ws = createProjectWebSocket(currentConv.project_id, (incomingMsg) => {
+      if (!isMounted) return;
+      setMessages((prev) => {
+        if (incomingMsg.id && prev.some((m) => String(m.id) === String(incomingMsg.id))) {
+          return prev;
+        }
+        return [...prev, incomingMsg];
       });
-      // The message will be broadcasted back via WebSocket and added to the list automatically!
+    });
+    wsRef.current = ws;
+
+    return () => {
+      isMounted = false;
+      ws.disconnect();
+    };
+  }, [selectedConversation?.id, selectedConversation?.project_id]);
+
+  const handleSendMessage = async (content: string) => {
+    if (!selectedConversation || !user?.id) return;
+
+    // Try WS first
+    if (wsRef.current) {
+      wsRef.current.sendMessage(content);
+    }
+
+    // Also send via REST to ensure persistence
+    try {
+      const res = await apiClient.post<Message>(`/api/conversations/${selectedConversation.id}/messages/`, {
+        content,
+      });
+      setMessages((prev) => {
+        if (prev.some((m) => String(m.id) === String(res.data.id))) return prev;
+        return [...prev, res.data];
+      });
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('Failed to post message:', err);
     }
   };
-
-  const conversationsData = conversation ? [conversation] : [];
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-white overflow-hidden -mx-8 -my-8 sm:mx-0 sm:my-0 sm:h-[calc(100vh-8rem)] sm:rounded-xl sm:border sm:border-border sm:shadow-sm">
@@ -83,17 +107,17 @@ export default function ChatPage() {
         <ConversationList 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          conversations={conversationsData}
+          conversations={conversations}
           selectedId={selectedConvId}
-          onSelect={setSelectedConvId}
+          onSelect={(id) => setSelectedConvId(id)}
         />
       </div>
 
       <div className={`flex-1 min-w-0 ${!selectedConvId ? 'hidden sm:flex' : 'flex'}`}>
         <ChatWindow 
-          conversation={conversation}
+          conversation={selectedConversation}
           messages={messages}
-          currentUserId={user?.id || ''}
+          currentUserId={String(user?.id || '')}
           onSendMessage={handleSendMessage}
         />
       </div>

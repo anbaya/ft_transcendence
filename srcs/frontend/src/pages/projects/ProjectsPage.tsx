@@ -14,7 +14,7 @@ import { useProjectStore } from '@/stores/projectStore';
 
 export default function ProjectsPage() {
   const { user } = useAuthStore();
-  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+  const canCreate = !!user;
   const [search, setSearch] = useState('');
   
   const { projects, isLoading, fetchProjects } = useProjectStore();
@@ -50,7 +50,7 @@ export default function ProjectsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">Projects</h1>
           <p className="text-sm text-muted mt-1">Manage and track your team's projects</p>
         </div>
-        {canManage && (
+        {canCreate && (
           <Button className="shrink-0" onClick={() => setIsCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create Project
@@ -90,7 +90,7 @@ export default function ProjectsPage() {
           <p className="mt-2 text-sm text-muted max-w-sm">
             You don't have any projects matching your search, or haven't created any yet.
           </p>
-          {canManage && (
+          {canCreate && (
             <Button className="mt-6" onClick={() => setIsCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Project

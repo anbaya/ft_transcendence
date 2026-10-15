@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTaskStore } from '@/stores/taskStore';
-import { useOrganizationStore } from '@/stores/organizationStore';
 import { cn } from '@/utils/cn';
 import {
   LayoutDashboard,
@@ -18,12 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Hexagon,
-  ChevronsUpDown,
-  Building2,
-  Plus,
-  ShieldAlert
+  ShieldAlert,
 } from 'lucide-react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Badge } from '@/components/ui/Badge';
 
 const adminNavigation = [
@@ -39,12 +34,6 @@ export function Sidebar() {
   const { isSidebarExpanded, toggleSidebar } = useLayoutStore();
   const { user } = useAuthStore();
   const { myTasks, fetchMyTasks } = useTaskStore();
-  const { 
-    organizations, 
-    activeOrganization, 
-    fetchOrganizations, 
-    setActiveOrganization 
-  } = useOrganizationStore();
 
   // Load user's assigned tasks on mount to calculate dynamic pending badge
   useEffect(() => {
@@ -53,23 +42,9 @@ export function Sidebar() {
     }
   }, []);
 
-  // Load user's organizations on mount
-  useEffect(() => {
-    if (organizations.length === 0) {
-      fetchOrganizations();
-    }
-  }, []);
-
-  // Default active organization to the first one once loaded if none is active
-  useEffect(() => {
-    if (organizations.length > 0 && !activeOrganization) {
-      setActiveOrganization(organizations[0]);
-    }
-  }, [organizations, activeOrganization]);
-
-  // Count uncompleted tasks for the current user
+  // Count uncompleted tasks for the current user (status is TODO or IN_PROGRESS)
   const pendingTasksCount = useMemo(() => {
-    return myTasks.filter((t) => t.status !== 'Done').length;
+    return myTasks.filter((t) => t.status !== 'COMPLETED').length;
   }, [myTasks]);
 
   // Main navigation with real dynamic badges
@@ -128,8 +103,6 @@ export function Sidebar() {
     </ul>
   );
 
-  const currentOrgName = activeOrganization?.name || (organizations.length > 0 ? organizations[0].name : 'Personal Workspace');
-
   return (
     <aside
       className={cn(
@@ -137,73 +110,22 @@ export function Sidebar() {
         isSidebarExpanded ? 'w-[240px]' : 'w-[72px]'
       )}
     >
-      {/* Brand & Organization Switcher */}
-      <div className="flex h-16 shrink-0 items-center px-3 border-b border-border">
+      {/* Brand Header */}
+      <div className="flex h-16 shrink-0 items-center px-4 border-b border-border">
         {isSidebarExpanded ? (
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button className="flex w-full items-center justify-between rounded-md p-1.5 hover:bg-slate-50 outline-none transition-colors">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-white font-bold text-xs uppercase">
-                    {activeOrganization ? activeOrganization.name.charAt(0) : <Hexagon className="h-5 w-5" />}
-                  </div>
-                  <div className="flex flex-col items-start truncate">
-                    <span className="text-sm font-bold text-primary leading-tight">Astra</span>
-                    <span className="text-xs text-muted truncate">{currentOrgName}</span>
-                  </div>
-                </div>
-                <ChevronsUpDown className="h-4 w-4 text-muted shrink-0 ml-1" />
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content align="start" className="w-[220px] z-50 bg-white rounded-md p-1 shadow-md border border-border animate-in fade-in-80">
-                <DropdownMenu.Label className="px-2 py-1.5 text-xs font-semibold text-muted">
-                  Organizations
-                </DropdownMenu.Label>
-                {organizations.length === 0 ? (
-                  <div className="px-2 py-1.5 text-xs text-slate-400">
-                    No organizations found
-                  </div>
-                ) : (
-                  organizations.map((org) => {
-                    const isActive = (activeOrganization?.id || organizations[0]?.id) === org.id;
-                    return (
-                      <DropdownMenu.Item 
-                        key={org.id} 
-                        onClick={() => setActiveOrganization(org)}
-                        className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm"
-                      >
-                        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-secondary text-white text-[10px] font-bold uppercase mr-2">
-                          {org.name.charAt(0)}
-                        </div>
-                        <span className="flex-1 truncate">{org.name}</span>
-                        {isActive && (
-                          <Badge variant="default" className="text-[10px] py-0 px-1 ml-2">Active</Badge>
-                        )}
-                      </DropdownMenu.Item>
-                    );
-                  })
-                )}
-                <DropdownMenu.Separator className="h-px bg-border my-1" />
-                <NavLink to="/organizations" className="block outline-none">
-                  <DropdownMenu.Item className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm">
-                    <Building2 className="mr-2 h-4 w-4 text-muted" />
-                    Manage Organizations
-                  </DropdownMenu.Item>
-                </NavLink>
-                <NavLink to="/organizations" className="block outline-none">
-                  <DropdownMenu.Item className="flex items-center px-2 py-1.5 text-sm outline-none cursor-pointer hover:bg-slate-100 rounded-sm">
-                    <Plus className="mr-2 h-4 w-4 text-muted" />
-                    Create Organization
-                  </DropdownMenu.Item>
-                </NavLink>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-sm">
+              <Hexagon className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col truncate">
+              <span className="text-base font-bold text-slate-900 tracking-tight leading-tight">Astra</span>
+              <span className="text-[11px] font-medium text-slate-400">Workspace</span>
+            </div>
+          </div>
         ) : (
-          <div className="flex w-full items-center justify-center pt-1">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-white font-bold text-xs uppercase">
-              {activeOrganization ? activeOrganization.name.charAt(0) : <Hexagon className="h-5 w-5" />}
+          <div className="flex w-full items-center justify-center">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-sm">
+              <Hexagon className="h-5 w-5" />
             </div>
           </div>
         )}

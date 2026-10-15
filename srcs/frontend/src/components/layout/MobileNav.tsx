@@ -30,7 +30,7 @@ export function MobileNav() {
 
   // Count uncompleted tasks for the current user
   const pendingTasksCount = useMemo(() => {
-    return myTasks.filter((t) => t.status !== 'Done').length;
+    return myTasks.filter((t) => t.status !== 'COMPLETED').length;
   }, [myTasks]);
 
   // Main navigation with real dynamic badges

@@ -1,25 +1,29 @@
 export type ConversationType = 'Direct' | 'Project' | 'Group';
 
 export interface Conversation {
-  id: string;
-  type: ConversationType;
+  id: number | string;
+  project_id: number | string;
+  project_name?: string;
   created_at: string;
-  project_id?: string;
-  // UI helper properties (not in raw schema, but useful for display)
-  name?: string; 
+  type?: ConversationType;
+  name?: string;
+  last_message?: string;
+  last_message_at?: string;
 }
 
 export interface ConversationMember {
-  id: string;
-  conversation_id: string;
-  user_id: string;
+  id: number | string;
+  conversation_id: number | string;
+  user_id: number | string;
 }
 
 export interface Message {
-  id: string;
-  conversation_id: string;
-  sender_id: string;
+  id: number | string;
+  conversation: number | string;
+  conversation_id?: number | string;
+  sender_id: number | string;
+  sender_name?: string;
   content: string;
-  sent_at: string;
-  updated_at: string;
+  created_at: string;
+  sent_at?: string;
 }

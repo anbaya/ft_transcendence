@@ -24,7 +24,7 @@ export function NotificationNav() {
     return () => unsubscribe();
   }, [fetchNotifications, addNotification]);
 
-  const handleNotificationClick = (id: string, link?: string) => {
+  const handleNotificationClick = (id: string | number, link?: string) => {
     markAsRead(id);
     if (link) {
       navigate(link);
@@ -102,7 +102,9 @@ export function NotificationNav() {
                       <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-secondary shadow-sm" />
                     )}
                   </div>
-                  <span className="text-xs text-muted mt-1 line-clamp-2">{notification.content}</span>
+                  <span className="text-xs text-muted mt-1 line-clamp-2">
+                    {notification.message || notification.content}
+                  </span>
                   <span className="text-[10px] font-medium text-muted/60 mt-1.5 uppercase tracking-wider">
                     {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                   </span>

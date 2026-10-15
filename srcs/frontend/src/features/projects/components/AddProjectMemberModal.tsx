@@ -8,26 +8,27 @@ import { useState } from 'react';
 interface AddProjectMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId: string;
+  projectId: string | number;
 }
 
 export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProjectMemberModalProps) {
-  const [userId, setUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const { addProjectMember } = useProjectStore();
 
   const handleAdd = async () => {
-    if (!userId.trim()) return;
+    if (!email.trim()) return;
     setIsAdding(true);
     setError(null);
     try {
-      await addProjectMember(projectId, userId);
-      setUserId('');
+      await addProjectMember(projectId, email.trim());
+      setEmail('');
       onOpenChange(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to add member');
+      const msg = err.response?.data?.email?.[0] || err.response?.data?.detail || err.message || 'Failed to add member';
+      setError(msg);
     } finally {
       setIsAdding(false);
     }
@@ -43,28 +44,28 @@ export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProj
               Add Project Member
             </Dialog.Title>
             <Dialog.Description className="text-sm text-muted">
-              Assign a new member to this project by their User ID.
+              Invite a registered user to this project by their email address.
             </Dialog.Description>
           </div>
           
           <div className="py-4 space-y-4">
             <Input
-              label="User ID"
-              placeholder="Enter User ID..."
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
+              label="User Email"
+              placeholder="collaborator@example.com"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              error={error || undefined}
             />
-            {error && <p className="text-sm text-error">{error}</p>}
             
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Role
               </label>
-              <select className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50">
-                <option value="Contributor" selected>Member</option>
-              </select>
-              <p className="text-xs text-muted mt-1">Roles are managed by the admin.</p>
+              <div className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                <span>Member</span>
+              </div>
+              <p className="text-xs text-muted mt-1">Invited users join as project members.</p>
             </div>
           </div>
 
@@ -72,7 +73,7 @@ export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProj
             <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={isAdding}>
               Cancel
             </Button>
-            <Button onClick={handleAdd} disabled={isAdding || !userId.trim()}>
+            <Button onClick={handleAdd} disabled={isAdding || !email.trim()}>
               {isAdding ? 'Adding...' : 'Add Member'}
             </Button>
           </div>

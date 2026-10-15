@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
+import { toast } from '@/stores/toastStore';
 import type { ProjectStatus, ProjectPriority } from '@/types/project';
 
 interface CreateProjectModalProps {
@@ -16,21 +17,27 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'Planning' as ProjectStatus,
-    priority: 'Medium' as ProjectPriority,
+    status: 'planned' as ProjectStatus,
+    priority: 'medium' as ProjectPriority,
     deadline: '',
   });
 
   const handleSubmit = async () => {
+    if (!formData.name.trim()) return;
     try {
-      // In a real app we would select the organization, but for now we hardcode it or pass it.
-      // Assuming organization_id is handled by the backend or we pass '1'.
-      await createProject({ ...formData, organization_id: '1' });
+      await createProject({
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        status: formData.status,
+        priority: formData.priority,
+        deadline: formData.deadline ? formData.deadline : null,
+      });
       onOpenChange(false);
-      setFormData({ name: '', description: '', status: 'Planning', priority: 'Medium', deadline: '' });
-    } catch (error) {
+      toast.success('Project created successfully!');
+      setFormData({ name: '', description: '', status: 'planned', priority: 'medium', deadline: '' });
+    } catch (error: any) {
       console.error(error);
-      alert('Failed to create project');
+      toast.error(error.response?.data?.name?.[0] || error.message || 'Failed to create project');
     }
   };
 
@@ -55,10 +62,11 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
             />
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Description
               </label>
               <textarea
@@ -71,33 +79,32 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Status
                 </label>
                 <select 
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value as ProjectStatus})}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                 >
-                  <option value="Planning">Planning</option>
-                  <option value="Active">Active</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Completed">Completed</option>
+                  <option value="planned">Planned</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Priority
                 </label>
                 <select 
                   value={formData.priority}
                   onChange={(e) => setFormData({...formData, priority: e.target.value as ProjectPriority})}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                 >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
                 </select>
               </div>
             </div>
@@ -114,7 +121,7 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} isLoading={isLoading}>
+            <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.name.trim()}>
               Create Project
             </Button>
           </div>

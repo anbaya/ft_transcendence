@@ -3,11 +3,11 @@ import { ArrowUpDown, CheckCircle2, MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { useAuthStore } from '@/stores/authStore';
 import type { Task } from '@/types/task';
 
 interface TaskTableProps {
   tasks: Task[];
+  showProjectName?: boolean;
   onViewDetails?: (task: Task) => void;
   onEdit?: (task: Task) => void;
   onDelete?: (task: Task) => void;
@@ -16,9 +16,7 @@ interface TaskTableProps {
 type SortField = 'title' | 'status' | 'priority' | 'deadline';
 type SortOrder = 'asc' | 'desc';
 
-export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableProps) {
-  const { user } = useAuthStore();
-  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdit, onDelete }: TaskTableProps) {
   const [sortField, setSortField] = useState<SortField>('deadline');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
@@ -41,16 +39,17 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
       case 'status':
         comparison = a.status.localeCompare(b.status);
         break;
-      case 'priority':
-        // Custom priority sort
-        const priorityOrder = { 'Urgent': 4, 'High': 3, 'Medium': 2, 'Low': 1 };
+      case 'priority': {
+        const priorityOrder: Record<string, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 };
         comparison = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
         break;
-      case 'deadline':
+      }
+      case 'deadline': {
         const dateA = a.deadline ? new Date(a.deadline).getTime() : 0;
         const dateB = b.deadline ? new Date(b.deadline).getTime() : 0;
         comparison = dateA - dateB;
         break;
+      }
     }
 
     return sortOrder === 'asc' ? comparison : -comparison;
@@ -58,19 +57,37 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'Done': return 'success';
-      case 'In Progress': return 'info';
-      case 'In Review': return 'warning';
+      case 'COMPLETED': return 'success';
+      case 'IN_PROGRESS': return 'warning';
+      case 'TODO': return 'default';
       default: return 'default';
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case 'COMPLETED': return 'Completed';
+      case 'IN_PROGRESS': return 'In Progress';
+      case 'TODO': return 'To Do';
+      default: return status || 'To Do';
     }
   };
 
   const getPriorityVariant = (priority: string) => {
     switch (priority) {
-      case 'Urgent':
-      case 'High': return 'error';
-      case 'Medium': return 'warning';
+      case 'HIGH': return 'destructive';
+      case 'MEDIUM': return 'warning';
+      case 'LOW': return 'default';
       default: return 'default';
+    }
+  };
+
+  const formatPriority = (priority: string) => {
+    switch (priority) {
+      case 'HIGH': return 'High';
+      case 'MEDIUM': return 'Medium';
+      case 'LOW': return 'Low';
+      default: return priority || 'Medium';
     }
   };
 
@@ -80,7 +97,7 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
         <CheckCircle2 className="mx-auto h-12 w-12 text-muted/50" />
         <h3 className="mt-4 text-lg font-semibold text-primary">No tasks found</h3>
         <p className="mt-2 text-sm text-muted max-w-sm">
-          No tasks match your current filters. Try adjusting your search or clear filters.
+          No tasks match your current criteria.
         </p>
       </div>
     );
@@ -100,6 +117,11 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
                 <ArrowUpDown className="h-3 w-3" />
               </div>
             </th>
+            {showProjectName && (
+              <th className="px-6 py-3 font-medium hidden sm:table-cell">
+                Project
+              </th>
+            )}
             <th 
               className="px-6 py-3 font-medium cursor-pointer hover:text-primary transition-colors select-none hidden sm:table-cell"
               onClick={() => handleSort('status')}
@@ -118,6 +140,9 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
                 <ArrowUpDown className="h-3 w-3" />
               </div>
             </th>
+            <th className="px-6 py-3 font-medium hidden md:table-cell">
+              Assignee
+            </th>
             <th 
               className="px-6 py-3 font-medium cursor-pointer hover:text-primary transition-colors select-none hidden lg:table-cell"
               onClick={() => handleSort('deadline')}
@@ -135,18 +160,36 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
             <tr key={task.id} className="hover:bg-slate-50/50 transition-colors group">
               <td className="px-6 py-4">
                 <p className="font-medium text-primary">{task.title}</p>
-                <p className="text-xs text-muted mt-1 truncate max-w-xs">{task.description}</p>
+                {task.description && (
+                  <p className="text-xs text-muted mt-1 truncate max-w-xs">{task.description}</p>
+                )}
                 {/* Mobile view metadata */}
                 <div className="flex sm:hidden gap-2 mt-2">
-                  <Badge variant={getStatusVariant(task.status)} className="text-[10px]">{task.status}</Badge>
-                  <Badge variant={getPriorityVariant(task.priority)} className="text-[10px]">{task.priority}</Badge>
+                  <Badge variant={getStatusVariant(task.status) as any} className="text-[10px]">
+                    {formatStatus(task.status)}
+                  </Badge>
+                  <Badge variant={getPriorityVariant(task.priority) as any} className="text-[10px]">
+                    {formatPriority(task.priority)}
+                  </Badge>
                 </div>
               </td>
+              {showProjectName && (
+                <td className="px-6 py-4 hidden sm:table-cell text-muted">
+                  {task.project_name || `Project ${task.project_id}`}
+                </td>
+              )}
               <td className="px-6 py-4 hidden sm:table-cell">
-                <Badge variant={getStatusVariant(task.status)}>{task.status}</Badge>
+                <Badge variant={getStatusVariant(task.status) as any}>
+                  {formatStatus(task.status)}
+                </Badge>
               </td>
               <td className="px-6 py-4 hidden md:table-cell">
-                <Badge variant={getPriorityVariant(task.priority)}>{task.priority}</Badge>
+                <Badge variant={getPriorityVariant(task.priority) as any}>
+                  {formatPriority(task.priority)}
+                </Badge>
+              </td>
+              <td className="px-6 py-4 hidden md:table-cell text-muted">
+                {task.assignee_name || task.assignee_email || (task.assignee_id ? `User ${task.assignee_id}` : 'Unassigned')}
               </td>
               <td className="px-6 py-4 hidden lg:table-cell text-muted">
                 {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}
@@ -166,18 +209,20 @@ export function TaskTable({ tasks, onViewDetails, onEdit, onDelete }: TaskTableP
                       >
                         View Details
                       </DropdownMenu.Item>
-                      {canManage && (
+                      {onEdit && (
+                        <DropdownMenu.Item 
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
+                          onClick={() => onEdit(task)}
+                        >
+                          Edit Task
+                        </DropdownMenu.Item>
+                      )}
+                      {onDelete && (
                         <>
-                          <DropdownMenu.Item 
-                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
-                            onClick={() => onEdit && onEdit(task)}
-                          >
-                            Edit Task
-                          </DropdownMenu.Item>
                           <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
                           <DropdownMenu.Item 
                             className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
-                            onClick={() => onDelete && onDelete(task)}
+                            onClick={() => onDelete(task)}
                           >
                             Delete
                           </DropdownMenu.Item>

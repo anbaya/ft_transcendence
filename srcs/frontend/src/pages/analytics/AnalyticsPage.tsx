@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
     const counts: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
     
     tasks.forEach((task) => {
-      if (task.status === 'Done') {
+      if (task.status === 'COMPLETED') {
         const date = new Date(task.updated_at || task.created_at);
         const dayIndex = (date.getDay() + 6) % 7; // Convert to Mon=0 ... Sun=6
         const dayName = daysOfWeek[dayIndex];
@@ -98,14 +98,15 @@ export default function AnalyticsPage() {
       .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
       .slice(0, 5)
       .map((task) => {
-        const isDone = task.status === 'Done';
-        const action = isDone ? 'completed' : task.status === 'In Progress' ? 'updated' : 'created';
+        const isDone = task.status === 'COMPLETED';
+        const isInProgress = task.status === 'IN_PROGRESS';
+        const action = isDone ? 'completed' : isInProgress ? 'updated' : 'created';
         // Inner return: transforms each individual task into an activity feed object
         return {
           id: task.id,
           task: task.title,
           action,
-          status: task.status,
+          status: task.status.replace('_', ' '),
           time: new Date(task.updated_at || task.created_at).toLocaleDateString(),
         };
       });

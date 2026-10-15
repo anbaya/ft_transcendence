@@ -19,7 +19,10 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   
   // Format the timestamp for display (e.g., 10:30 AM)
-  const formattedTime = new Date(message.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timestamp = message.created_at || message.sent_at;
+  const formattedTime = timestamp
+    ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '';
 
   return (
     // Align message to the right for the current user, left for others

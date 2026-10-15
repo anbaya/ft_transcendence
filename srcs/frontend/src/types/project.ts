@@ -1,23 +1,28 @@
-export type ProjectStatus = 'Planning' | 'Active' | 'On Hold' | 'Completed';
-export type ProjectPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+export type ProjectStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
+export type ProjectPriority = 'low' | 'medium' | 'high';
 
 export interface Project {
-  id: string;
+  id: number | string;
   name: string;
-  description: string;
-  start_date: string;
-  organization_id: string;
-  deadline: string;
+  description?: string | null;
+  start_date?: string | null;
+  deadline?: string | null;
   status: ProjectStatus;
   priority: ProjectPriority;
+  created_by: number | string;
+  chat_sync_status?: 'pending' | 'ready' | 'failed';
   created_at: string;
   updated_at: string;
-  created_by: string;
 }
 
 export interface ProjectMember {
-  id: string;
+  id: number | string;
+  project?: number | string;
+  project_id?: number | string;
+  user_id: number | string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role?: 'PROJECT_MANAGER' | 'MEMBER';
   joined_at: string;
-  project_id: string;
-  user_id: string;
 }

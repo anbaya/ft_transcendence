@@ -8,12 +8,13 @@ interface TaskState {
   isLoading: boolean;
   error: string | null;
 
-  fetchProjectTasks: (projectId: string) => Promise<void>;
+  fetchProjectTasks: (projectId: string | number) => Promise<void>;
   fetchMyTasks: () => Promise<void>;
-  createTask: (projectId: string, data: Partial<Task>) => Promise<Task>;
-  updateTaskStatus: (taskId: string, status: TaskStatus) => Promise<void>;
-  updateTaskAssignee: (taskId: string, assigneeId: string) => Promise<void>;
-  deleteTask: (taskId: string) => Promise<void>;
+  createTask: (projectId: string | number, data: Partial<Task>) => Promise<Task>;
+  updateTask: (taskId: string | number, data: Partial<Task>) => Promise<Task>;
+  updateTaskStatus: (taskId: string | number, status: TaskStatus) => Promise<void>;
+  updateTaskAssignee: (taskId: string | number, assigneeId: string | number | null) => Promise<void>;
+  deleteTask: (taskId: string | number) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskState>((set) => ({
@@ -22,7 +23,7 @@ export const useTaskStore = create<TaskState>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchProjectTasks: async (projectId: string) => {
+  fetchProjectTasks: async (projectId: string | number) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.get<Task[]>(`/api/tasks/projects/${projectId}/tasks/`);
@@ -42,7 +43,7 @@ export const useTaskStore = create<TaskState>((set) => ({
     }
   },
 
-  createTask: async (projectId: string, data: Partial<Task>) => {
+  createTask: async (projectId: string | number, data: Partial<Task>) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.post<Task>(`/api/tasks/projects/${projectId}/tasks/`, data);
@@ -57,21 +58,42 @@ export const useTaskStore = create<TaskState>((set) => ({
     }
   },
 
-  updateTaskStatus: async (taskId: string, status: TaskStatus) => {
-    // Map UI statuses to backend enums
-    const statusMap: Record<TaskStatus, string> = {
-      'Todo': 'TODO',
-      'In Progress': 'IN_PROGRESS',
-      'In Review': 'IN_PROGRESS', // Backend doesn't have 'In Review', map to 'IN_PROGRESS'
-      'Done': 'COMPLETED'
-    };
-    const backendStatus = statusMap[status] || 'TODO';
+  updateTask: async (taskId: string | number, data: Partial<Task>) => {
+    set({ isLoading: true, error: null });
+    try {
+      let response;
+      try {
+        response = await apiClient.patch<Task>(`/api/tasks/${taskId}/`, data);
+      } catch (err) {
+        response = await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/`, data);
+      }
+      set((state) => ({
+        tasks: state.tasks.map((t) => String(t.id) === String(taskId) ? response.data : t),
+        myTasks: state.myTasks.map((t) => String(t.id) === String(taskId) ? response.data : t),
+        isLoading: false,
+      }));
+      return response.data;
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update task', isLoading: false });
+      throw error;
+    }
+  },
+
+  updateTaskStatus: async (taskId: string | number, status: TaskStatus) => {
+    // Backend expects 'TODO' | 'IN_PROGRESS' | 'COMPLETED'
+    const validStatus: TaskStatus =
+      status === 'COMPLETED' ? 'COMPLETED' :
+      status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'TODO';
 
     try {
-      const response = await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/status/`, { status: backendStatus });
+      try {
+        await apiClient.patch<Task>(`/api/tasks/${taskId}/status/`, { status: validStatus });
+      } catch (err) {
+        await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/status/`, { status: validStatus });
+      }
       set((state) => ({
-        tasks: state.tasks.map((t) => t.id === taskId ? response.data : t),
-        myTasks: state.myTasks.map((t) => t.id === taskId ? response.data : t),
+        tasks: state.tasks.map((t) => String(t.id) === String(taskId) ? { ...t, status: validStatus } : t),
+        myTasks: state.myTasks.map((t) => String(t.id) === String(taskId) ? { ...t, status: validStatus } : t),
       }));
     } catch (error: any) {
       set({ error: error.message || 'Failed to update status' });
@@ -79,12 +101,18 @@ export const useTaskStore = create<TaskState>((set) => ({
     }
   },
 
-  updateTaskAssignee: async (taskId: string, assigneeId: string) => {
+  updateTaskAssignee: async (taskId: string | number, assigneeId: string | number | null) => {
     try {
-      const response = await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/assignee/`, { assignee_id: assigneeId });
+      let response;
+      const payload = { assignee_id: assigneeId ? Number(assigneeId) : null };
+      try {
+        response = await apiClient.patch<Task>(`/api/tasks/${taskId}/assignee/`, payload);
+      } catch (err) {
+        response = await apiClient.patch<Task>(`/api/tasks/tasks/${taskId}/assignee/`, payload);
+      }
       set((state) => ({
-        tasks: state.tasks.map((t) => t.id === taskId ? response.data : t),
-        myTasks: state.myTasks.map((t) => t.id === taskId ? response.data : t),
+        tasks: state.tasks.map((t) => String(t.id) === String(taskId) ? response.data : t),
+        myTasks: state.myTasks.map((t) => String(t.id) === String(taskId) ? response.data : t),
       }));
     } catch (error: any) {
       set({ error: error.message || 'Failed to update assignee' });
@@ -92,12 +120,16 @@ export const useTaskStore = create<TaskState>((set) => ({
     }
   },
 
-  deleteTask: async (taskId: string) => {
+  deleteTask: async (taskId: string | number) => {
     try {
-      await apiClient.delete(`/api/tasks/tasks/${taskId}/`);
+      try {
+        await apiClient.delete(`/api/tasks/${taskId}/`);
+      } catch (err) {
+        await apiClient.delete(`/api/tasks/tasks/${taskId}/`);
+      }
       set((state) => ({
-        tasks: state.tasks.filter((t) => t.id !== taskId),
-        myTasks: state.myTasks.filter((t) => t.id !== taskId),
+        tasks: state.tasks.filter((t) => String(t.id) !== String(taskId)),
+        myTasks: state.myTasks.filter((t) => String(t.id) !== String(taskId)),
       }));
     } catch (error: any) {
       set({ error: error.message || 'Failed to delete task' });

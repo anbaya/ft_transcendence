@@ -10,6 +10,8 @@ export function AIMessageInput() {
   const sendMessage = useAIStore((state) => state.sendMessage);
   const isTyping = useAIStore((state) => state.isTyping);
 
+  const selectedProjectId = useAIStore((state) => state.selectedProjectId);
+
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -42,7 +44,11 @@ export function AIMessageInput() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask AI assistant about your project..."
+            placeholder={
+              selectedProjectId 
+                ? "Ask about tasks, members, or documents in this project..." 
+                : "Ask AI anything (code, debugging, concepts)..."
+            }
             className="w-full max-h-[200px] min-h-[52px] bg-transparent resize-none py-3.5 pl-4 pr-12 focus:outline-none text-sm leading-relaxed"
             rows={1}
             disabled={isTyping}
@@ -64,21 +70,41 @@ export function AIMessageInput() {
       
       <div className="flex items-center justify-between px-2 mt-2">
         <div className="flex gap-2">
-          {/* Mock prompt suggestions */}
-          <button 
-            type="button" 
-            onClick={() => setContent("Summarize the latest project updates")}
-            className="text-[10px] font-medium text-secondary bg-secondary/10 hover:bg-secondary/20 px-2 py-1 rounded-full transition-colors"
-          >
-            Summarize project
-          </button>
-          <button 
-            type="button" 
-            onClick={() => setContent("What are my pending tasks?")}
-            className="text-[10px] font-medium text-secondary bg-secondary/10 hover:bg-secondary/20 px-2 py-1 rounded-full transition-colors hidden sm:block"
-          >
-            Pending tasks
-          </button>
+          {selectedProjectId ? (
+            <>
+              <button 
+                type="button" 
+                onClick={() => setContent("What are the pending tasks for this project?")}
+                className="text-[10px] font-medium text-secondary bg-secondary/10 hover:bg-secondary/20 px-2 py-1 rounded-full transition-colors"
+              >
+                Pending tasks
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setContent("Summarize the project members and documents")}
+                className="text-[10px] font-medium text-secondary bg-secondary/10 hover:bg-secondary/20 px-2 py-1 rounded-full transition-colors hidden sm:block"
+              >
+                Team & docs
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                type="button" 
+                onClick={() => setContent("Explain REST vs WebSocket architecture")}
+                className="text-[10px] font-medium text-secondary bg-secondary/10 hover:bg-secondary/20 px-2 py-1 rounded-full transition-colors"
+              >
+                REST vs WebSockets
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setContent("How do microservices communicate securely?")}
+                className="text-[10px] font-medium text-secondary bg-secondary/10 hover:bg-secondary/20 px-2 py-1 rounded-full transition-colors hidden sm:block"
+              >
+                Microservices security
+              </button>
+            </>
+          )}
         </div>
         <div className="text-[10px] text-muted-foreground flex items-center gap-1 hidden sm:flex">
           <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border/50 text-[9px] font-sans">Enter</kbd> to send

@@ -1,100 +1,139 @@
 import { useAuthStore } from '@/stores/authStore';
 
-type EventCallback = (data: any) => void;
+type MessageHandler = (data: any) => void;
 
-class WebSocketClient {
+export class ProjectWebSocketClient {
   private ws: WebSocket | null = null;
-  private url: string;
+  private projectId: string | number;
+  private onMessageCallback: MessageHandler;
+  private onStatusChange?: (status: 'connected' | 'disconnected' | 'connecting') => void;
+  private reconnectTimeout: any = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 3000;
-  private listeners: Map<string, Set<EventCallback>> = new Map();
-  private isConnecting = false;
+  private isExplicitlyClosed = false;
 
-  constructor(url: string) {
-    this.url = url;
+  constructor(
+    projectId: string | number,
+    onMessage: MessageHandler,
+    onStatusChange?: (status: 'connected' | 'disconnected' | 'connecting') => void
+  ) {
+    this.projectId = projectId;
+    this.onMessageCallback = onMessage;
+    this.onStatusChange = onStatusChange;
   }
 
   public connect() {
-    if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
-    
-    this.isConnecting = true;
+    this.isExplicitlyClosed = false;
     const token = useAuthStore.getState().token;
-    
-    // Add token to URL if we have one
-    const wsUrl = token ? `${this.url}?token=${token}` : this.url;
+    if (!token) {
+      console.warn('Cannot connect to WebSocket without auth token');
+      return;
+    }
 
-    this.ws = new WebSocket(wsUrl);
+    if (this.ws?.readyState === WebSocket.OPEN) return;
 
-    this.ws.onopen = () => {
-      console.log('WebSocket connected');
-      this.isConnecting = false;
-      this.reconnectAttempts = 0;
-    };
+    this.onStatusChange?.('connecting');
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws/projects/${this.projectId}/chat/?token=${encodeURIComponent(token)}`;
 
-    this.ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type && this.listeners.has(data.type)) {
-          this.listeners.get(data.type)?.forEach(callback => callback(data.payload));
+    try {
+      this.ws = new WebSocket(wsUrl);
+
+      this.ws.onopen = () => {
+        console.log(`WebSocket connected for project ${this.projectId}`);
+        this.reconnectAttempts = 0;
+        this.onStatusChange?.('connected');
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          // Backend sends { type: 'chat_message', id, sender_id, sender_name, message, created_at }
+          if (data.type === 'chat_message') {
+            this.onMessageCallback({
+              id: data.id,
+              conversation: Number(this.projectId),
+              sender_id: data.sender_id,
+              sender_name: data.sender_name,
+              content: data.message,
+              created_at: data.created_at,
+            });
+          } else {
+            this.onMessageCallback(data);
+          }
+        } catch (err) {
+          console.error('WebSocket parse error:', err);
         }
-      } catch (err) {
-        console.error('WebSocket message parse error:', err);
-      }
-    };
+      };
 
-    this.ws.onclose = () => {
-      this.isConnecting = false;
+      this.ws.onclose = () => {
+        this.onStatusChange?.('disconnected');
+        if (!this.isExplicitlyClosed) {
+          this.handleReconnect();
+        }
+      };
+
+      this.ws.onerror = (err) => {
+        console.error(`WebSocket error for project ${this.projectId}:`, err);
+      };
+    } catch (err) {
+      console.error('Failed to instantiate WebSocket:', err);
       this.handleReconnect();
-    };
-
-    this.ws.onerror = (error) => {
-      this.isConnecting = false;
-      console.error('WebSocket error:', error);
-      // The onclose event will fire and handle reconnection
-    };
+    }
   }
 
   private handleReconnect() {
+    if (this.isExplicitlyClosed) return;
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`WebSocket reconnecting... Attempt ${this.reconnectAttempts}`);
-      setTimeout(() => this.connect(), this.reconnectInterval);
+      this.reconnectTimeout = setTimeout(() => {
+        this.connect();
+      }, this.reconnectInterval);
+    }
+  }
+
+  public sendMessage(text: string) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      // Backend expects { "message": "text" }
+      this.ws.send(JSON.stringify({ message: text.trim() }));
     } else {
-      console.error('WebSocket max reconnect attempts reached');
+      console.error('Cannot send message: WebSocket is not open');
     }
   }
 
   public disconnect() {
+    this.isExplicitlyClosed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
-  }
-
-  public send(type: string, payload: any) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ type, payload }));
-    } else {
-      console.error('WebSocket is not connected');
-    }
-  }
-
-  public on(event: string, callback: EventCallback) {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
-    this.listeners.get(event)?.add(callback);
-    
-    // Return unsubscribe function
-    return () => {
-      this.listeners.get(event)?.delete(callback);
-    };
+    this.onStatusChange?.('disconnected');
   }
 }
 
-// Determine WS URL based on current host (assume wss:// if https)
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsHost = import.meta.env.VITE_WS_URL || `${protocol}//${window.location.host}/ws/`;
+// Factory function
+export function createProjectWebSocket(
+  projectId: string | number,
+  onMessage: MessageHandler,
+  onStatusChange?: (status: 'connected' | 'disconnected' | 'connecting') => void
+) {
+  const client = new ProjectWebSocketClient(projectId, onMessage, onStatusChange);
+  client.connect();
+  return client;
+}
 
-export const wsClient = new WebSocketClient(wsHost);
+// Compatibility singleton
+class LegacyWebSocketClient {
+  public connect() {}
+  public disconnect() {}
+  public send(_type: string, _payload: any) {}
+  public on(_event: string, _cb: any) { return () => {}; }
+}
+
+export const wsClient = new LegacyWebSocketClient();

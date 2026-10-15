@@ -14,7 +14,21 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const { user } = useAuthStore();
-  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+  const canManage = user?.role === 'ADMIN' || String(project.created_by) === String(user?.id);
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'in_progress': return 'warning';
+      case 'cancelled': return 'destructive';
+      default: return 'default';
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    if (!status) return 'Planned';
+    return status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  };
 
   return (
     <div className="flex flex-col justify-between rounded-lg border border-border bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group">
@@ -25,10 +39,10 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <Badge 
-              variant={project.status === 'Completed' ? 'success' : project.status === 'On Hold' ? 'warning' : 'default'} 
+              variant={getStatusVariant(project.status) as any} 
               className="text-xs"
             >
-              {project.status}
+              {formatStatus(project.status)}
             </Badge>
             {canManage && (
               <DropdownMenu.Root>
@@ -69,8 +83,8 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
       
       <div className="mt-6 flex flex-col gap-4">
         <div className="flex justify-between text-xs text-muted">
-          <span>Priority: {project.priority}</span>
-          <span>Due: {new Date(project.deadline).toLocaleDateString()}</span>
+          <span className="capitalize">Priority: {project.priority}</span>
+          <span>Due: {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline'}</span>
         </div>
         <Link to={`/projects/${project.id}`}>
           <Button variant="secondary" className="w-full group-hover:bg-indigo-50 transition-colors">

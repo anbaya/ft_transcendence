@@ -2,12 +2,13 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useProjectStore } from '@/stores/projectStore';
+import { toast } from '@/stores/toastStore';
 
 interface DeleteProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectName: string;
-  projectId: string;
+  projectId: string | number;
 }
 
 export function DeleteProjectModal({ open, onOpenChange, projectName, projectId }: DeleteProjectModalProps) {
@@ -17,11 +18,12 @@ export function DeleteProjectModal({ open, onOpenChange, projectName, projectId 
     try {
       if (projectId) {
         await deleteProject(projectId);
+        toast.success('Project deleted successfully');
         onOpenChange(false);
       }
     } catch (error) {
       console.error(error);
-      alert('Failed to delete project');
+      toast.error('Failed to delete project');
     }
   };
   return (

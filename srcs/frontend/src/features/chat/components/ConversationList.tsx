@@ -15,8 +15,8 @@ interface ConversationListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   conversations: ChatThread[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedId: string | number | null;
+  onSelect: (id: string | number) => void;
 }
 
 export function ConversationList({ 
@@ -66,7 +66,7 @@ export function ConversationList({
                 <button
                   onClick={() => onSelect(conv.id)}
                   className={`w-full text-left p-4 flex items-start gap-3 transition-colors hover:bg-slate-50 ${
-                    selectedId === conv.id ? 'bg-slate-50 border-l-2 border-primary' : 'border-l-2 border-transparent'
+                    String(selectedId) === String(conv.id) ? 'bg-slate-50 border-l-2 border-primary' : 'border-l-2 border-transparent'
                   }`}
                 >
                   <Avatar 

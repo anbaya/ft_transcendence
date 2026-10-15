@@ -2,12 +2,13 @@ import React, { useCallback, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { UploadCloud, X, File as FileIcon, CheckCircle2 } from 'lucide-react';
 import { useDocumentStore } from '@/stores/documentStore';
+import { toast } from '@/stores/toastStore';
 import { cn } from '@/utils/cn';
 
 interface UploadModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId?: string;
+  projectId?: string | number;
 }
 
 export function UploadModal({ isOpen, onOpenChange, projectId }: UploadModalProps) {
@@ -29,17 +30,39 @@ export function UploadModal({ isOpen, onOpenChange, projectId }: UploadModalProp
     setDragging(false);
     
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      await uploadFile(files[0], projectId);
-      setTimeout(() => onOpenChange(false), 800); // Close shortly after completion
+    if (files.length > 0 && projectId) {
+      try {
+        await uploadFile(files[0], projectId);
+        toast.success('Document uploaded successfully!');
+        setTimeout(() => onOpenChange(false), 800); // Close shortly after completion
+      } catch (err: any) {
+        const errMsg =
+          err?.response?.data?.file?.[0] ||
+          err?.response?.data?.name?.[0] ||
+          err?.response?.data?.detail ||
+          err?.message ||
+          'Failed to upload document';
+        toast.error(errMsg);
+      }
     }
   }, [setDragging, uploadFile, projectId, onOpenChange]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      await uploadFile(files[0], projectId);
-      setTimeout(() => onOpenChange(false), 800);
+    if (files && files.length > 0 && projectId) {
+      try {
+        await uploadFile(files[0], projectId);
+        toast.success('Document uploaded successfully!');
+        setTimeout(() => onOpenChange(false), 800);
+      } catch (err: any) {
+        const errMsg =
+          err?.response?.data?.file?.[0] ||
+          err?.response?.data?.name?.[0] ||
+          err?.response?.data?.detail ||
+          err?.message ||
+          'Failed to upload document';
+        toast.error(errMsg);
+      }
     }
   };
 
@@ -75,7 +98,7 @@ export function UploadModal({ isOpen, onOpenChange, projectId }: UploadModalProp
               className="hidden"
               ref={fileInputRef}
               onChange={handleFileSelect}
-              accept=".pdf,.png,.jpg,.jpeg,.fig,.md,.txt,.doc,.docx"
+              accept=".pdf,.docx,.txt,.csv,.xlsx,.png,.jpg,.jpeg"
             />
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm mb-4">
               <UploadCloud className="h-6 w-6 text-secondary" />
@@ -84,7 +107,7 @@ export function UploadModal({ isOpen, onOpenChange, projectId }: UploadModalProp
               Click to upload <span className="font-normal text-muted">or drag and drop</span>
             </p>
             <p className="text-xs text-muted/80">
-              PDF, PNG, JPG, MD, TXT (max. 10MB)
+              PDF, DOCX, TXT, CSV, XLSX, PNG, JPG (max. 10MB)
             </p>
           </div>
 

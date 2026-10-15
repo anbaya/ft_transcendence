@@ -91,14 +91,12 @@ export function ChatWindow({
           ) : (
             // Map through messages and render individual bubbles
             messages.map((msg, idx) => {
-              const isCurrentUser = msg.sender_id === currentUserId;
+              const isCurrentUser = String(msg.sender_id) === String(currentUserId);
               
               // Only show avatar for the last message in a consecutive group from the same sender
-              const isLastInGroup = idx === messages.length - 1 || messages[idx + 1].sender_id !== msg.sender_id;
+              const isLastInGroup = idx === messages.length - 1 || String(messages[idx + 1].sender_id) !== String(msg.sender_id);
               
-              // We'd typically look up the sender's real name based on sender_id.
-              // For mock purposes, if it's the current user, it's "You", otherwise it's the conversation partner.
-              const senderName = isCurrentUser ? 'You' : conversation.name;
+              const senderName = isCurrentUser ? 'You' : (msg.sender_name || conversation.name);
               
               return (
                 <MessageBubble 

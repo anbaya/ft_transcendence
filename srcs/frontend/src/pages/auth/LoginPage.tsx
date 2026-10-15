@@ -35,19 +35,18 @@ export default function LoginPage() {
     setGlobalError(null);
     try {
       const response = await apiClient.post('/api/auth/login/', data);
-      
-      // Typically Django Rest Framework SimpleJWT returns { access: '...', refresh: '...' }
-      // The user data might be included if it's a custom view, otherwise we'd fetch /api/auth/me/
-      const { access, user } = response.data;
+      const { access, refresh } = response.data;
       
       if (!access) {
         throw new Error('No access token received');
       }
 
-      login(
-        user || { id: 'unknown', email: data.email, first_name: data.email.split('@')[0], last_name: '' },
-        access
-      );
+      // Fetch user profile from /api/auth/me/ using the access token
+      const meResponse = await apiClient.get('/api/auth/me/', {
+        headers: { Authorization: `Bearer ${access}` },
+      });
+
+      login(meResponse.data, access, refresh);
       
       navigate('/dashboard');
     } catch (err: any) {

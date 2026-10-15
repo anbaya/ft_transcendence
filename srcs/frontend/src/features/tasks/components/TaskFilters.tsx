@@ -1,5 +1,4 @@
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
-
 import { Button } from '@/components/ui/Button';
 
 interface TaskFiltersProps {
@@ -45,10 +44,9 @@ export function TaskFilters({
             className="h-10 rounded-md border border-border bg-white px-3 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
           >
             <option value="All">All Statuses</option>
-            <option value="Todo">Todo</option>
-            <option value="In Progress">In Progress</option>
-            <option value="In Review">In Review</option>
-            <option value="Done">Done</option>
+            <option value="TODO">To Do</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
           </select>
         </div>
 
@@ -61,10 +59,9 @@ export function TaskFilters({
             className="h-10 rounded-md border border-border bg-white px-3 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
           >
             <option value="All">All Priorities</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
           </select>
         </div>
 

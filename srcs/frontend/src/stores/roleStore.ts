@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Role, RolePermission, UpdateRolePayload } from '@/types/role';
+import type { Role, UpdateRolePayload } from '@/types/role';
 import apiClient from '@/services/api/client';
 
 interface RoleState {

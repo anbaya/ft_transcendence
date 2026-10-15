@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   // Simple, clean metrics
   const totalTasks = myTasks.length;
-  const completedTasks = myTasks.filter((t) => t.status === 'Done').length;
+  const completedTasks = myTasks.filter((t) => t.status === 'COMPLETED').length;
   const pendingTasks = totalTasks - completedTasks;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 

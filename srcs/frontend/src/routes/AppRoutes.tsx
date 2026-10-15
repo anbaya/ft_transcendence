@@ -17,8 +17,6 @@ import ProjectsPage from '@/pages/projects/ProjectsPage';
 import ProjectDetailsPage from '@/pages/projects/ProjectDetailsPage';
 import TasksPage from '@/pages/tasks/TasksPage';
 import ChatPage from '@/pages/chat/ChatPage';
-import OrganizationListPage from '@/pages/organizations/OrganizationListPage';
-import OrganizationDetailsPage from '@/pages/organizations/OrganizationDetailsPage';
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { DocumentsPage } from '@/pages/documents/DocumentsPage';
 import AIAssistantPage from '@/pages/ai/AIAssistantPage';
@@ -49,8 +47,6 @@ export default function AppRoutes() {
           
           {/* Core feature routes */}
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/organizations" element={<OrganizationListPage />} />
-          <Route path="/organizations/:id" element={<OrganizationDetailsPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:id" element={<ProjectDetailsPage />} />
           <Route path="/tasks" element={<TasksPage />} />

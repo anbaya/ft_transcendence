@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Camera, Save, LogOut, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '@/services/api/client';
+import { toast } from '@/stores/toastStore';
 
 export default function ProfilePage() {
   const { user, logout } = useAuthStore();
@@ -30,11 +31,11 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const response = await apiClient.patch('/api/auth/me/', formData);
-      const { token, login } = useAuthStore.getState();
-      if (token) login(response.data, token);
-      alert('Profile updated successfully!');
+      const { token, refreshToken, login } = useAuthStore.getState();
+      if (token) login(response.data, token, refreshToken);
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to update profile');
+      toast.error(error.response?.data?.detail || 'Failed to update profile');
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +44,7 @@ export default function ProfilePage() {
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
     setIsLoading(true);
@@ -53,9 +54,9 @@ export default function ProfilePage() {
         new_password: passwordData.newPassword,
       });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      alert('Password updated successfully!');
+      toast.success('Password updated successfully!');
     } catch (error: any) {
-      alert(error.response?.data?.non_field_errors?.[0] || error.response?.data?.old_password?.[0] || 'Failed to update password');
+      toast.error(error.response?.data?.non_field_errors?.[0] || error.response?.data?.old_password?.[0] || 'Failed to update password');
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +95,7 @@ export default function ProfilePage() {
               
               <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                 <Shield className="h-4 w-4" />
-                {user?.role === 'ADMIN' ? 'Administrator' : 'Project Manager'}
+                {user?.role === 'ADMIN' ? 'Administrator' : 'Member'}
               </div>
             </CardContent>
           </Card>

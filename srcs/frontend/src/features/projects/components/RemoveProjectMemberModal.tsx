@@ -3,15 +3,17 @@ import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useProjectStore } from '@/stores/projectStore';
 import { useState } from 'react';
+import { toast } from '@/stores/toastStore';
 
 interface RemoveProjectMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  memberId: string;
-  projectId: string;
+  memberId: string | number;
+  projectId: string | number;
+  memberName?: string;
 }
 
-export function RemoveProjectMemberModal({ open, onOpenChange, memberId, projectId }: RemoveProjectMemberModalProps) {
+export function RemoveProjectMemberModal({ open, onOpenChange, memberId, projectId, memberName }: RemoveProjectMemberModalProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { removeProjectMember } = useProjectStore();
 
@@ -20,9 +22,11 @@ export function RemoveProjectMemberModal({ open, onOpenChange, memberId, project
     setIsDeleting(true);
     try {
       await removeProjectMember(projectId, memberId);
+      toast.success('Member removed from project');
       onOpenChange(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.response?.data?.detail || err.message || 'Failed to remove member');
     } finally {
       setIsDeleting(false);
     }
@@ -41,7 +45,7 @@ export function RemoveProjectMemberModal({ open, onOpenChange, memberId, project
               </Dialog.Title>
             </div>
             <Dialog.Description className="text-sm text-muted">
-              Are you sure you want to remove the member with ID <span className="font-medium text-primary">{memberId}</span> from this project? 
+              Are you sure you want to remove <span className="font-semibold text-primary">{memberName || 'this member'}</span> from this project? 
               They will no longer have access to this project's tasks and documents.
             </Dialog.Description>
           </div>

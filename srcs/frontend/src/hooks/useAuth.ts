@@ -11,7 +11,7 @@ export function useAuth() {
 
     const initializeAuth = async () => {
       // Read directly from the store state to avoid dependency loops in useEffect
-      const { token, isAuthenticated, login } = useAuthStore.getState();
+      const { token, refreshToken, isAuthenticated, login } = useAuthStore.getState();
       
       // If the app boots up and Zustand persist has loaded a token
       if (token && isAuthenticated) {
@@ -20,8 +20,8 @@ export function useAuth() {
           const response = await apiClient.get('/api/auth/me/');
           
           if (mounted) {
-            // Update the store with the fresh user data, keep the token
-            login(response.data, token);
+            // Update the store with the fresh user data and preserve tokens
+            login(response.data, token, refreshToken);
           }
         } catch (error) {
           // If this fails (e.g. 401 Unauthorized), the interceptor in apiClient.ts

@@ -1,10 +1,14 @@
 export interface Document {
-  id: string;
-  project_id?: string;
-  uploader_id: string;
-  filename: string;
-  file_type: string;
-  file_size: number;
-  storage_path: string;
+  id: number | string;
+  project_id: number | string;
+  project_name?: string;
+  uploaded_by_id?: number | string;
+  uploaded_by_name?: string;
+  name: string;
+  file: string;
   uploaded_at: string;
+  // Fallbacks for compatibility
+  filename?: string;
+  file_size?: number;
+  file_type?: string;
 }

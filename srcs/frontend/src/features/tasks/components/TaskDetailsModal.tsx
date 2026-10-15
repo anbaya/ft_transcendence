@@ -12,7 +12,7 @@ interface TaskDetailsModalProps {
   task?: Task;
   onEditClick: () => void;
   onDeleteClick: () => void;
-  onStatusChange?: (taskId: string, status: TaskStatus) => Promise<void>;
+  onStatusChange?: (taskId: string | number, status: TaskStatus) => Promise<void>;
 }
 
 export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDeleteClick, onStatusChange }: TaskDetailsModalProps) {
@@ -23,21 +23,41 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'Done': return 'success';
-      case 'In Progress': return 'info';
-      case 'In Review': return 'warning';
+      case 'COMPLETED': return 'success';
+      case 'IN_PROGRESS': return 'warning';
+      case 'TODO': return 'default';
       default: return 'default';
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case 'COMPLETED': return 'Completed';
+      case 'IN_PROGRESS': return 'In Progress';
+      case 'TODO': return 'To Do';
+      default: return status || 'To Do';
     }
   };
 
   const getPriorityVariant = (priority: string) => {
     switch (priority) {
-      case 'Urgent':
-      case 'High': return 'error';
-      case 'Medium': return 'warning';
+      case 'HIGH': return 'destructive';
+      case 'MEDIUM': return 'warning';
+      case 'LOW': return 'default';
       default: return 'default';
     }
   };
+
+  const formatPriority = (priority: string) => {
+    switch (priority) {
+      case 'HIGH': return 'High';
+      case 'MEDIUM': return 'Medium';
+      case 'LOW': return 'Low';
+      default: return priority || 'Medium';
+    }
+  };
+
+  const statuses: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -50,30 +70,32 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
               <div className="flex items-center gap-2 mb-3">
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger className="outline-none">
-                    <Badge variant={getStatusVariant(task.status)} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
-                      {task.status}
+                    <Badge variant={getStatusVariant(task.status) as any} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
+                      {formatStatus(task.status)}
                       <ChevronDown className="h-3 w-3" />
                     </Badge>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content align="start" className="z-[60] min-w-[140px] overflow-hidden rounded-md border border-border bg-white p-1 shadow-md">
-                      {['Todo', 'In Progress', 'In Review', 'Done'].map((status) => (
+                      {statuses.map((status) => (
                         <DropdownMenu.Item
                           key={status}
                           className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100"
                           onClick={async () => {
                             if (task.status !== status && onStatusChange) {
-                              await onStatusChange(task.id, status as TaskStatus);
+                              await onStatusChange(task.id, status);
                             }
                           }}
                         >
-                          {status}
+                          {formatStatus(status)}
                         </DropdownMenu.Item>
                       ))}
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
-                <Badge variant={getPriorityVariant(task.priority)}>{task.priority}</Badge>
+                <Badge variant={getPriorityVariant(task.priority) as any}>
+                  {formatPriority(task.priority)}
+                </Badge>
               </div>
               <Dialog.Title className="text-xl font-bold tracking-tight text-primary">
                 {task.title}
@@ -105,9 +127,12 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
                   <User className="h-4 w-4 mr-2 text-muted" />
                   Assignee
                 </h3>
-                <p className="text-sm text-muted">
-                  {task.assignee_id ? `User #${task.assignee_id}` : 'Unassigned'}
+                <p className="text-sm text-primary font-medium">
+                  {task.assignee_name || task.assignee_email || (task.assignee_id ? 'Team Member' : 'Unassigned')}
                 </p>
+                {task.assignee_email && task.assignee_name && (
+                  <p className="text-xs text-muted mt-0.5">{task.assignee_email}</p>
+                )}
               </div>
               
               <div>
@@ -123,9 +148,9 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
               <div>
                 <h3 className="text-sm font-medium text-primary mb-2 flex items-center">
                   <CheckCircle2 className="h-4 w-4 mr-2 text-muted" />
-                  Created By
+                  Project
                 </h3>
-                <p className="text-sm text-muted">User #{task.created_by}</p>
+                <p className="text-sm text-muted">{task.project_name || `Project #${task.project_id}`}</p>
               </div>
 
               <div>

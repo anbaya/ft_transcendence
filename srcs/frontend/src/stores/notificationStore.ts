@@ -8,8 +8,8 @@ interface NotificationState {
   isLoading: boolean;
   error: string | null;
   fetchNotifications: () => Promise<void>;
-  markAsRead: (id: string) => Promise<void>;
-  markAllAsRead: () => void;
+  markAsRead: (id: string | number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   addNotification: (notification: Notification) => void;
 }
 
@@ -23,9 +23,10 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     set({ isLoading: true });
     try {
       const response = await apiClient.get<Notification[]>('/api/notifications/');
+      const items = response.data || [];
       set({
-        notifications: response.data,
-        unreadCount: response.data.filter((n) => !n.is_read).length,
+        notifications: items,
+        unreadCount: items.filter((n) => !n.is_read).length,
         isLoading: false,
       });
     } catch (error) {
@@ -33,12 +34,12 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     }
   },
 
-  markAsRead: async (id: string) => {
+  markAsRead: async (id: string | number) => {
     try {
       await apiClient.patch(`/api/notifications/${id}/read/`);
       set((state) => {
         const updatedNotifications = state.notifications.map((n) =>
-          n.id === id ? { ...n, is_read: true } : n
+          String(n.id) === String(id) ? { ...n, is_read: true } : n
         );
         return {
           notifications: updatedNotifications,
@@ -50,17 +51,22 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     }
   },
 
-  markAllAsRead: () => {
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
-      unreadCount: 0,
-    }));
+  markAllAsRead: async () => {
+    try {
+      await apiClient.patch('/api/notifications/read-all/');
+      set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
+        unreadCount: 0,
+      }));
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   },
 
   addNotification: (notification: Notification) => {
     set((state) => {
       // Prevent duplicates
-      if (state.notifications.some(n => n.id === notification.id)) return state;
+      if (state.notifications.some(n => String(n.id) === String(notification.id))) return state;
       const updated = [notification, ...state.notifications];
       return {
         notifications: updated,

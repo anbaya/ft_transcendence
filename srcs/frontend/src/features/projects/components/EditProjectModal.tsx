@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
+import { toast } from '@/stores/toastStore';
 import type { Project, ProjectStatus, ProjectPriority } from '@/types/project';
 
 interface EditProjectModalProps {
@@ -17,18 +18,18 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'Planning' as ProjectStatus,
-    priority: 'Medium' as ProjectPriority,
+    status: 'planned' as ProjectStatus,
+    priority: 'medium' as ProjectPriority,
     deadline: '',
   });
 
   useEffect(() => {
     if (project) {
       setFormData({
-        name: project.name,
-        description: project.description,
-        status: project.status,
-        priority: project.priority,
+        name: project.name || '',
+        description: project.description || '',
+        status: project.status || 'planned',
+        priority: project.priority || 'medium',
         deadline: project.deadline?.split('T')[0] || '',
       });
     }
@@ -38,11 +39,18 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
 
   const handleSubmit = async () => {
     try {
-      await updateProject(project.id, formData);
+      await updateProject(project.id, {
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        status: formData.status,
+        priority: formData.priority,
+        deadline: formData.deadline ? formData.deadline : null,
+      });
       onOpenChange(false);
-    } catch (error) {
+      toast.success('Project updated successfully!');
+    } catch (error: any) {
       console.error(error);
-      alert('Failed to update project');
+      toast.error(error.response?.data?.name?.[0] || error.message || 'Failed to update project');
     }
   };
 
@@ -66,10 +74,11 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               type="text"
+              required
             />
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Description
               </label>
               <textarea
@@ -81,33 +90,32 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Status
                 </label>
                 <select 
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value as ProjectStatus})}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                 >
-                  <option value="Planning">Planning</option>
-                  <option value="Active">Active</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Completed">Completed</option>
+                  <option value="planned">Planned</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Priority
                 </label>
                 <select 
                   value={formData.priority}
                   onChange={(e) => setFormData({...formData, priority: e.target.value as ProjectPriority})}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                 >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
                 </select>
               </div>
             </div>

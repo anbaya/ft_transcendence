@@ -1,8 +1,12 @@
+import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import type { Task } from '@/types/task';
+import { useTaskStore } from '@/stores/taskStore';
+import { useProjectStore } from '@/stores/projectStore';
+import { toast } from '@/stores/toastStore';
+import type { Task, TaskStatus, TaskPriority } from '@/types/task';
 
 interface EditTaskModalProps {
   open: boolean;
@@ -11,7 +15,51 @@ interface EditTaskModalProps {
 }
 
 export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) {
+  const { updateTask, isLoading } = useTaskStore();
+  const { activeProjectMembers } = useProjectStore();
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    status: 'TODO' as TaskStatus,
+    priority: 'MEDIUM' as TaskPriority,
+    assignee_id: '',
+    deadline: '',
+  });
+
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        title: task.title || '',
+        description: task.description || '',
+        status: (task.status as TaskStatus) || 'TODO',
+        priority: (task.priority as TaskPriority) || 'MEDIUM',
+        assignee_id: task.assignee_id ? String(task.assignee_id) : '',
+        deadline: task.deadline ? task.deadline.split('T')[0] : '',
+      });
+    }
+  }, [task]);
+
   if (!task) return null;
+
+  const handleSubmit = async () => {
+    if (!formData.title.trim()) return;
+    try {
+      await updateTask(task.id, {
+        title: formData.title.trim(),
+        description: formData.description.trim() || null,
+        status: formData.status,
+        priority: formData.priority,
+        assignee_id: formData.assignee_id ? Number(formData.assignee_id) : null,
+        deadline: formData.deadline ? formData.deadline : null,
+      });
+      onOpenChange(false);
+      toast.success('Task updated successfully!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.title?.[0] || error.message || 'Failed to update task');
+    }
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -30,69 +78,78 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
           <div className="py-4 space-y-4">
             <Input
               label="Title"
-              defaultValue={task.title}
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               type="text"
+              required
             />
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Description
               </label>
               <textarea
-                defaultValue={task.description}
-                className="flex min-h-[80px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="flex min-h-[80px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Status
                 </label>
                 <select 
-                  defaultValue={task.status}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as TaskStatus })}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                 >
-                  <option value="Todo">Todo</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="In Review">In Review</option>
-                  <option value="Done">Done</option>
+                  <option value="TODO">To Do</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Priority
                 </label>
                 <select 
-                  defaultValue={task.priority}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
                 >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
                 </select>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Assignee
               </label>
               <select 
-                defaultValue={task.assignee_id || ""}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                value={formData.assignee_id}
+                onChange={(e) => setFormData({ ...formData, assignee_id: e.target.value })}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
               >
                 <option value="">Unassigned</option>
-                <option value="1">Anoir Baya</option>
-                <option value="2">Douaa E.</option>
-                <option value="3">Anas K.</option>
+                {activeProjectMembers.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.first_name || member.last_name
+                      ? `${member.first_name || ''} ${member.last_name || ''}`.trim()
+                      : member.email || `Member ${member.user_id}`}
+                  </option>
+                ))}
               </select>
             </div>
 
             <Input
               label="Deadline"
-              defaultValue={task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''}
+              value={formData.deadline}
+              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
               type="date"
             />
           </div>
@@ -101,12 +158,12 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button>
+            <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.title.trim()}>
               Save Changes
             </Button>
           </div>
           
-          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-muted text-primary">
+          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none text-primary">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </Dialog.Close>

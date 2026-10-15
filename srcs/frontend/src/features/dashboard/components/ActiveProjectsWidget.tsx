@@ -8,7 +8,7 @@ export function ActiveProjectsWidget() {
   
   // Show only up to 5 active projects
   const displayProjects = projects
-    .filter(p => p.status !== 'Completed')
+    .filter(p => p.status !== 'completed')
     .slice(0, 5);
 
   return (
@@ -32,17 +32,17 @@ export function ActiveProjectsWidget() {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-primary truncate pr-2">{project.name}</span>
-                <Badge variant={project.priority === 'High' || project.priority === 'Urgent' ? 'error' : 'default'} className="text-[10px]">
+                <Badge variant={project.priority === 'high' ? 'error' : 'default'} className="text-[10px] capitalize">
                   {project.priority}
                 </Badge>
               </div>
 
               <div className="flex items-center justify-between mt-3">
-                <Badge variant={project.status === 'Active' ? 'success' : 'default'} className="text-[10px]">
-                  {project.status}
+                <Badge variant={project.status === 'in_progress' ? 'success' : 'default'} className="text-[10px] capitalize">
+                  {project.status.replace('_', ' ')}
                 </Badge>
                 <span className="text-xs text-muted">
-                  Due: {new Date(project.deadline).toLocaleDateString()}
+                  Due: {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline'}
                 </span>
               </div>
             </div>

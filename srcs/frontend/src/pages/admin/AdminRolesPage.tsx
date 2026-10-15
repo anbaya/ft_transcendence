@@ -16,7 +16,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useRoleStore } from '@/stores/roleStore';
 import type { RolePermission } from '@/types/role';
 
-const ALL_MODULES = ['Users', 'Projects', 'Tasks', 'Documents', 'Organizations'];
+const ALL_MODULES = ['Users', 'Projects', 'Tasks', 'Documents'];
 const ALL_ACTIONS = ['Create', 'Read', 'Update', 'Delete'];
 
 export default function AdminRolesPage() {

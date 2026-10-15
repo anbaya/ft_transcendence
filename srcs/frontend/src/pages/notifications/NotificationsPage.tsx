@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Bell, Check, CheckCircle2, MessageSquare, ClipboardList, Briefcase, Info } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -6,16 +6,20 @@ import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 export function NotificationsPage() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotificationStore();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'unread') return !n.is_read;
     return true;
   });
 
-  const getIcon = (type: string) => {
+  const getIcon = (type?: string) => {
     switch (type) {
       case 'task_assigned':
         return <ClipboardList className="h-5 w-5 text-indigo-500" />;
@@ -28,7 +32,7 @@ export function NotificationsPage() {
     }
   };
 
-  const handleNotificationClick = (id: string, link?: string) => {
+  const handleNotificationClick = (id: string | number, link?: string) => {
     markAsRead(id);
     if (link) {
       navigate(link);
@@ -138,7 +142,7 @@ export function NotificationsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-muted line-clamp-2">
-                    {notification.content}
+                    {notification.message || notification.content}
                   </p>
                 </div>
 

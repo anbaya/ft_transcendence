@@ -5,7 +5,9 @@ import { useTaskStore } from '@/stores/taskStore';
 import { useProjectStore } from '@/stores/projectStore';
 
 const priorityConfig: Record<string, { dot: string; variant: 'error' | 'warning' | 'default' }> = {
-  'Urgent': { dot: 'bg-red-600', variant: 'error' },
+  'HIGH': { dot: 'bg-red-500', variant: 'error' },
+  'MEDIUM': { dot: 'bg-amber-500', variant: 'warning' },
+  'LOW': { dot: 'bg-slate-400', variant: 'default' },
   'High': { dot: 'bg-red-500', variant: 'error' },
   'Medium': { dot: 'bg-amber-500', variant: 'warning' },
   'Low': { dot: 'bg-slate-400', variant: 'default' },
@@ -20,9 +22,9 @@ export function TaskFeed() {
     if (projects.length === 0) fetchProjects();
   }, []);
 
-  const getProjectName = (projectId: string) => {
+  const getProjectName = (projectId: string | number) => {
     const p = projects.find((proj) => String(proj.id) === String(projectId));
-    return p ? p.name : `Project #${projectId}`;
+    return p ? p.name : 'Project';
   };
 
   return (

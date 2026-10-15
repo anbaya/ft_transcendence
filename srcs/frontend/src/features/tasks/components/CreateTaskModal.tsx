@@ -1,14 +1,60 @@
+import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useTaskStore } from '@/stores/taskStore';
+import { useProjectStore } from '@/stores/projectStore';
+import { toast } from '@/stores/toastStore';
+import type { TaskStatus, TaskPriority } from '@/types/task';
 
 interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  projectId?: string | number;
 }
 
-export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
+export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskModalProps) {
+  const { createTask, isLoading } = useTaskStore();
+  const { activeProject, activeProjectMembers } = useProjectStore();
+  const currentProjectId = projectId || activeProject?.id;
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    status: 'TODO' as TaskStatus,
+    priority: 'MEDIUM' as TaskPriority,
+    assignee_id: '',
+    deadline: '',
+  });
+
+  const handleSubmit = async () => {
+    if (!formData.title.trim() || !currentProjectId) return;
+    try {
+      await createTask(currentProjectId, {
+        title: formData.title.trim(),
+        description: formData.description.trim() || null,
+        status: formData.status,
+        priority: formData.priority,
+        assignee_id: formData.assignee_id ? Number(formData.assignee_id) : null,
+        deadline: formData.deadline ? formData.deadline : null,
+      });
+      onOpenChange(false);
+      toast.success('Task created successfully!');
+      setFormData({
+        title: '',
+        description: '',
+        status: 'TODO',
+        priority: 'MEDIUM',
+        assignee_id: '',
+        deadline: '',
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.title?.[0] || error.message || 'Failed to create task');
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -19,67 +65,88 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
               Create Task
             </Dialog.Title>
             <Dialog.Description className="text-sm text-muted">
-              Add a new task and assign it to your team.
+              Add a new task and assign it to a project member.
             </Dialog.Description>
           </div>
           
           <div className="py-4 space-y-4">
             <Input
               label="Title"
-              placeholder="e.g. Update user authentication"
+              placeholder="e.g. Implement authentication"
               type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
             />
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Description
               </label>
               <textarea
                 placeholder="Brief description of the task..."
-                className="flex min-h-[80px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="flex min-h-[80px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Status
                 </label>
-                <select className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="Todo">Todo</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="In Review">In Review</option>
-                  <option value="Done">Done</option>
+                <select 
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as TaskStatus })}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
+                >
+                  <option value="TODO">To Do</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+                <label className="text-sm font-medium leading-none text-primary">
                   Priority
                 </label>
-                <select className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
+                <select 
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
+                >
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
                 </select>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-primary">
+              <label className="text-sm font-medium leading-none text-primary">
                 Assignee
               </label>
-              <select className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50">
+              <select 
+                value={formData.assignee_id}
+                onChange={(e) => setFormData({ ...formData, assignee_id: e.target.value })}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
+              >
                 <option value="">Unassigned</option>
-                <option value="1">Anoir Baya</option>
-                <option value="2">Douaa E.</option>
-                <option value="3">Anas K.</option>
+                {activeProjectMembers.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.first_name || member.last_name
+                      ? `${member.first_name || ''} ${member.last_name || ''}`.trim()
+                      : member.email || `Member ${member.user_id}`}
+                  </option>
+                ))}
               </select>
             </div>
 
             <Input
               label="Deadline"
               type="date"
+              value={formData.deadline}
+              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
             />
           </div>
 
@@ -87,12 +154,12 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button>
+            <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.title.trim()}>
               Create Task
             </Button>
           </div>
           
-          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-muted text-primary">
+          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none text-primary">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </Dialog.Close>
