@@ -11,14 +11,12 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
 
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -29,14 +27,12 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
-
-# Application definition
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 INSTALLED_APPS = [
     'rest_framework',
-    'organizations',
     'projects',
     'analytics',
     "django.contrib.admin",
@@ -55,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "config.middleware.RequestCountMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -148,13 +145,13 @@ REST_FRAMEWORK = {
 }
 
 
-
 import os
 
 CHAT_SERVICE_URL = os.environ.get("CHAT_SERVICE_URL")
 INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN")
 TASK_SERVICE_URL = os.environ.get("TASK_SERVICE_URL")
 DOCUMENT_SERVICE_URL = os.environ.get("DOCUMENT_SERVICE_URL")
+AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL")
 JWT_SIGNING_KEY = os.environ.get("JWT_SIGNING_KEY")
 
 SIMPLE_JWT = {

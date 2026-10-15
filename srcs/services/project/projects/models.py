@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 class Project(models.Model) :
     id = models.BigAutoField(primary_key=True)
 
@@ -11,14 +10,6 @@ class Project(models.Model) :
     deadline = models.DateField(null=True, blank=True)
 
     created_by = models.BigIntegerField()
-
-    organization = models.ForeignKey(
-        'organizations.Organization',
-        on_delete=models.PROTECT,
-        related_name='projects',
-        null=True,
-        blank=True
-    )
 
     class Status(models.TextChoices):
         PLANNED = 'planned', 'Planned'

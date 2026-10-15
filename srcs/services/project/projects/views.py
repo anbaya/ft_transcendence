@@ -7,15 +7,14 @@ from django.db import transaction
 from rest_framework.exceptions import APIException,PermissionDenied
 import logging
 import requests
-from organizations.models import OrganizationMember
-from organizations.permissions import is_admin
-from .permissions import IsProjectOwnerOrAdmin, IsProjectMemberOrOwnerOrAdmin, ProjectMemberPermission
+from .permissions import IsProjectOwnerOrAdmin, IsProjectMemberOrOwnerOrAdmin, ProjectMemberPermission, is_admin
 from django.db.models import Q
 from .task_service import delete_project_tasks
 from .document_service import delete_project_documents
 from rest_framework.response import Response
 from rest_framework import status
 from .chat_service import create_notification
+from .auth_service import get_user, get_users_bulk
 
 logger = logging.getLogger(__name__)
 class ProjectListView(generics.ListCreateAPIView):
@@ -31,21 +30,6 @@ class ProjectListView(generics.ListCreateAPIView):
         ).distinct()
 
     def perform_create(self, serializer):
-        organization = serializer.validated_data.get('organization')
-
-        if organization and not is_admin(self.request):
-            is_owner = organization.owner_id == self.request.user.id
-
-            is_member = OrganizationMember.objects.filter(
-                organization=organization,
-                user_id=self.request.user.id
-            ).exists()
-
-            if not is_owner and not is_member:
-                raise PermissionDenied(
-                    "You must be a member of this organization "
-                    "to create a project in it."
-                )
         project = serializer.save(
             created_by=self.request.user.id
         )
@@ -114,16 +98,62 @@ class ProjectMemberListView(generics.ListCreateAPIView):
         project = self.get_project()
         return ProjectMember.objects.filter(project=project)
 
+    def list(self, request, *args, **kwargs):
+        project = self.get_project()
+        queryset = list(self.get_queryset())
+        user_ids = [m.user_id for m in queryset]
+
+        users_by_id = {}
+        if user_ids:
+            try:
+                bulk_users = get_users_bulk(user_ids)
+                for u in bulk_users:
+                    users_by_id[u.get('id')] = u
+            except Exception:
+                for uid in user_ids:
+                    try:
+                        u = get_user(uid)
+                        users_by_id[u.get('id')] = u
+                    except Exception:
+                        pass
+
+        for member in queryset:
+            u_info = users_by_id.get(member.user_id, {})
+            member.first_name = u_info.get('first_name', '')
+            member.last_name = u_info.get('last_name', '')
+            member.email = u_info.get('email', '')
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         project = self.get_project()
-
         member = serializer.save(project=project)
+
+        try:
+            user_data = get_user(member.user_id)
+            member.first_name = user_data.get('first_name', '')
+            member.last_name = user_data.get('last_name', '')
+            member.email = user_data.get('email', '')
+        except Exception:
+            pass
+
+        actor_name = ""
+        try:
+            actor_user = get_user(self.request.user.id)
+            actor_name = f"{actor_user.get('first_name', '')} {actor_user.get('last_name', '')}".strip() or actor_user.get('email', '')
+        except Exception:
+            pass
+        if not actor_name:
+            actor_name = "Project manager"
+
+        notif_text = f"{actor_name} added you to project {project.name}"
 
         try:
             create_notification(
                 user_id=member.user_id,
-                title="Added to a project",
-                message=f"You have been added to the project {project.name}."
+                title=notif_text,
+                message=notif_text
             )
         except (requests.RequestException, RuntimeError):
             logger.exception(
@@ -148,11 +178,22 @@ class ProjectMemberDetailView(generics.DestroyAPIView):
 
         instance.delete()
 
+        actor_name = ""
+        try:
+            actor_user = get_user(self.request.user.id)
+            actor_name = f"{actor_user.get('first_name', '')} {actor_user.get('last_name', '')}".strip() or actor_user.get('email', '')
+        except Exception:
+            pass
+        if not actor_name:
+            actor_name = "Project manager"
+
+        notif_text = f"{actor_name} removed you from project {project.name}"
+
         try:
             create_notification(
                 user_id=user_id,
-                title="Removed from a project",
-                message=f"You have been removed from the project {project.name}."
+                title=notif_text,
+                message=notif_text
             )
         except (requests.RequestException, RuntimeError):
             logger.exception(

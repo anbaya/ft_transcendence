@@ -5,7 +5,7 @@ from projects.chat_service import create_project_conversation
 
 
 class Command(BaseCommand):
-    help = "Synchronise les conversations des projets."
+    help = "Synchronizes project conversations."
 
     def handle(self, *args, **options):
         projects = Project.objects.filter(
@@ -20,7 +20,7 @@ class Command(BaseCommand):
                 project.save(update_fields=['chat_sync_status'])
 
                 self.stderr.write(
-                    f"Échec du projet {project.id} : "
+                    f"Project {project.id} failed: "
                     f"{type(e).__name__} - {e} - "
                     f"{e.response.text if isinstance(e, requests.HTTPError) and e.response is not None else ''}"
                 )
@@ -29,5 +29,5 @@ class Command(BaseCommand):
                 project.save(update_fields=['chat_sync_status'])
 
                 self.stdout.write(
-                    f"Conversation prête pour le projet {project.id}"
+                    f"Conversation ready for project {project.id}"
                 )
