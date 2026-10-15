@@ -47,12 +47,11 @@ class ProjectTaskListCreateView(generics.ListCreateAPIView):
             raise NotFound("Project not found.")
 
         
-        if project.get("created_by") == user_id:
+        if str(project.get("created_by")) == str(user_id):
             return Task.objects.filter(
                 project_id=project_id
             )
 
-        
         members = get_project_members(
             project_id,
             access_token
@@ -62,7 +61,7 @@ class ProjectTaskListCreateView(generics.ListCreateAPIView):
             raise NotFound("Project not found.")
 
         is_member = any(
-            member.get("user_id") == user_id
+            str(member.get("user_id")) == str(user_id)
             for member in members
         )
 
@@ -103,17 +102,15 @@ class ProjectTaskListCreateView(generics.ListCreateAPIView):
             raise NotFound("Project not found.")
 
         
-        if role != "ADMIN" and project.get("created_by") != user_id:
+        if role != "ADMIN" and str(project.get("created_by")) != str(user_id):
             raise PermissionDenied(
                 "Only the project creator or ADMIN can create tasks."
             )
 
-        
         assignee_id = serializer.validated_data.get(
             "assignee_id"
         )
 
-        
         if assignee_id is not None:
             members = get_project_members(
                 project_id,
@@ -124,7 +121,7 @@ class ProjectTaskListCreateView(generics.ListCreateAPIView):
                 raise NotFound("Project not found.")
 
             is_member = any(
-                member.get("user_id") == assignee_id
+                str(member.get("user_id")) == str(assignee_id)
                 for member in members
             )
 
@@ -133,11 +130,19 @@ class ProjectTaskListCreateView(generics.ListCreateAPIView):
                     "The assignee must be a member of the project."
                 )
 
-        
-        serializer.save(
+        task = serializer.save(
             project_id=project_id,
             creator_id=user_id
         )
+        if assignee_id:
+            try:
+                send_notification(
+                    user_id=assignee_id,
+                    title="New task assigned",
+                    message=f"A task was assigned to you in project {project.get('name', '')}: {task.title}"
+                )
+            except Exception:
+                pass
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
@@ -180,13 +185,12 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             raise NotFound("Project not found.")
 
         
-        if project.get("created_by") == user_id:
+        if str(project.get("created_by")) == str(user_id):
             return Response(
                 TaskSerializer(task).data,
                 status=status.HTTP_200_OK
             )
 
-        
         members = get_project_members(
             task.project_id,
             access_token
@@ -196,7 +200,7 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             raise NotFound("Project not found.")
 
         is_member = any(
-            member.get("user_id") == user_id
+            str(member.get("user_id")) == str(user_id)
             for member in members
         )
 
@@ -217,10 +221,7 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
         user_id = request.user.id
         role = request.user.role
 
-       
         forbidden_fields = {
-            "status",
-            "assignee_id",
             "project_id",
             "creator_id"
         }
@@ -238,7 +239,6 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        
         if role != "ADMIN":
             access_token = self.get_access_token()
 
@@ -250,21 +250,41 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             if project is None:
                 raise NotFound("Project not found.")
 
-            if project.get("created_by") != user_id:
+            if str(project.get("created_by")) != str(user_id):
                 raise PermissionDenied(
                     "Only the project creator or ADMIN can update tasks."
                 )
 
+        assignee_id = request.data.get("assignee_id")
+        if assignee_id is not None and str(assignee_id) != str(task.assignee_id):
+            access_token = self.get_access_token()
+            members = get_project_members(task.project_id, access_token)
+            if members is not None:
+                is_member = any(
+                    str(member.get("user_id")) == str(assignee_id)
+                    for member in members
+                )
+                if not is_member:
+                    raise PermissionDenied(
+                        "The assignee must be a member of the project."
+                    )
+            try:
+                send_notification(
+                    user_id=assignee_id,
+                    title="New task assigned",
+                    message=f"A task was assigned to you: {task.title}"
+                )
+            except Exception:
+                pass
+
         return super().update(request, *args, **kwargs)
 
-    
     def destroy(self, request, *args, **kwargs):
         task = self.get_object()
 
         user_id = request.user.id
         role = request.user.role
 
-        
         if role != "ADMIN":
             access_token = self.get_access_token()
 
@@ -276,7 +296,7 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             if project is None:
                 raise NotFound("Project not found.")
 
-            if project.get("created_by") != user_id:
+            if str(project.get("created_by")) != str(user_id):
                 raise PermissionDenied(
                     "Only the project creator or ADMIN can delete tasks."
                 )
@@ -316,7 +336,7 @@ class TaskStatusUpdateView(generics.UpdateAPIView):
             )
 
         
-        if task.assignee_id == user_id:
+        if str(task.assignee_id) == str(user_id):
             task.status = new_status
             task.save()
 
@@ -325,7 +345,6 @@ class TaskStatusUpdateView(generics.UpdateAPIView):
                 status=status.HTTP_200_OK
             )
 
-        
         auth_header = request.headers.get("Authorization", "")
 
         if not auth_header.startswith("Bearer "):
@@ -343,12 +362,11 @@ class TaskStatusUpdateView(generics.UpdateAPIView):
         if project is None:
             raise NotFound("Project not found.")
 
-        if project.get("created_by") != user_id:
+        if str(project.get("created_by")) != str(user_id):
             raise PermissionDenied(
                 "You are not allowed to update this task status."
             )
 
-       
         task.status = new_status
         task.save()
 
@@ -378,7 +396,6 @@ class TaskAssigneeUpdateView(generics.UpdateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        
         auth_header = request.headers.get("Authorization", "")
 
         if not auth_header.startswith("Bearer "):
@@ -388,7 +405,6 @@ class TaskAssigneeUpdateView(generics.UpdateAPIView):
 
         access_token = auth_header.split(" ", 1)[1]
 
-        
         project = get_project(
             project_id,
             access_token
@@ -397,13 +413,11 @@ class TaskAssigneeUpdateView(generics.UpdateAPIView):
         if project is None:
             raise NotFound("Project not found.")
 
-        
-        if role != "ADMIN" and project.get("created_by") != user_id:
+        if role != "ADMIN" and str(project.get("created_by")) != str(user_id):
             raise PermissionDenied(
                 "Only the project creator or ADMIN can assign tasks."
             )
 
-        
         members = get_project_members(
             project_id,
             access_token
@@ -412,9 +426,8 @@ class TaskAssigneeUpdateView(generics.UpdateAPIView):
         if members is None:
             raise NotFound("Project not found.")
 
-        
         is_member = any(
-            member.get("user_id") == assignee_id
+            str(member.get("user_id")) == str(assignee_id)
             for member in members
         )
 
