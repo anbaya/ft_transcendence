@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY auth/ .
 COPY shared/start-django.sh ./start-django.sh
 COPY shared/migrate-and-exec.py ./migrate-and-exec.py
-RUN chmod +x ./start-django.sh
+RUN sed -i 's/\r$//' ./start-django.sh ./migrate-and-exec.py && chmod +x ./start-django.sh
 
 EXPOSE 8000
 

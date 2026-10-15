@@ -92,6 +92,41 @@ class InternalUserDetailView(generics.RetrieveAPIView):
     authentication_classes = []
     permission_classes = [HasInternalToken]
 
+class InternalUserByEmailView(APIView):
+    authentication_classes = []
+    permission_classes = [HasInternalToken]
+
+    def get(self, request):
+        email = request.query_params.get("email")
+        if not email:
+            return Response(
+                {"detail": "Email query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user = User.objects.filter(email__iexact=email.strip(), is_active=True).first()
+        if not user:
+            return Response(
+                {"detail": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = InternalUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class InternalUserBulkView(APIView):
+    authentication_classes = []
+    permission_classes = [HasInternalToken]
+
+    def post(self, request):
+        ids = request.data.get("ids", [])
+        if not isinstance(ids, list):
+            return Response(
+                {"detail": "ids must be a list."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        users = User.objects.filter(id__in=ids, is_active=True)
+        serializer = InternalUserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class ChangePasswordView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
     authentication_classes = [JWTAuthentication]
