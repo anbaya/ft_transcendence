@@ -1,14 +1,22 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
-COPY shared/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-COPY shared/manage.py ./manage.py
-COPY shared/service ./service
-COPY shared/start.sh ./start.sh
-COPY shared/migrate-and-exec.py ./migrate-and-exec.py
-RUN chmod +x ./start.sh
 
-ENV PORT=8000
+RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false update && apt-get install -y \
+    default-libmysqlclient-dev \
+    build-essential \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ai/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ai/ .
+COPY shared/start-django.sh ./start-django.sh
+COPY shared/migrate-and-exec.py ./migrate-and-exec.py
+RUN sed -i 's/\r$//' ./start-django.sh ./migrate-and-exec.py && chmod +x ./start-django.sh
+
 EXPOSE 8000
-CMD ["./start.sh"]
+
+CMD ["./start-django.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
