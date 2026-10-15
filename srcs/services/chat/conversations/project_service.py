@@ -39,3 +39,21 @@ def get_project_members(project_id, authorization_header):
     response.raise_for_status()
 
     return response.json()
+
+
+def get_user_projects(authorization_header):
+    if not settings.PROJECT_SERVICE_URL:
+        raise RuntimeError("PROJECT_SERVICE_URL not configured.")
+
+    url = f"{settings.PROJECT_SERVICE_URL.rstrip('/')}/api/projects/"
+
+    response = requests.get(
+        url,
+        headers={"Authorization": authorization_header},
+        timeout=5,
+    )
+
+    response.raise_for_status()
+
+    return response.json()
+

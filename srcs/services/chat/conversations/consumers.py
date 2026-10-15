@@ -109,17 +109,30 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             })
             await self.close(code=4403)
             return
-        message = content.get("message")
+        message = content.get("content")
 
-        if not message or not message.strip():
+        if message is None:
+            message = content.get("message")
+
+        if not isinstance(message, str) or not message.strip():
             await self.send_json({
                 "error": "The message cannot be empty."
             })
             return
 
+
         message = message.strip()
 
         saved_message = await self.save_message(message)
+
+        sender_name = f"User {self.user_id}"
+        try:
+            sender = await self.get_sender()
+            formatted_name = f"{sender.get('first_name', '')} {sender.get('last_name', '')}".strip()
+            if formatted_name:
+                sender_name = formatted_name
+        except (requests.RequestException, RuntimeError):
+            pass
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -127,6 +140,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "type": "chat_message",
                 "id": saved_message.id,
                 "sender_id": saved_message.sender_id,
+                "sender_name": sender_name,
                 "message": saved_message.content,
                 "created_at": saved_message.created_at.isoformat(),
             }
@@ -134,13 +148,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         try:
             members = await self.get_members()
-            sender = await self.get_sender()
-
-            sender_name = (
-                f"{sender.get('first_name', '')} "
-                f"{sender.get('last_name', '')}"
-            ).strip()
-
             await self.create_message_notifications(
                 members,
                 saved_message.content,
@@ -172,7 +179,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         for member in members:
             user_id = member.get("user_id")
 
-            if user_id is not None and user_id != self.user_id:
+            if user_id is not None and str(user_id) != str(self.user_id):
                 create_notification(
                     user_id=user_id,
                     title="New message",
@@ -184,9 +191,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 )
 
     async def chat_message(self, event):
-        await self.send_json({
+        data = {
             "id": event["id"],
             "sender_id": event["sender_id"],
+            "sender": event["sender_id"],
+            "sender_name": event.get("sender_name", f"User {event['sender_id']}"),
             "message": event["message"],
+            "content": event["message"],
+            "sent_at": event["created_at"],
             "created_at": event["created_at"],
+        }
+
+        await self.send_json({
+            "type": "message.new",
+            "payload": data,
+            **data,
         })

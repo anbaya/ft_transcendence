@@ -42,6 +42,21 @@ class NotificationReadView(generics.UpdateAPIView):
             status=status.HTTP_200_OK
         )
 
+class NotificationReadAllView(APIView):
+    authentication_classes = [ServiceJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        Notification.objects.filter(
+            user_id=request.user.id,
+            is_read=False
+        ).update(is_read=True)
+
+        return Response(
+            {"message": "All notifications marked as read."},
+            status=status.HTTP_200_OK
+        )
+
 class InternalNotificationCreateView(APIView):
     authentication_classes = []
     permission_classes = [IsInternalService]

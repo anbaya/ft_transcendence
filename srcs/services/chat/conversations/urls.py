@@ -1,7 +1,17 @@
 from django.urls import path
-from .views import MessageListView, MessageDetailView, ProjectConversationView
+from .views import (
+    MessageListView,
+    MessageDetailView,
+    ProjectConversationView,
+    UserConversationsListView,
+)
 
 urlpatterns = [
+    path(
+        'my/',
+        UserConversationsListView.as_view(),
+        name='user-conversations'
+    ),
     path(
         '<int:conversation_id>/messages/',
         MessageListView.as_view(),
