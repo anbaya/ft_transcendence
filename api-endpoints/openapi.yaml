@@ -2,8 +2,8 @@ openapi: 3.0.3
 
 info:
   title: ft_transcendence
-  version: 2.0.0
-  description: Common API endpoints for all Django services.
+  version: 2.1.0
+  description: Common API endpoints and contracts for all Django microservices (Auth, Project, Task, Chat, Notifications, Document, AI) and WebSocket connections.
 
 paths:
 
@@ -13,7 +13,7 @@ paths:
 
   /api/auth/register/:
     post:
-      summary: Register a user
+      summary: Register a new user
       requestBody:
         required: true
         content:
@@ -24,28 +24,31 @@ paths:
               properties:
                 first_name:
                   type: string
+                  example: John
                 last_name:
                   type: string
+                  example: Doe
                 email:
                   type: string
                   format: email
+                  example: john.doe@example.com
                 password:
                   type: string
                   minLength: 8
                   format: password
       responses:
         '201':
-          description: User registered
+          description: User registered successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
         '400':
-          description: Invalid registration data
+          description: Validation error or email already in use
 
   /api/auth/login/:
     post:
-      summary: Login
+      summary: Login with credentials
       requestBody:
         required: true
         content:
@@ -62,7 +65,7 @@ paths:
                   format: password
       responses:
         '200':
-          description: Login successful
+          description: Login successful, returns JWT tokens
           content:
             application/json:
               schema:
@@ -77,7 +80,7 @@ paths:
 
   /api/auth/refresh/:
     post:
-      summary: Refresh access token
+      summary: Refresh JWT access token
       requestBody:
         required: true
         content:
@@ -90,7 +93,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: New access token
+          description: New access token generated
           content:
             application/json:
               schema:
@@ -103,12 +106,12 @@ paths:
 
   /api/auth/me/:
     get:
-      summary: Get current user
+      summary: Get currently authenticated user
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Current user
+          description: Current user profile
           content:
             application/json:
               schema:
@@ -116,7 +119,7 @@ paths:
         '401':
           description: Authentication required
     patch:
-      summary: Update current user
+      summary: Update profile of currently authenticated user
       security:
         - bearerAuth: []
       requestBody:
@@ -132,7 +135,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: User updated
+          description: User profile updated
           content:
             application/json:
               schema:
@@ -144,7 +147,7 @@ paths:
 
   /api/auth/logout/:
     post:
-      summary: Logout
+      summary: Logout user and invalidate refresh token
       security:
         - bearerAuth: []
       requestBody:
@@ -160,6 +163,14 @@ paths:
       responses:
         '200':
           description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout successful
         '400':
           description: Invalid refresh token
 
@@ -184,11 +195,75 @@ paths:
                   format: password
       responses:
         '200':
-          description: Password changed
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password changed successfully.
         '400':
-          description: Invalid password data
+          description: Incorrect old password or invalid new password
         '401':
           description: Authentication required
+
+  /api/auth/forgot-password/:
+    post:
+      summary: Request password reset link by email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Password reset email sent if account exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/reset-password/:
+    post:
+      summary: Reset password with token from email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [uid, token, new_password]
+              properties:
+                uid:
+                  type: string
+                token:
+                  type: string
+                new_password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Password has been reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Invalid or expired token
 
   # ============================================================
   # PROJECT SERVICE
@@ -197,11 +272,12 @@ paths:
   /api/projects/:
     get:
       summary: Get accessible projects
+      description: Returns all projects created by or shared with the authenticated user.
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Projects retrieved
+          description: Projects retrieved successfully
           content:
             application/json:
               schema:
@@ -209,7 +285,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/Project'
     post:
-      summary: Create project
+      summary: Create a new project
+      description: Any authenticated user can create a project and automatically becomes its project manager.
       security:
         - bearerAuth: []
       requestBody:
@@ -220,7 +297,7 @@ paths:
               $ref: '#/components/schemas/ProjectInput'
       responses:
         '201':
-          description: Project created
+          description: Project created successfully
           content:
             application/json:
               schema:
@@ -232,7 +309,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/Id'
     get:
-      summary: Get project
+      summary: Get project details
       security:
         - bearerAuth: []
       responses:
@@ -242,6 +319,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
+        '403':
+          description: Access denied
         '404':
           description: Project not found
     put:
@@ -263,10 +342,12 @@ paths:
                 $ref: '#/components/schemas/Project'
         '400':
           description: Invalid project data
+        '403':
+          description: Only project manager or admin can update project
         '404':
           description: Project not found
     patch:
-      summary: Update project
+      summary: Partial update project
       security:
         - bearerAuth: []
       requestBody:
@@ -284,25 +365,29 @@ paths:
                 $ref: '#/components/schemas/Project'
         '400':
           description: Invalid project data
+        '403':
+          description: Only project manager or admin can update project
         '404':
           description: Project not found
     delete:
       summary: Delete project
+      description: Deletes the project and cascade-deletes associated tasks, documents, and chat conversations.
       security:
         - bearerAuth: []
       responses:
         '204':
           description: Project deleted
+        '403':
+          description: Only project manager or admin can delete project
         '404':
           description: Project not found
-        '503':
-          description: Associated service unavailable
 
   /api/projects/{project_id}/members/:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
       summary: Get project members
+      description: Returns list of members with real first name, last name, email, and role.
       security:
         - bearerAuth: []
       responses:
@@ -314,10 +399,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProjectMember'
+        '403':
+          description: Access denied
         '404':
           description: Project not found
     post:
-      summary: Add project member
+      summary: Add a member to project by email
+      description: Adds a registered user to the project using their email. Only the project manager or admin can invite members.
       security:
         - bearerAuth: []
       requestBody:
@@ -326,19 +414,27 @@ paths:
           application/json:
             schema:
               type: object
-              required: [user_id]
+              required: [email]
               properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email of the user to invite
+                  example: collaborator@example.com
                 user_id:
                   type: integer
+                  description: Optional fallback user ID
       responses:
         '201':
-          description: Member added
+          description: Member added successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectMember'
         '400':
-          description: Invalid user or member already exists
+          description: User not found or already a member
+        '403':
+          description: Only project manager or admin can add members
         '404':
           description: Project not found
 
@@ -347,218 +443,73 @@ paths:
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/Id'
     delete:
-      summary: Remove project member
+      summary: Remove a member from project
+      description: Removes a member from the project. The project owner cannot be removed.
       security:
         - bearerAuth: []
       responses:
         '204':
-          description: Member removed
+          description: Member removed successfully
+        '403':
+          description: Permission denied or attempt to remove project owner
         '404':
           description: Project or membership not found
-
-  # ============================================================
-  # ORGANIZATIONS - PROJECT SERVICE
-  # ============================================================
-
-  /api/organizations/:
-    get:
-      summary: Get accessible organizations
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Organizations retrieved
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Organization'
-    post:
-      summary: Create organization
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrganizationInput'
-      responses:
-        '201':
-          description: Organization created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '400':
-          description: Invalid organization data
-
-  /api/organizations/{id}/:
-    parameters:
-      - $ref: '#/components/parameters/Id'
-    get:
-      summary: Get organization
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Organization retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '404':
-          description: Organization not found
-    put:
-      summary: Replace organization
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrganizationInput'
-      responses:
-        '200':
-          description: Organization updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '400':
-          description: Invalid organization data
-        '404':
-          description: Organization not found
-    patch:
-      summary: Update organization
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OrganizationInput'
-      responses:
-        '200':
-          description: Organization updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '400':
-          description: Invalid organization data
-        '404':
-          description: Organization not found
-    delete:
-      summary: Delete organization
-      security:
-        - bearerAuth: []
-      responses:
-        '204':
-          description: Organization deleted
-        '404':
-          description: Organization not found
-        '409':
-          description: Organization has linked projects
-
-  /api/organizations/{organization_id}/members/:
-    parameters:
-      - $ref: '#/components/parameters/OrganizationId'
-    get:
-      summary: Get organization members
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Members retrieved
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OrganizationMember'
-    post:
-      summary: Add organization member
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [user_id]
-              properties:
-                user_id:
-                  type: integer
-      responses:
-        '201':
-          description: Member added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrganizationMember'
-        '400':
-          description: Invalid user or member already exists
-
-  /api/organizations/{organization_id}/members/{id}/:
-    parameters:
-      - $ref: '#/components/parameters/OrganizationId'
-      - $ref: '#/components/parameters/Id'
-    delete:
-      summary: Remove organization member
-      security:
-        - bearerAuth: []
-      responses:
-        '204':
-          description: Member removed
-        '404':
-          description: Organization or membership not found
-
-  # ============================================================
-  # ANALYTICS - PROJECT SERVICE
-  # ============================================================
 
   /api/projects/{id}/analytics/:
     parameters:
       - $ref: '#/components/parameters/Id'
     get:
-      summary: Get project analytics
+      summary: Get project analytics and task completion statistics
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_tasks:
+                    type: integer
+                  completed_tasks:
+                    type: integer
+                  in_progress_tasks:
+                    type: integer
+                  todo_tasks:
+                    type: integer
+                  completion_rate:
+                    type: number
         '404':
           description: Project not found
-        '503':
-          description: Task statistics unavailable
 
   # ============================================================
   # TASK SERVICE
   # ============================================================
 
-  /api/projects/{project_id}/tasks/:
+  /api/tasks/projects/{project_id}/tasks/:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
-      summary: Get project tasks
+      summary: Get tasks for a specific project
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Tasks retrieved
+          description: Project tasks retrieved
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Task'
+        '403':
+          description: Access denied
+        '404':
+          description: Project not found
     post:
-      summary: Create task
+      summary: Create task in project
+      description: Visible and accessible to the project manager. Assignee must be an existing member of this project.
       security:
         - bearerAuth: []
       requestBody:
@@ -576,12 +527,48 @@ paths:
                 $ref: '#/components/schemas/Task'
         '400':
           description: Invalid task data
+        '403':
+          description: Only project manager or admin can create tasks
+
+  /api/projects/{project_id}/tasks/:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      summary: Get project tasks (Direct alias)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tasks retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      summary: Create task in project (Direct alias)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
 
   /api/tasks/{id}/:
     parameters:
       - $ref: '#/components/parameters/Id'
     get:
-      summary: Get task
+      summary: Get task details
       security:
         - bearerAuth: []
       responses:
@@ -593,7 +580,7 @@ paths:
                 $ref: '#/components/schemas/Task'
         '404':
           description: Task not found
-    patch:
+    put:
       summary: Update task
       security:
         - bearerAuth: []
@@ -611,7 +598,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
         '400':
-          description: Invalid task data
+          description: Invalid data
+        '403':
+          description: Only project manager, creator or assignee can edit task
+        '404':
+          description: Task not found
+    patch:
+      summary: Partial update task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid data
+        '403':
+          description: Only project manager, creator or assignee can edit task
         '404':
           description: Task not found
     delete:
@@ -621,6 +633,8 @@ paths:
       responses:
         '204':
           description: Task deleted
+        '403':
+          description: Only project manager or admin can delete task
         '404':
           description: Task not found
 
@@ -629,6 +643,7 @@ paths:
       - $ref: '#/components/parameters/Id'
     patch:
       summary: Update task status
+      description: Allows assignee, project manager, or admin to update status.
       security:
         - bearerAuth: []
       requestBody:
@@ -651,6 +666,8 @@ paths:
                 $ref: '#/components/schemas/Task'
         '400':
           description: Invalid status
+        '403':
+          description: Permission denied
         '404':
           description: Task not found
 
@@ -658,7 +675,8 @@ paths:
     parameters:
       - $ref: '#/components/parameters/Id'
     patch:
-      summary: Assign task
+      summary: Assign or reassign task
+      description: Assignee must be a member of the project.
       security:
         - bearerAuth: []
       requestBody:
@@ -680,18 +698,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
         '400':
-          description: Invalid assignee
+          description: Assignee not member of project
+        '403':
+          description: Permission denied
         '404':
           description: Task not found
 
-  /api/users/me/tasks/:
+  /api/tasks/users/me/tasks/:
     get:
-      summary: Get my assigned tasks
+      summary: Get tasks assigned to current user
+      description: Used for global Tasks page. Returns all tasks assigned to the current user with project names.
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Tasks retrieved
+          description: User tasks retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
+  /api/users/me/tasks/:
+    get:
+      summary: Get tasks assigned to current user (Direct alias)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User tasks retrieved
           content:
             application/json:
               schema:
@@ -700,25 +736,43 @@ paths:
                   $ref: '#/components/schemas/Task'
 
   # ============================================================
-  # CHAT SERVICE
+  # CHAT SERVICE & WEBSOCKETS
   # ============================================================
+
+  /api/conversations/my/:
+    get:
+      summary: Get all conversations for current user
+      description: Returns all project chat conversations the user belongs to with last message preview.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User conversations retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
 
   /api/conversations/projects/{project_id}/:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
-      summary: Get project conversation
+      summary: Get or create conversation for project
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Conversation retrieved
+          description: Project conversation retrieved
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Conversation'
+        '403':
+          description: Not a member of this project
         '404':
-          description: Conversation not found
+          description: Project not found
 
   /api/conversations/{conversation_id}/messages/:
     parameters:
@@ -728,7 +782,7 @@ paths:
         schema:
           type: integer
     get:
-      summary: Get conversation messages
+      summary: Get message history for conversation
       security:
         - bearerAuth: []
       responses:
@@ -740,10 +794,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Message'
+        '403':
+          description: Access denied
         '404':
           description: Conversation not found
     post:
-      summary: Send message
+      summary: Send a message in conversation
       security:
         - bearerAuth: []
       requestBody:
@@ -766,6 +822,8 @@ paths:
                 $ref: '#/components/schemas/Message'
         '400':
           description: Invalid or empty message
+        '403':
+          description: Access denied
         '404':
           description: Conversation not found
 
@@ -786,7 +844,6 @@ paths:
               properties:
                 content:
                   type: string
-                  minLength: 1
       responses:
         '200':
           description: Message updated
@@ -794,8 +851,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
-        '400':
-          description: Invalid content
+        '403':
+          description: Can only edit own messages
         '404':
           description: Message not found
     delete:
@@ -805,8 +862,30 @@ paths:
       responses:
         '204':
           description: Message deleted
+        '403':
+          description: Can only delete own messages
         '404':
           description: Message not found
+
+  /ws/projects/{project_id}/chat/:
+    get:
+      summary: WebSocket real-time chat connection
+      description: |
+        WebSocket handshake endpoint.
+        Connect using: `wss://<host>:8443/ws/projects/<project_id>/chat/?token=<access_token>`
+        Inbound frame: `{ "message": "Hello team" }`
+        Outbound frame: `{ "type": "chat_message", "id": 1, "sender_id": 2, "sender_name": "John Doe", "message": "Hello team", "created_at": "..." }`
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: JWT Access token
+      responses:
+        '101':
+          description: WebSocket protocol handshake successful
 
   # ============================================================
   # NOTIFICATIONS - CHAT SERVICE
@@ -814,7 +893,7 @@ paths:
 
   /api/notifications/:
     get:
-      summary: Get my notifications
+      summary: Get notifications for authenticated user
       security:
         - bearerAuth: []
       responses:
@@ -827,32 +906,129 @@ paths:
                 items:
                   $ref: '#/components/schemas/Notification'
 
-  /api/notifications/{id}/read/:
-    parameters:
-      - $ref: '#/components/parameters/Id'
-    patch:
-      summary: Mark notification as read
+  /api/notifications/read-all/:
+    post:
+      summary: Mark all user notifications as read
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Notification updated
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: All notifications marked as read.
+
+  /api/notifications/{id}/read/:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      summary: Mark specific notification as read
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification marked as read
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Notification'
         '404':
           description: Notification not found
+    post:
+      summary: Mark specific notification as read (POST alias)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
 
   # ============================================================
   # DOCUMENT SERVICE
   # ============================================================
 
+  /api/documents/my/:
+    get:
+      summary: Get all documents accessible to current user across all projects
+      description: Used for global Documents page.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Documents retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /api/documents/projects/{project_id}/documents/:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      summary: Get documents for a specific project
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Project documents retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        '403':
+          description: Not a member of this project
+        '404':
+          description: Project not found
+    post:
+      summary: Upload a document to a project
+      description: Only project members can upload documents. Maximum file size 10MB. Form data must include file and name.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: Optional document name (defaults to file name)
+                file:
+                  type: string
+                  format: binary
+                  description: Supported formats PDF, DOCX, TXT, CSV, XLSX, MD, JSON
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Unsupported format or file too large
+        '403':
+          description: Permission denied
+
   /api/projects/{project_id}/documents/:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
-      summary: Get project documents
+      summary: Get project documents (Direct alias)
       security:
         - bearerAuth: []
       responses:
@@ -865,7 +1041,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Document'
     post:
-      summary: Upload document
+      summary: Upload project document (Direct alias)
       security:
         - bearerAuth: []
       requestBody:
@@ -874,15 +1050,13 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [name, file]
+              required: [file]
               properties:
                 name:
                   type: string
-                  maxLength: 255
                 file:
                   type: string
                   format: binary
-                  description: PDF, DOCX, TXT, CSV or XLSX; maximum 10 MB
       responses:
         '201':
           description: Document uploaded
@@ -890,14 +1064,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Document'
-        '400':
-          description: Unsupported format, file too large, or invalid data
+
+  /api/documents/documents/{id}/:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      summary: Get document metadata
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document metadata retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found
+    delete:
+      summary: Delete document
+      description: Only the uploader, project manager, or admin can delete a document.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Document deleted
+        '403':
+          description: Permission denied
+        '404':
+          description: Document not found
 
   /api/documents/{id}/:
     parameters:
       - $ref: '#/components/parameters/Id'
     get:
-      summary: Get document information
+      summary: Get document metadata (Direct alias)
       security:
         - bearerAuth: []
       responses:
@@ -907,15 +1108,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Document'
-        '404':
-          description: Document not found
     delete:
-      summary: Delete document
+      summary: Delete document (Direct alias)
       security:
         - bearerAuth: []
       responses:
         '204':
           description: Document deleted
+
+  /api/documents/documents/{id}/download/:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      summary: Download document file
+      description: Requires Bearer Authorization token. Returns binary file blob.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document binary stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Permission denied
         '404':
           description: Document not found
 
@@ -923,29 +1141,115 @@ paths:
     parameters:
       - $ref: '#/components/parameters/Id'
     get:
-      summary: Download document
+      summary: Download document file (Direct alias)
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Document file
+          description: Document binary stream
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: binary
-        '404':
-          description: Document or file not found
 
   # ============================================================
   # AI SERVICE
   # ============================================================
 
+  /api/ai/ask/:
+    post:
+      summary: Ask AI assistant (General Mode or Project Mode)
+      description: |
+        Dual-mode AI Assistant powered by Google Gemini:
+        1. **General Mode** (`project_id` omitted or `null`): Answers general technical questions directly via Gemini without project context.
+        2. **Project Mode** (`project_id` provided): Verifies project membership, loads tasks, team members, and document extracts via RAG to provide contextualized answers.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question:
+                  type: string
+                  description: The question prompt
+                  example: What are the pending tasks for this project?
+                project_id:
+                  type: integer
+                  nullable: true
+                  description: Project ID to contextualize, or null for general questions
+                  example: 1
+      responses:
+        '200':
+          description: AI response generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    description: Generated answer formatted in Markdown
+                  mode:
+                    type: string
+                    enum: [general, project]
+                  project_id:
+                    type: integer
+                    nullable: true
+        '400':
+          description: Empty or invalid question
+        '403':
+          description: Access to project denied
+        '404':
+          description: Project not found
+        '503':
+          description: Unable to contact project service
+
+  /api/ai/history/:
+    get:
+      summary: Get AI interaction history
+      description: Lists previous question-answer interactions for the authenticated user. Optional filtering by project.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: project_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by project ID or pass 'general' for general questions
+      responses:
+        '200':
+          description: Interaction history retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AIInteraction'
+    delete:
+      summary: Clear AI interaction history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: project_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '204':
+          description: History cleared successfully
+
   /api/ai/projects/{project_id}/ask/:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     post:
-      summary: Ask the project AI assistant
+      summary: Ask project AI assistant (Project URL alias)
       security:
         - bearerAuth: []
       requestBody:
@@ -960,23 +1264,35 @@ paths:
                   type: string
       responses:
         '200':
-          description: AI answer generated
-        '400':
-          description: Invalid question
-        '404':
-          description: Project not found
+          description: Answer generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                  mode:
+                    type: string
+                  project_id:
+                    type: integer
 
   /api/ai/projects/{project_id}/history/:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
-      summary: Get project AI interaction history
+      summary: Get AI history for specific project (Project URL alias)
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: AI history retrieved
-
+          description: History retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AIInteraction'
 
 components:
 
@@ -996,13 +1312,6 @@ components:
 
     ProjectId:
       name: project_id
-      in: path
-      required: true
-      schema:
-        type: integer
-
-    OrganizationId:
-      name: organization_id
       in: path
       required: true
       schema:
@@ -1034,6 +1343,7 @@ components:
       properties:
         id:
           type: integer
+          readOnly: true
         name:
           type: string
         description:
@@ -1049,9 +1359,7 @@ components:
           nullable: true
         created_by:
           type: integer
-        organization:
-          type: integer
-          nullable: true
+          readOnly: true
         status:
           type: string
           enum: [planned, in_progress, completed, cancelled]
@@ -1064,12 +1372,15 @@ components:
         created_at:
           type: string
           format: date-time
+          readOnly: true
         updated_at:
           type: string
           format: date-time
+          readOnly: true
 
     ProjectInput:
       type: object
+      required: [name]
       properties:
         name:
           type: string
@@ -1085,70 +1396,40 @@ components:
           type: string
           format: date
           nullable: true
-        organization:
-          type: integer
-          nullable: true
         status:
           type: string
           enum: [planned, in_progress, completed, cancelled]
+          default: planned
         priority:
           type: string
           enum: [low, medium, high]
+          default: medium
 
     ProjectMember:
       type: object
       properties:
         id:
           type: integer
+          readOnly: true
         project:
           type: integer
+          readOnly: true
         user_id:
           type: integer
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        role:
+          type: string
+          enum: [PROJECT_MANAGER, MEMBER]
         joined_at:
           type: string
           format: date-time
-
-    Organization:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        owner_id:
-          type: integer
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    OrganizationInput:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 150
-        description:
-          type: string
-          nullable: true
-
-    OrganizationMember:
-      type: object
-      properties:
-        id:
-          type: integer
-        organization:
-          type: integer
-        user_id:
-          type: integer
-        joined_at:
-          type: string
-          format: date-time
+          readOnly: true
 
     Task:
       type: object
@@ -1175,12 +1456,22 @@ components:
         project_id:
           type: integer
           readOnly: true
+        project_name:
+          type: string
+          readOnly: true
         creator_id:
           type: integer
           readOnly: true
         assignee_id:
           type: integer
           nullable: true
+        assignee_name:
+          type: string
+          readOnly: true
+        assignee_email:
+          type: string
+          format: email
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -1192,6 +1483,7 @@ components:
 
     TaskInput:
       type: object
+      required: [title]
       properties:
         title:
           type: string
@@ -1202,9 +1494,11 @@ components:
         status:
           type: string
           enum: [TODO, IN_PROGRESS, COMPLETED]
+          default: TODO
         priority:
           type: string
           enum: [LOW, MEDIUM, HIGH]
+          default: MEDIUM
         deadline:
           type: string
           format: date
@@ -1218,30 +1512,57 @@ components:
       properties:
         id:
           type: integer
+          readOnly: true
         project_id:
           type: integer
+        project_name:
+          type: string
+          readOnly: true
         created_at:
           type: string
           format: date-time
+          readOnly: true
 
     Message:
       type: object
       properties:
         id:
           type: integer
+          readOnly: true
         conversation:
           type: integer
         sender_id:
           type: integer
+          readOnly: true
+        sender_name:
+          type: string
+          readOnly: true
         content:
           type: string
         created_at:
           type: string
           format: date-time
+          readOnly: true
 
     Notification:
       type: object
-      description: Notification returned for the authenticated user.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        message:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
 
     Document:
       type: object
@@ -1252,15 +1573,43 @@ components:
         project_id:
           type: integer
           readOnly: true
+        project_name:
+          type: string
+          readOnly: true
         uploaded_by_id:
           type: integer
+          readOnly: true
+        uploaded_by_name:
+          type: string
           readOnly: true
         name:
           type: string
           maxLength: 255
         file:
           type: string
+          readOnly: true
         uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    AIInteraction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_id:
+          type: integer
+          readOnly: true
+        project_id:
+          type: integer
+          nullable: true
+        question:
+          type: string
+        answer:
+          type: string
+        created_at:
           type: string
           format: date-time
           readOnly: true
