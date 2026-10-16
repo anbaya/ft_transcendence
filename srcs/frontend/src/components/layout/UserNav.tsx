@@ -12,7 +12,7 @@ export function UserNav() {
 
   const handleLogout = () => {
     logout();
-    navigate('/auth/login');
+    window.location.href = '/auth/login';
   };
 
   if (!user) return null;

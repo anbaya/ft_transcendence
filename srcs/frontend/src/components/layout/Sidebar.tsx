@@ -37,10 +37,8 @@ export function Sidebar() {
 
   // Load user's assigned tasks on mount to calculate dynamic pending badge
   useEffect(() => {
-    if (myTasks.length === 0) {
-      fetchMyTasks();
-    }
-  }, []);
+    fetchMyTasks();
+  }, [fetchMyTasks, user?.id]);
 
   // Count uncompleted tasks for the current user (status is TODO or IN_PROGRESS)
   const pendingTasksCount = useMemo(() => {

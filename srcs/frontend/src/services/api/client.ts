@@ -64,6 +64,7 @@ apiClient.interceptors.response.use(
 
       if (!refreshToken) {
         useAuthStore.getState().logout();
+        window.location.href = '/auth/login';
         return Promise.reject(error);
       }
 
@@ -98,6 +99,7 @@ apiClient.interceptors.response.use(
       } catch (refreshErr) {
         processQueue(refreshErr, null);
         useAuthStore.getState().logout();
+        window.location.href = '/auth/login';
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;

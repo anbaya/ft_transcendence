@@ -26,18 +26,23 @@ interface AIState {
   setActiveConversation: (id: string) => void;
   createNewConversation: (projectId?: string) => string;
   deleteConversation: (id: string) => void;
+  reset: () => void;
 }
 
-export const useAIStore = create<AIState>((set, get) => ({
+const initialAIState = {
   selectedProjectId: null,
   messages: [],
   isTyping: false,
   isLoading: false,
   error: null,
   isPanelOpen: false,
-
   conversations: [],
   activeConversationId: null,
+};
+
+export const useAIStore = create<AIState>((set, get) => ({
+  ...initialAIState,
+  reset: () => set(initialAIState),
 
   togglePanel: (open) => set((state) => ({
     isPanelOpen: open !== undefined ? open : !state.isPanelOpen

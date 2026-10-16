@@ -13,14 +13,20 @@ interface AnalyticsState {
   fetchAnalytics: (projectId: string | number) => Promise<void>;
   clearAnalytics: () => void;
   setSelectedProjectId: (id: string) => void;
+  reset: () => void;
 }
 
-export const useAnalyticsStore = create<AnalyticsState>((set) => ({
+const initialAnalyticsState = {
   data: null,
   selectedProjectId: null,
   isLoading: false,
   error: null,
   isServiceUnavailable: false,
+};
+
+export const useAnalyticsStore = create<AnalyticsState>((set) => ({
+  ...initialAnalyticsState,
+  reset: () => set(initialAnalyticsState),
 
   fetchAnalytics: async (projectId: string | number) => {
     set({ isLoading: true, error: null, isServiceUnavailable: false });

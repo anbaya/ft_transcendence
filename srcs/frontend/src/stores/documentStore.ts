@@ -19,9 +19,10 @@ interface DocumentState {
   fetchDocuments: (projectId: string | number) => Promise<void>;
   fetchMyDocuments: () => Promise<void>;
   downloadDocument: (doc: Document) => Promise<void>;
+  reset: () => void;
 }
 
-export const useDocumentStore = create<DocumentState>((set) => ({
+const initialState = {
   documents: [],
   myDocuments: [],
   isUploading: false,
@@ -29,6 +30,11 @@ export const useDocumentStore = create<DocumentState>((set) => ({
   isDragging: false,
   isLoading: false,
   error: null,
+};
+
+export const useDocumentStore = create<DocumentState>((set) => ({
+  ...initialState,
+  reset: () => set(initialState),
 
   setDragging: (isDragging) => set({ isDragging }),
 

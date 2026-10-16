@@ -15,13 +15,19 @@ interface TaskState {
   updateTaskStatus: (taskId: string | number, status: TaskStatus) => Promise<void>;
   updateTaskAssignee: (taskId: string | number, assigneeId: string | number | null) => Promise<void>;
   deleteTask: (taskId: string | number) => Promise<void>;
+  reset: () => void;
 }
 
-export const useTaskStore = create<TaskState>((set) => ({
+const initialState = {
   tasks: [],
   myTasks: [],
   isLoading: false,
   error: null,
+};
+
+export const useTaskStore = create<TaskState>((set) => ({
+  ...initialState,
+  reset: () => set(initialState),
 
   fetchProjectTasks: async (projectId: string | number) => {
     set({ isLoading: true, error: null });

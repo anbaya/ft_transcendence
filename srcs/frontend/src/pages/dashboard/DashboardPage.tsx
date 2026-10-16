@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchMyTasks();
-  }, []);
+  }, [fetchMyTasks, user?.id]);
 
   const displayName = user?.first_name || user?.email?.split('@')[0] || 'there';
 

@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
 import { Camera, Save, LogOut, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '@/services/api/client';
 import { toast } from '@/stores/toastStore';
 
 export default function ProfilePage() {
   const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,7 +62,7 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/auth/login');
+    window.location.href = '/auth/login';
   };
 
   return (

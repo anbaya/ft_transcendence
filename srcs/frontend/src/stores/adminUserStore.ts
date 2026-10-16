@@ -12,12 +12,18 @@ interface AdminUserState {
   toggleUserStatus: (id: string | number, isActive: boolean) => Promise<void>;
   deleteUser: (id: string | number) => Promise<void>;
   inviteUser: (data: InviteUserData) => Promise<AdminUser>;
+  reset: () => void;
 }
 
-export const useAdminUserStore = create<AdminUserState>((set) => ({
+const initialAdminUserState = {
   users: [],
   isLoading: false,
   error: null,
+};
+
+export const useAdminUserStore = create<AdminUserState>((set) => ({
+  ...initialAdminUserState,
+  reset: () => set(initialAdminUserState),
 
   fetchUsers: async () => {
     set({ isLoading: true, error: null });

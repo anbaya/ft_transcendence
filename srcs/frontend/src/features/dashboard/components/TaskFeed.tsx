@@ -19,8 +19,8 @@ export function TaskFeed() {
 
   useEffect(() => {
     fetchMyTasks();
-    if (projects.length === 0) fetchProjects();
-  }, []);
+    fetchProjects();
+  }, [fetchMyTasks, fetchProjects]);
 
   const getProjectName = (projectId: string | number) => {
     const p = projects.find((proj) => String(proj.id) === String(projectId));

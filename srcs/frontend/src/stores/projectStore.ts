@@ -18,14 +18,20 @@ interface ProjectState {
   fetchProjectMembers: (projectId: string | number) => Promise<void>;
   addProjectMember: (projectId: string | number, email: string) => Promise<ProjectMember>;
   removeProjectMember: (projectId: string | number, memberId: string | number) => Promise<void>;
+  reset: () => void;
 }
 
-export const useProjectStore = create<ProjectState>((set) => ({
+const initialState = {
   projects: [],
   activeProject: null,
   activeProjectMembers: [],
   isLoading: false,
   error: null,
+};
+
+export const useProjectStore = create<ProjectState>((set) => ({
+  ...initialState,
+  reset: () => set(initialState),
 
   fetchProjects: async () => {
     set({ isLoading: true, error: null });

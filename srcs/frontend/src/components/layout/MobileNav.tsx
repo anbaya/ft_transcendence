@@ -6,16 +6,17 @@ import { cn } from '@/utils/cn';
 import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, Settings, HelpCircle, Hexagon } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
+import { useAuthStore } from '@/stores/authStore';
+
 export function MobileNav() {
   const { isMobileNavOpen, closeMobileNav } = useLayoutStore();
   const { myTasks, fetchMyTasks } = useTaskStore();
+  const user = useAuthStore((state) => state.user);
 
   // Load user's tasks on mount to calculate dynamic pending badge
   useEffect(() => {
-    if (myTasks.length === 0) {
-      fetchMyTasks();
-    }
-  }, []);
+    fetchMyTasks();
+  }, [fetchMyTasks, user?.id]);
 
   // Close nav when window is resized to desktop breakpoint
   useEffect(() => {

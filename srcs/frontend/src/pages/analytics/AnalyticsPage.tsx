@@ -49,10 +49,8 @@ export default function AnalyticsPage() {
 
   // 1. On mount: fetch all user projects for the dropdown selector
   useEffect(() => {
-    if (projects.length === 0) {
-      fetchProjects();
-    }
-  }, []);
+    fetchProjects();
+  }, [fetchProjects]);
 
   // 2. Auto-select the first project once projects list is available
   useEffect(() => {

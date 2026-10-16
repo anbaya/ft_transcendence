@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { resetAllStores } from './resetAllStores';
 
 export type UserRole = 'ADMIN' | 'PROJECT_MANAGER' | 'MEMBER' | 'USER';
 
@@ -30,17 +31,22 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       isAuthenticated: false,
-      login: (user, token, refreshToken = null) =>
+      login: (user, token, refreshToken = null) => {
+        resetAllStores();
         set((state) => ({
           user,
           token,
           refreshToken: refreshToken !== undefined ? refreshToken : state.refreshToken,
           isAuthenticated: true,
-        })),
+        }));
+      },
       setToken: (token) => set({ token }),
       setRefreshToken: (refreshToken) => set({ refreshToken }),
       setUser: (user) => set({ user }),
-      logout: () => set({ user: null, token: null, refreshToken: null, isAuthenticated: false }),
+      logout: () => {
+        resetAllStores();
+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
+      },
     }),
     {
       name: 'auth-storage',

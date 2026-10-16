@@ -11,13 +11,19 @@ interface RoleState {
   fetchRoles: () => Promise<void>;
   selectRole: (role: Role) => void;
   updateRole: (roleId: string, payload: UpdateRolePayload) => Promise<Role>;
+  reset: () => void;
 }
 
-export const useRoleStore = create<RoleState>((set, get) => ({
+const initialRoleState = {
   roles: [],
   selectedRole: null,
   isLoading: false,
   error: null,
+};
+
+export const useRoleStore = create<RoleState>((set, get) => ({
+  ...initialRoleState,
+  reset: () => set(initialRoleState),
 
   fetchRoles: async () => {
     set({ isLoading: true, error: null });

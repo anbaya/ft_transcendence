@@ -1,10 +1,17 @@
+import { useEffect } from 'react';
 import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/Badge';
 
 export function ActiveProjectsWidget() {
-  const { projects } = useProjectStore();
+  const { projects, fetchProjects } = useProjectStore();
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects, user?.id]);
   
   // Show only up to 5 active projects
   const displayProjects = projects

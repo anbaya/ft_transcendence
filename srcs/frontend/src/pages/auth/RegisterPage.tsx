@@ -88,7 +88,7 @@ export default function RegisterPage() {
           <Input
             label="First name"
             type="text"
-            placeholder="Anoir"
+            placeholder="first name"
             autoComplete="given-name"
             error={errors.first_name?.message}
             {...register('first_name')}
@@ -96,7 +96,7 @@ export default function RegisterPage() {
           <Input
             label="Last name"
             type="text"
-            placeholder="Baya"
+            placeholder="last name"
             autoComplete="family-name"
             error={errors.last_name?.message}
             {...register('last_name')}
