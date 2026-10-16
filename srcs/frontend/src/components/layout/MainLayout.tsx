@@ -1,5 +1,5 @@
 
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileNav } from './MobileNav';
@@ -25,12 +25,28 @@ export function MainLayout() {
         <Header />
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
-          <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col justify-between">
+          <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8 w-full flex-1">
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>
           </div>
+
+          {/* App Footer */}
+          <footer className="border-t border-border bg-white/70 backdrop-blur-xs py-3.5 px-6 mt-auto">
+            <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-muted">
+              <p>&copy; {new Date().getFullYear()} Astra Workspace. All rights reserved.</p>
+              <div className="flex items-center gap-3.5">
+                <Link to="/privacy" className="hover:text-primary hover:underline transition-colors">
+                  Privacy Policy
+                </Link>
+                <span>•</span>
+                <Link to="/terms" className="hover:text-primary hover:underline transition-colors">
+                  Terms of Service
+                </Link>
+              </div>
+            </div>
+          </footer>
         </main>
       </div>
 

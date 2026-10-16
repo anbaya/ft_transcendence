@@ -1,5 +1,5 @@
 import { Hexagon } from 'lucide-react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 
 export function AuthLayout() {
   return (
@@ -39,8 +39,13 @@ export function AuthLayout() {
           </p>
         </div>
 
-        <div className="relative z-10 text-sm text-slate-700 font-semibold drop-shadow-sm">
-          &copy; {new Date().getFullYear()} Astra Inc. All rights reserved.
+        <div className="relative z-10 text-sm text-slate-700 font-semibold drop-shadow-sm flex items-center justify-between">
+          <span>&copy; {new Date().getFullYear()} Astra Inc. All rights reserved.</span>
+          <div className="flex items-center gap-3 text-xs">
+            <Link to="/privacy" className="hover:underline">Privacy Policy</Link>
+            <span>•</span>
+            <Link to="/terms" className="hover:underline">Terms of Service</Link>
+          </div>
         </div>
       </div>
 
@@ -56,6 +61,17 @@ export function AuthLayout() {
 
         <div className="mx-auto w-full max-w-sm">
           <Outlet />
+
+          {/* Auth Footer Links */}
+          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-3 text-xs text-muted">
+            <Link to="/privacy" className="hover:text-primary hover:underline transition-colors">
+              Privacy Policy
+            </Link>
+            <span>•</span>
+            <Link to="/terms" className="hover:text-primary hover:underline transition-colors">
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </div>
     </div>

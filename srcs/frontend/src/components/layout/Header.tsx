@@ -1,6 +1,6 @@
 
 import { useLocation } from 'react-router-dom';
-import { Search, Bot, Menu } from 'lucide-react';
+import { Bot, Menu } from 'lucide-react';
 import { UserNav } from './UserNav';
 import { NotificationNav } from './NotificationNav';
 import { useLayoutStore } from '@/stores/layoutStore';
@@ -36,22 +36,9 @@ export function Header() {
         </h1>
       </div>
 
-      {/* Center: Search (Hidden on small mobile) */}
-      <div className="hidden flex-1 items-center justify-center px-6 md:flex max-w-md w-full">
-        <button className="flex w-full items-center justify-between rounded-md border border-border bg-slate-50 px-3 py-1.5 text-sm text-muted hover:border-slate-300 hover:bg-slate-100 transition-colors">
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            <span>Search...</span>
-          </div>
-          <kbd className="hidden rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-muted sm:inline-block border border-border shadow-sm">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
-
       {/* Right: Actions */}
       <div className="flex items-center gap-2 sm:gap-4">
-        <button 
+        <button
           onClick={() => {
             const { togglePanel } = useAIStore.getState();
             togglePanel();
@@ -61,11 +48,11 @@ export function Header() {
           <Bot className="h-5 w-5" />
           <span className="sr-only">AI Assistant</span>
         </button>
-        
+
         <NotificationNav />
-        
+
         <div className="h-6 w-px bg-border hidden sm:block mx-1" />
-        
+
         <UserNav />
       </div>
     </header>

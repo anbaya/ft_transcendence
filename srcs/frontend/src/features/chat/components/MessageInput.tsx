@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Smile, Paperclip } from 'lucide-react';
+import { Send, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface MessageInputProps {
@@ -56,13 +56,6 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
           className="flex-1 max-h-[120px] bg-transparent border-0 py-3 px-1 text-sm text-primary placeholder:text-muted focus:ring-0 resize-none outline-none disabled:cursor-not-allowed disabled:opacity-50"
           rows={1}
         />
-
-        <button 
-          className="p-3 text-muted hover:text-primary transition-colors disabled:opacity-50"
-          disabled={disabled}
-        >
-          <Paperclip className="h-5 w-5" />
-        </button>
       </div>
       
       <Button 

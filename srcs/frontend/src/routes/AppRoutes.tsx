@@ -25,10 +25,18 @@ import ProfilePage from '@/pages/profile/ProfilePage';
 import AdminRoute from './AdminRoute';
 import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import AdminRolesPage from '@/pages/admin/AdminRolesPage';
+import PrivacyPolicyPage from '@/pages/legal/PrivacyPolicyPage';
+import TermsOfServicePage from '@/pages/legal/TermsOfServicePage';
 
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Public Legal Pages (Accessible to everyone) */}
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
+      <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
+
       {/* Public Routes with AuthLayout */}
       <Route element={<AuthLayout />}>
         <Route path="/auth/login" element={<LoginPage />} />

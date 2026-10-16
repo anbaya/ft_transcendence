@@ -57,16 +57,6 @@ export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProj
               onChange={(e) => setEmail(e.target.value)}
               error={error || undefined}
             />
-            
-            <div className="space-y-1">
-              <label className="text-sm font-medium leading-none text-primary">
-                Role
-              </label>
-              <div className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                <span>Member</span>
-              </div>
-              <p className="text-xs text-muted mt-1">Invited users join as project members.</p>
-            </div>
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">

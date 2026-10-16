@@ -13,11 +13,11 @@ import {
   Bot,
   BarChart2,
   Settings,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   Hexagon,
   ShieldAlert,
+  Shield,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
@@ -27,7 +27,8 @@ const adminNavigation = [
 ];
 
 const helpNavigation = [
-  { name: 'Help & Support', href: '/help', icon: HelpCircle },
+  { name: 'Privacy Policy', href: '/privacy', icon: Shield },
+  { name: 'Terms of Service', href: '/terms', icon: FileText },
 ];
 
 export function Sidebar() {

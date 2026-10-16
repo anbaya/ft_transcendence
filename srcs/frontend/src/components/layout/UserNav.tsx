@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Avatar from '@radix-ui/react-avatar';
 import { useAuthStore } from '@/stores/authStore';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, LogOut, Shield, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function UserNav() {
@@ -65,11 +65,19 @@ export function UserNav() {
           </DropdownMenu.Item>
 
           <DropdownMenu.Item
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/privacy')}
             className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-slate-50 rounded-sm cursor-pointer outline-none"
           >
-            <Settings className="h-4 w-4 text-muted" />
-            <span>Settings</span>
+            <Shield className="h-4 w-4 text-muted" />
+            <span>Privacy Policy</span>
+          </DropdownMenu.Item>
+
+          <DropdownMenu.Item
+            onClick={() => navigate('/terms')}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-slate-50 rounded-sm cursor-pointer outline-none"
+          >
+            <FileText className="h-4 w-4 text-muted" />
+            <span>Terms of Service</span>
           </DropdownMenu.Item>
 
           <DropdownMenu.Separator className="h-px bg-border my-1" />

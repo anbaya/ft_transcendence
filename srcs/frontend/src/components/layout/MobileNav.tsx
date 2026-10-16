@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { cn } from '@/utils/cn';
-import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, Settings, HelpCircle, Hexagon } from 'lucide-react';
+import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, HelpCircle, Hexagon } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 import { useAuthStore } from '@/stores/authStore';
@@ -48,7 +48,6 @@ export function MobileNav() {
     { name: 'Documents', href: '/documents', icon: FileText },
     { name: 'AI Assistant', href: '/ai', icon: Bot, isNew: true },
     { name: 'Analytics', href: '/analytics', icon: BarChart2 },
-    { name: 'Admin Console', href: '/admin', icon: Settings },
     { name: 'Help & Support', href: '/help', icon: HelpCircle },
   ], [pendingTasksCount]);
 
