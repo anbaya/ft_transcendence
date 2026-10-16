@@ -12,19 +12,12 @@ import {
   FileText,
   Bot,
   BarChart2,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Hexagon,
-  ShieldAlert,
   Shield,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-
-const adminNavigation = [
-  { name: 'User Management', href: '/admin/users', icon: Settings },
-  { name: 'Role Management', href: '/admin/roles', icon: ShieldAlert },
-];
 
 const helpNavigation = [
   { name: 'Privacy Policy', href: '/privacy', icon: Shield },
@@ -141,16 +134,7 @@ export function Sidebar() {
           {renderNavItems(mainNavigation)}
         </div>
 
-        {user?.role === 'ADMIN' && (
-          <div>
-            {isSidebarExpanded && (
-              <div className="mb-2 px-3 text-xs font-semibold tracking-wider text-muted/70">
-                ADMIN
-              </div>
-            )}
-            {renderNavItems(adminNavigation)}
-          </div>
-        )}
+
       </div>
 
       {/* Bottom Section */}
