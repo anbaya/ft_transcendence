@@ -85,19 +85,19 @@ export default function ChatPage() {
     // Try WS first
     if (wsRef.current) {
       wsRef.current.sendMessage(content);
-    }
-
-    // Also send via REST to ensure persistence
-    try {
-      const res = await apiClient.post<Message>(`/api/conversations/${selectedConversation.id}/messages/`, {
-        content,
-      });
-      setMessages((prev) => {
-        if (prev.some((m) => String(m.id) === String(res.data.id))) return prev;
-        return [...prev, res.data];
-      });
-    } catch (err) {
-      console.error('Failed to post message:', err);
+    }else if (selectedConvId){
+      // Fallback to REST API
+      try {
+        const res = await apiClient.post<Message>(`/api/conversations/${selectedConversation.id}/messages/`, {
+          content,
+        });
+        setMessages((prev) => {
+          if (prev.some((m) => String(m.id) === String(res.data.id))) return prev;
+          return [...prev, res.data];
+        });
+      } catch (err) {
+        console.error('Failed to post message:', err);
+      }
     }
   };
 

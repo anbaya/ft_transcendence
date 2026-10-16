@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { MessageSquare, Phone, Video, MoreVertical, Info } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import type { Message } from '@/types/chat';
@@ -61,24 +60,7 @@ export function ChatWindow({
             </p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" className="h-9 w-9 p-0 text-muted hover:text-primary hidden sm:flex">
-            <Phone className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" className="h-9 w-9 p-0 text-muted hover:text-primary hidden sm:flex">
-            <Video className="h-4 w-4" />
-          </Button>
-          <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
-          <Button variant="ghost" className="h-9 w-9 p-0 text-muted hover:text-primary">
-            <Info className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" className="h-9 w-9 p-0 text-muted hover:text-primary">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
-
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="flex flex-col">
