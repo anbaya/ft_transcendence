@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import Task
 from .project_service import get_project
@@ -12,6 +13,22 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = '__all__'
         read_only_fields = ['creator_id', 'project_id', 'project_name', 'assignee_name']
+
+    def validate(self, attrs):
+        deadline = attrs.get(
+            'deadline',
+            self.instance.deadline if self.instance else None
+        )
+        today = timezone.now().date()
+
+        if deadline:
+            if not self.instance or ('deadline' in attrs and self.instance.deadline != deadline):
+                if deadline < today:
+                    raise serializers.ValidationError({
+                        'deadline': 'The deadline cannot be in the past.'
+                    })
+
+        return attrs
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
