@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import Project, ProjectMember
 import requests
@@ -22,6 +23,16 @@ class ProjectSerializer(serializers.ModelSerializer):
             'deadline',
             self.instance.deadline if self.instance else None
         )
+
+        today = timezone.now().date()
+
+        if deadline:
+            # For new projects or when deadline is updated, it cannot be in the past
+            if not self.instance or ('deadline' in attrs and self.instance.deadline != deadline):
+                if deadline < today:
+                    raise serializers.ValidationError({
+                        'deadline': 'The deadline cannot be in the past.'
+                    })
 
         if start_date and deadline and deadline < start_date:
             raise serializers.ValidationError({
