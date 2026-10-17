@@ -23,6 +23,9 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
     deadline: '',
   });
 
+  const today = new Date().toLocaleDateString('en-CA');
+  const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
+
   useEffect(() => {
     if (project) {
       setFormData({
@@ -38,6 +41,10 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
   if (!project) return null;
 
   const handleSubmit = async () => {
+    if (isDeadlineInvalid) {
+      toast.error('Deadline must be a future date');
+      return;
+    }
     try {
       await updateProject(project.id, {
         name: formData.name.trim(),
@@ -119,12 +126,13 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
                 </select>
               </div>
             </div>
-
             <Input
               label="Deadline"
-              value={formData.deadline}
-              onChange={(e) => setFormData({...formData, deadline: e.target.value})}
               type="date"
+              min={today}
+              value={formData.deadline}
+              error={isDeadlineInvalid ? 'Deadline must be a future date' : undefined}
+              onChange={(e) => setFormData({...formData, deadline: e.target.value})}
             />
           </div>
 
@@ -132,7 +140,11 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} isLoading={isLoading}>
+            <Button 
+              onClick={handleSubmit} 
+              isLoading={isLoading} 
+              disabled={!formData.name.trim() || isDeadlineInvalid}
+            >
               Save Changes
             </Button>
           </div>
