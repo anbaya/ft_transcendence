@@ -27,6 +27,9 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
     deadline: '',
   });
 
+  const today = new Date().toLocaleDateString('en-CA');
+  const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
+
   useEffect(() => {
     if (task) {
       setFormData({
@@ -44,6 +47,10 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) return;
+    if (isDeadlineInvalid) {
+      toast.error('Deadline cannot be in the past');
+      return;
+    }
     try {
       await updateTask(task.id, {
         title: formData.title.trim(),
@@ -145,12 +152,13 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
                 ))}
               </select>
             </div>
-
             <Input
               label="Deadline"
+              type="date"
+              min={today}
               value={formData.deadline}
               onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-              type="date"
+              error={isDeadlineInvalid ? 'Deadline cannot be in the past' : undefined}
             />
           </div>
 
@@ -158,7 +166,11 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.title.trim()}>
+            <Button 
+              onClick={handleSubmit} 
+              isLoading={isLoading} 
+              disabled={!formData.title.trim() || isDeadlineInvalid}
+            >
               Save Changes
             </Button>
           </div>

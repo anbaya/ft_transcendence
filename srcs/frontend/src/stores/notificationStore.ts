@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Notification } from '@/types/notification';
 import apiClient from '@/services/api/client';
+import { toast } from '@/stores/toastStore';
 
 interface NotificationState {
   notifications: Notification[];
@@ -72,12 +73,22 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   addNotification: (notification: Notification) => {
     set((state) => {
       // Prevent duplicates
-      if (state.notifications.some(n => String(n.id) === String(notification.id))) return state;
+      if (state.notifications.some((n) => String(n.id) === String(notification.id))) return state;
+
+      const messageText = notification.message || notification.content || '';
+      const text = notification.title
+        ? `${notification.title}${messageText ? `: ${messageText}` : ''}`
+        : messageText;
+
+      if (text) {
+        toast.info(text);
+      }
+
       const updated = [notification, ...state.notifications];
       return {
         notifications: updated,
         unreadCount: updated.filter((n) => !n.is_read).length,
       };
     });
-  }
+  },
 }));

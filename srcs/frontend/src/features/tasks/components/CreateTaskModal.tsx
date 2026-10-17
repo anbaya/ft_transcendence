@@ -18,7 +18,7 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
   const { createTask, isLoading } = useTaskStore();
   const { activeProject, activeProjectMembers } = useProjectStore();
   const currentProjectId = projectId || activeProject?.id;
-
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -27,9 +27,16 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
     assignee_id: '',
     deadline: '',
   });
-
+  
+  const today = new Date().toLocaleDateString('en-CA');
+  const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
+  
   const handleSubmit = async () => {
     if (!formData.title.trim() || !currentProjectId) return;
+    if (isDeadlineInvalid) {
+      toast.error('Deadline cannot be in the past');
+      return;
+    }
     try {
       await createTask(currentProjectId, {
         title: formData.title.trim(),
@@ -145,8 +152,10 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
             <Input
               label="Deadline"
               type="date"
+              min={today}
               value={formData.deadline}
               onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+              error={isDeadlineInvalid ? 'Deadline cannot be in the past' : undefined}
             />
           </div>
 
@@ -154,7 +163,11 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.title.trim()}>
+            <Button 
+              onClick={handleSubmit} 
+              isLoading={isLoading} 
+              disabled={!formData.title.trim() || isDeadlineInvalid}
+            >
               Create Task
             </Button>
           </div>
