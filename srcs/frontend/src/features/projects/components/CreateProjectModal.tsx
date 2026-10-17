@@ -22,8 +22,15 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
     deadline: '',
   });
 
+  const today = new Date().toLocaleDateString('en-CA');
+  const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) return;
+    if (isDeadlineInvalid) {
+      toast.error('Deadline must be a future date');
+      return;
+    }
     try {
       await createProject({
         name: formData.name.trim(),
@@ -112,7 +119,9 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             <Input
               label="Deadline"
               type="date"
+              min={today}
               value={formData.deadline}
+              error={isDeadlineInvalid ? 'Deadline must be a future date' : undefined}
               onChange={(e) => setFormData({...formData, deadline: e.target.value})}
             />
           </div>
@@ -121,7 +130,11 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} isLoading={isLoading} disabled={!formData.name.trim()}>
+            <Button 
+              onClick={handleSubmit} 
+              isLoading={isLoading} 
+              disabled={!formData.name.trim() || isDeadlineInvalid}
+            >
               Create Project
             </Button>
           </div>
