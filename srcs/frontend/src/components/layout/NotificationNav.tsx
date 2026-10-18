@@ -5,24 +5,21 @@ import { cn } from '@/utils/cn';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
-import { wsClient } from '@/services/websocket/client';
-import { WS_EVENTS } from '@/services/websocket/events';
-import type { Notification } from '@/types/notification';
 
 export function NotificationNav() {
-  const { notifications, unreadCount, markAllAsRead, markAsRead, fetchNotifications, addNotification } = useNotificationStore();
+  const { notifications, unreadCount, markAllAsRead, markAsRead, fetchNotifications } = useNotificationStore();
   const navigate = useNavigate();
+  const NOTIFICATION_POLL_INTERVAL_MS = 15000; // 15 seconds
 
   useEffect(() => {
     fetchNotifications();
     
-    wsClient.connect();
-    const unsubscribe = wsClient.on(WS_EVENTS.NOTIFICATION_CREATED, (payload: Notification) => {
-      addNotification(payload);
-    });
+    const intervalId = setInterval(() => {
+      fetchNotifications();
+    }, NOTIFICATION_POLL_INTERVAL_MS);
 
-    return () => unsubscribe();
-  }, [fetchNotifications, addNotification]);
+    return () => clearInterval(intervalId);
+  }, [fetchNotifications]);
 
   const handleNotificationClick = (id: string | number, link?: string) => {
     markAsRead(id);

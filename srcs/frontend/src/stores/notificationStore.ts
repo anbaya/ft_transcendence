@@ -22,15 +22,30 @@ const initialState = {
   error: null,
 };
 
-export const useNotificationStore = create<NotificationState>((set) => ({
+let hasInitialFetchCompleted = false;
+
+export const useNotificationStore = create<NotificationState>((set, get) => ({
   ...initialState,
   reset: () => set(initialState),
 
   fetchNotifications: async () => {
-    set({ isLoading: true });
     try {
       const response = await apiClient.get<Notification[]>('/api/notifications/');
       const items = response.data || [];
+      // If this is a background poll (not the first page load)
+      if (hasInitialFetchCompleted) {
+        const existingIds = new Set(get().notifications.map((n) => String(n.id)));
+        const newUnreadItems = items.filter((n) => !existingIds.has(String(n.id)) && !n.is_read);
+        // Pop a toast for every new notification that arrived
+        newUnreadItems.forEach((n) => {
+          const messageText = n.message || n.content || '';
+          const text = n.title ? `${n.title}: ${messageText}` : messageText;
+          if (text) {
+            toast.info(text);
+          }
+        });
+      }
+      hasInitialFetchCompleted = true;
       set({
         notifications: items,
         unreadCount: items.filter((n) => !n.is_read).length,
