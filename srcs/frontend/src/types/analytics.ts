@@ -1,4 +1,4 @@
-export interface TaskAnalyticsStats {
+interface TaskAnalyticsStats {
   total: number;
   todo: number;
   in_progress: number;

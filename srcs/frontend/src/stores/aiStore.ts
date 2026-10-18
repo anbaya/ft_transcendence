@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import apiClient from '@/services/api/client';
-import type { AIConversation, AIMessage, AIInteraction } from '@/types/ai';
+import type { AIMessage, AIInteraction } from '@/types/ai';
 
 interface AIState {
   selectedProjectId: number | null; // null represents General Mode
@@ -10,10 +10,6 @@ interface AIState {
   error: string | null;
   isPanelOpen: boolean;
 
-  // Compatibility with older components
-  conversations: AIConversation[];
-  activeConversationId: string | null;
-
   // Actions
   togglePanel: (open?: boolean) => void;
   setSelectedProjectId: (id: number | null) => void;
@@ -21,11 +17,6 @@ interface AIState {
   sendMessage: (content: string, projectIdOverride?: number | null) => Promise<void>;
   clearHistory: (projectIdOverride?: number | null) => Promise<void>;
   clearError: () => void;
-
-  // Backward compatibility methods
-  setActiveConversation: (id: string) => void;
-  createNewConversation: (projectId?: string) => string;
-  deleteConversation: (id: string) => void;
   reset: () => void;
 }
 
@@ -36,8 +27,6 @@ const initialAIState = {
   isLoading: false,
   error: null,
   isPanelOpen: false,
-  conversations: [],
-  activeConversationId: null,
 };
 
 export const useAIStore = create<AIState>((set, get) => ({
@@ -81,19 +70,8 @@ export const useAIStore = create<AIState>((set, get) => ({
         });
       });
 
-      const conv: AIConversation = {
-        id: targetId ? `proj-${targetId}` : 'general',
-        title: targetId ? `Project #${targetId} Chat` : 'General Chat',
-        project_id: targetId ? String(targetId) : undefined,
-        messages: formatted,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
       set({
         messages: formatted,
-        conversations: [conv],
-        activeConversationId: conv.id,
         isLoading: false,
       });
     } catch (err: any) {
@@ -113,23 +91,11 @@ export const useAIStore = create<AIState>((set, get) => ({
       projectId: targetId,
     };
 
-    set((state) => {
-      const nextMessages = [...state.messages, tempUserMsg];
-      const conv: AIConversation = {
-        id: targetId ? `proj-${targetId}` : 'general',
-        title: targetId ? `Project #${targetId} Chat` : 'General Chat',
-        project_id: targetId ? String(targetId) : undefined,
-        messages: nextMessages,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      return {
-        messages: nextMessages,
-        conversations: [conv],
-        isTyping: true,
-        error: null,
-      };
-    });
+    set((state) => ({
+      messages: [...state.messages, tempUserMsg],
+      isTyping: true,
+      error: null,
+    }));
 
     try {
       const body = {
@@ -151,22 +117,10 @@ export const useAIStore = create<AIState>((set, get) => ({
         projectId: response.data.project_id ?? targetId,
       };
 
-      set((state) => {
-        const nextMessages = [...state.messages, assistantMsg];
-        const conv: AIConversation = {
-          id: targetId ? `proj-${targetId}` : 'general',
-          title: targetId ? `Project #${targetId} Chat` : 'General Chat',
-          project_id: targetId ? String(targetId) : undefined,
-          messages: nextMessages,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        return {
-          messages: nextMessages,
-          conversations: [conv],
-          isTyping: false,
-        };
-      });
+      set((state) => ({
+        messages: [...state.messages, assistantMsg],
+        isTyping: false,
+      }));
     } catch (err: any) {
       const errMsg = err?.response?.data?.error || err?.response?.data?.message || 'Failed to generate AI response.';
       set({ isTyping: false, error: errMsg });
@@ -184,7 +138,6 @@ export const useAIStore = create<AIState>((set, get) => ({
 
       set({
         messages: [],
-        conversations: [],
         error: null,
       });
     } catch (err: any) {
@@ -194,13 +147,4 @@ export const useAIStore = create<AIState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
-
-  setActiveConversation: (_id) => {},
-  createNewConversation: (_projectId) => {
-    set({ messages: [] });
-    return 'new';
-  },
-  deleteConversation: (_id) => {
-    get().clearHistory();
-  },
 }));

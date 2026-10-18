@@ -127,13 +127,3 @@ export function createProjectWebSocket(
   client.connect();
   return client;
 }
-
-// Compatibility singleton
-class LegacyWebSocketClient {
-  public connect() {}
-  public disconnect() {}
-  public send(_type: string, _payload: any) {}
-  public on(_event: string, _cb: any) { return () => {}; }
-}
-
-export const wsClient = new LegacyWebSocketClient();

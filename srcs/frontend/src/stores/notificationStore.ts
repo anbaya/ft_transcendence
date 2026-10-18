@@ -11,7 +11,6 @@ interface NotificationState {
   fetchNotifications: () => Promise<void>;
   markAsRead: (id: string | number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
-  addNotification: (notification: Notification) => void;
   reset: () => void;
 }
 
@@ -83,27 +82,5 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
     }
-  },
-
-  addNotification: (notification: Notification) => {
-    set((state) => {
-      // Prevent duplicates
-      if (state.notifications.some((n) => String(n.id) === String(notification.id))) return state;
-
-      const messageText = notification.message || notification.content || '';
-      const text = notification.title
-        ? `${notification.title}${messageText ? `: ${messageText}` : ''}`
-        : messageText;
-
-      if (text) {
-        toast.info(text);
-      }
-
-      const updated = [notification, ...state.notifications];
-      return {
-        notifications: updated,
-        unreadCount: updated.filter((n) => !n.is_read).length,
-      };
-    });
   },
 }));

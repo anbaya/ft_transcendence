@@ -8,12 +8,10 @@ interface DocumentState {
   myDocuments: Document[];
   isUploading: boolean;
   uploadProgress: number;
-  isDragging: boolean;
   isLoading: boolean;
   error: string | null;
   
   // Actions
-  setDragging: (isDragging: boolean) => void;
   uploadFile: (file: File, projectId: string | number) => Promise<Document | undefined>;
   deleteDocument: (id: string | number) => Promise<void>;
   fetchDocuments: (projectId: string | number) => Promise<void>;
@@ -27,7 +25,6 @@ const initialState = {
   myDocuments: [],
   isUploading: false,
   uploadProgress: 0,
-  isDragging: false,
   isLoading: false,
   error: null,
 };
@@ -35,8 +32,6 @@ const initialState = {
 export const useDocumentStore = create<DocumentState>((set) => ({
   ...initialState,
   reset: () => set(initialState),
-
-  setDragging: (isDragging) => set({ isDragging }),
 
   uploadFile: async (file: File, projectId: string | number) => {
     set({ isUploading: true, uploadProgress: 0, error: null });

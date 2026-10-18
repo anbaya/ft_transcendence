@@ -1,4 +1,4 @@
-export type NotificationType = 'task_assigned' | 'message_received' | 'project_update' | 'system';
+type NotificationType = 'task_assigned' | 'message_received' | 'project_update' | 'system';
 
 export interface Notification {
   id: number | string;

@@ -4,8 +4,6 @@ import { useDocumentStore } from './documentStore';
 import { useNotificationStore } from './notificationStore';
 import { useAIStore } from './aiStore';
 import { useAnalyticsStore } from './analyticsStore';
-import { useAdminUserStore } from './adminUserStore';
-import { useRoleStore } from './roleStore';
 
 export function resetAllStores() {
   useProjectStore.getState().reset?.();
@@ -14,6 +12,4 @@ export function resetAllStores() {
   useNotificationStore.getState().reset?.();
   useAIStore.getState().reset?.();
   useAnalyticsStore.getState().reset?.();
-  useAdminUserStore.getState().reset?.();
-  useRoleStore.getState().reset?.();
 }
