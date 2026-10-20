@@ -9,7 +9,6 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
-import UnauthorizedPage from '@/pages/auth/UnauthorizedPage';
 
 // Protected Pages
 import DashboardPage from '@/pages/dashboard/DashboardPage';
@@ -42,8 +41,6 @@ export default function AppRoutes() {
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       </Route>
-
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>

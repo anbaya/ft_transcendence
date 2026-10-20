@@ -2,9 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { resetAllStores } from './resetAllStores';
 
-export type UserRole = 'ADMIN' | 'PROJECT_MANAGER' | 'MEMBER' | 'USER';
-
-export interface User {
+interface User {
   id: string | number;
   email: string;
   first_name: string;
@@ -20,7 +18,6 @@ interface AuthState {
   login: (user: User, token: string, refreshToken?: string | null) => void;
   setToken: (token: string) => void;
   setRefreshToken: (refreshToken: string) => void;
-  setUser: (user: User) => void;
   logout: () => void;
 }
 
@@ -42,7 +39,6 @@ export const useAuthStore = create<AuthState>()(
       },
       setToken: (token) => set({ token }),
       setRefreshToken: (refreshToken) => set({ refreshToken }),
-      setUser: (user) => set({ user }),
       logout: () => {
         resetAllStores();
         set({ user: null, token: null, refreshToken: null, isAuthenticated: false });

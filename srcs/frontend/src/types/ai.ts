@@ -22,12 +22,3 @@ export interface AIInteraction {
   answer: string;
   created_at: string;
 }
-
-export interface AIConversation {
-  id: string;
-  title: string;
-  project_id?: string;
-  messages: AIMessage[];
-  created_at: string;
-  updated_at: string;
-}
