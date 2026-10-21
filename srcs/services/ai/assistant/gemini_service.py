@@ -30,10 +30,11 @@ def generate_answer(prompt):
 
     client = genai.Client(api_key=api_key)
     models_to_try = [
-        os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
+        os.environ.get("GEMINI_MODEL", "gemini-3.8-flash"),
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
+        "gemini-2.5-flash",
         "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
     ]
 
     last_error = None
@@ -54,11 +55,13 @@ def generate_embedding(text):
     api_key = get_api_key()
 
     if not api_key:
-        return generate_fallback_embedding(text)
+        return None
 
     client = genai.Client(api_key=api_key)
     models_to_try = [
-        os.environ.get("GEMINI_EMBEDDING_MODEL", "text-embedding-004"),
+        os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001"),
+        "gemini-embedding-001",
+        "gemini-embedding-2",
         "text-embedding-004",
     ]
 
@@ -73,7 +76,7 @@ def generate_embedding(text):
         except Exception:
             pass
 
-    return generate_fallback_embedding(text)
+    return None
 
 def classify_question(question):
     api_key = get_api_key()

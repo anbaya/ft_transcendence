@@ -49,11 +49,24 @@ class AskAssistantView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
+            recent_interactions = list(
+                AIInteraction.objects.filter(
+                    user_id=request.user.id,
+                    project_id=target_project_id,
+                ).order_by('-created_at', '-id')[:3]
+            )
+            recent_interactions.reverse()
+            history_text = "\n".join(
+                f"User: {item.question}\nAssistant: {item.answer}"
+                for item in recent_interactions
+            )
+
             answer = answer_project_question(
                 project_id=target_project_id,
                 question=question,
                 authorization_header=authorization,
                 project_data=project_data,
+                conversation_history=history_text,
             )
 
             AIInteraction.objects.create(
@@ -69,7 +82,22 @@ class AskAssistantView(APIView):
                 "project_id": target_project_id,
             })
 
-        answer = answer_general_question(question)
+        recent_interactions = list(
+            AIInteraction.objects.filter(
+                user_id=request.user.id,
+                project_id__isnull=True,
+            ).order_by('-created_at', '-id')[:3]
+        )
+        recent_interactions.reverse()
+        history_text = "\n".join(
+            f"User: {item.question}\nAssistant: {item.answer}"
+            for item in recent_interactions
+        )
+
+        answer = answer_general_question(
+            question=question,
+            conversation_history=history_text,
+        )
 
         AIInteraction.objects.create(
             user_id=request.user.id,

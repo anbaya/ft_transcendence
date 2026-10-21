@@ -18,12 +18,26 @@ def extract_pdf(file_bytes):
 def extract_docx(file_bytes):
     try:
         document = Document(io.BytesIO(file_bytes))
-        paragraphs = []
+        parts = []
         for paragraph in document.paragraphs:
             text = paragraph.text.strip()
             if text:
-                paragraphs.append(text)
-        return "\n".join(paragraphs)
+                parts.append(text)
+
+        for table in document.tables:
+            table_lines = []
+            for row in table.rows:
+                row_cells = []
+                for cell in row.cells:
+                    cell_text = cell.text.strip().replace("\n", " ")
+                    if not row_cells or cell_text != row_cells[-1]:
+                        row_cells.append(cell_text)
+                if any(row_cells):
+                    table_lines.append(" | ".join(row_cells))
+            if table_lines:
+                parts.append("\n[Table]\n" + "\n".join(table_lines) + "\n")
+
+        return "\n".join(parts)
     except Exception:
         return ""
 
