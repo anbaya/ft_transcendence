@@ -24,7 +24,10 @@ class DocumentChunk(models.Model):
     document_id = models.BigIntegerField()
 
     content = models.TextField()
-    embedding = models.JSONField()
+    embedding = models.JSONField(null=True, blank=True)
+    content_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
+    doc_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
+    chunk_index = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

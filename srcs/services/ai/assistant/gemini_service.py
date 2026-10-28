@@ -1,6 +1,8 @@
 import os
 import hashlib
-from google import genai
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_api_key():
     return os.environ.get("GEMINI_API_KEY", "").strip()
@@ -28,13 +30,18 @@ def generate_answer(prompt):
     if not api_key:
         return "Gemini API key (GEMINI_API_KEY) is not configured yet. Please provide your GEMINI_API_KEY in the .env file."
 
-    client = genai.Client(api_key=api_key)
+    try:
+        from google import genai
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        return f"Error initializing Gemini client: {e}"
+
     models_to_try = [
-        os.environ.get("GEMINI_MODEL", "gemini-3.8-flash"),
-        "gemini-3.8-flash",
-        "gemini-flash-latest",
+        os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
         "gemini-2.5-flash",
         "gemini-2.0-flash",
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
     ]
 
     last_error = None
@@ -55,14 +62,19 @@ def generate_embedding(text):
     api_key = get_api_key()
 
     if not api_key:
-        return None
+        return generate_fallback_embedding(text)
 
-    client = genai.Client(api_key=api_key)
+    try:
+        from google import genai
+        client = genai.Client(api_key=api_key)
+    except Exception:
+        return generate_fallback_embedding(text)
+
     models_to_try = [
-        os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001"),
+        os.environ.get("GEMINI_EMBEDDING_MODEL", "text-embedding-004"),
+        "text-embedding-004",
         "gemini-embedding-001",
         "gemini-embedding-2",
-        "text-embedding-004",
     ]
 
     for model_name in models_to_try:
@@ -76,7 +88,55 @@ def generate_embedding(text):
         except Exception:
             pass
 
-    return None
+    return generate_fallback_embedding(text)
+
+def ocr_pdf_multimodal(file_bytes):
+    """
+    Extracts text from scanned/image PDFs using Gemini's native multimodal capabilities.
+    """
+    api_key = get_api_key()
+    if not api_key or not file_bytes:
+        return ""
+
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+        prompt = (
+            "You are a specialized OCR tool. Extract and transcribe all text, headings, "
+            "tables, and numbers from this document exactly as they appear. "
+            "Do not summarize, do not provide any commentary, introduction, or conclusions. "
+            "Output only the transcribed content."
+        )
+
+        models_to_try = [
+            os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-3.8-flash",
+        ]
+
+        for model_name in models_to_try:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[
+                        types.Part.from_bytes(
+                            data=file_bytes,
+                            mime_type="application/pdf",
+                        ),
+                        prompt,
+                    ],
+                )
+                if response and response.text:
+                    return response.text.strip()
+            except Exception:
+                continue
+    except Exception as e:
+        logger.warning(f"OCR fallback failed: {e}")
+
+    return ""
 
 def classify_question(question):
     api_key = get_api_key()

@@ -9,3 +9,7 @@ pandas
 openpyxl
 python-docx
 pypdf
+chromadb
+rank-bm25
+ragas
+datasets

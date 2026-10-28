@@ -8,3 +8,10 @@
 **/.git
 .git
 *.sqlite3
+*.db
+db.sqlite3
+chroma_data
+**/chroma_data
+**/.env
+.env
+*.log
