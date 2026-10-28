@@ -186,9 +186,12 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
             if project is None:
                 raise NotFound("Project not found.")
 
-            if str(project.get("created_by")) != str(user_id):
+            is_project_owner = str(project.get("created_by")) == str(user_id)
+            is_uploader = str(document.uploaded_by_id) == str(user_id)
+
+            if not is_project_owner and not is_uploader:
                 raise PermissionDenied(
-                    "Only the project creator or ADMIN can delete documents."
+                    "Only the uploader, project creator, or ADMIN can delete documents."
                 )
 
         if document.file:
@@ -307,4 +310,4 @@ class UserDocumentsListView(generics.ListAPIView):
         except Exception:
             pass
 
-        return Document.objects.none()
+        return Document.objects.none()
