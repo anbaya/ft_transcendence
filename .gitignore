@@ -1,13 +1,18 @@
 # Environment Variables
 .env
+.env.*
+!.env.example
 
 # Dependencies
 node_modules/
 vendor/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 venv/
 .venv/
+env/
 
 # OS and IDE files
 .DS_Store
@@ -19,7 +24,17 @@ venv/
 data/
 elasticsearch-data/
 postgres-data/
+*.sqlite3
+*.db
+db.sqlite3
+chroma_data/
+**/chroma_data/
+*.chroma
 
 # Secrets and Certificates
 secrets/
 certs/
+
+# Media / Uploads
+media/
+**/media/
