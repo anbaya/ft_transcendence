@@ -438,17 +438,32 @@ class TaskAssigneeUpdateView(generics.UpdateAPIView):
 
         task.assignee_id = assignee_id
         task.save()
-        send_notification(
-            user_id=assignee_id,
-            title="New task assigned",
-            message=f"You have been assigned to task: {task.title}"
-        )
+        try:
+            send_notification(
+                user_id=assignee_id,
+                title="New task assigned",
+                message=f"You have been assigned to task: {task.title}"
+            )
+        except Exception:
+            pass
 
         return Response(
             TaskSerializer(task).data,
             status=status.HTTP_200_OK
         )
     
+class ProjectMemberTasksUnassignView(generics.GenericAPIView):
+    permission_classes = [IsInternalService]
+
+    def post(self, request, project_id, user_id, *args, **kwargs):
+        Task.objects.filter(
+            project_id=project_id,
+            assignee_id=user_id
+        ).update(assignee_id=None)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ProjectTasksDeleteView(generics.GenericAPIView):
     permission_classes = [IsInternalService]
 
