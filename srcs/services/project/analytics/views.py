@@ -8,6 +8,20 @@ from projects.models import Project
 from projects.permissions import IsProjectMemberOrOwnerOrAdmin
 
 
+def is_task_overdue(task, today):
+    if task.get("status") == "COMPLETED":
+        return False
+    raw_deadline = task.get("deadline")
+    if not raw_deadline:
+        return False
+    try:
+        if isinstance(raw_deadline, str) and "T" in raw_deadline:
+            raw_deadline = raw_deadline.split("T")[0]
+        return date.fromisoformat(str(raw_deadline)) < today
+    except (ValueError, TypeError):
+        return False
+
+
 class ProjectAnalyticsView(APIView):
 
     permission_classes = [IsProjectMemberOrOwnerOrAdmin]
@@ -44,18 +58,15 @@ class ProjectAnalyticsView(APIView):
             "members_count": project.members.count(),
             "tasks": {
                 "total": len(tasks),
-                "todo": sum(t["status"] == "TODO" for t in tasks),
+                "todo": sum(t.get("status") == "TODO" for t in tasks),
                 "in_progress": sum(
-                    t["status"] == "IN_PROGRESS" for t in tasks
+                    t.get("status") == "IN_PROGRESS" for t in tasks
                 ),
                 "completed": sum(
-                    t["status"] == "COMPLETED" for t in tasks
+                    t.get("status") == "COMPLETED" for t in tasks
                 ),
                 "overdue": sum(
-                    t["status"] != "COMPLETED"
-                    and t.get("deadline") is not None
-                    and date.fromisoformat(t["deadline"]) < today
-                    for t in tasks
+                    is_task_overdue(t, today) for t in tasks
                 ),
             }
         })

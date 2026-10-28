@@ -27,7 +27,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         today = timezone.now().date()
 
         if deadline:
-            # For new projects or when deadline is updated, it cannot be in the past
             if not self.instance or ('deadline' in attrs and self.instance.deadline != deadline):
                 if deadline < today:
                     raise serializers.ValidationError({

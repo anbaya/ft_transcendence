@@ -4,12 +4,18 @@ from .models import Project, ProjectMember
 from .serializers import ProjectSerializer, ProjectMemberSerializer
 from .chat_service import create_project_conversation, delete_project_conversation
 from django.db import transaction
-from rest_framework.exceptions import APIException,PermissionDenied
+from rest_framework.exceptions import APIException, PermissionDenied
 import logging
 import requests
-from .permissions import IsProjectOwnerOrAdmin, IsProjectMemberOrOwnerOrAdmin, ProjectMemberPermission, is_admin
+from .permissions import (
+    IsProjectOwnerOrAdmin,
+    IsProjectMemberOrOwnerOrAdmin,
+    ProjectMemberPermission,
+    IsInternalService,
+    is_admin,
+)
 from django.db.models import Q
-from .task_service import delete_project_tasks
+from .task_service import delete_project_tasks, unassign_project_member_tasks
 from .document_service import delete_project_documents
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,6 +23,8 @@ from .chat_service import create_notification
 from .auth_service import get_user, get_users_bulk
 
 logger = logging.getLogger(__name__)
+
+
 class ProjectListView(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
 
@@ -30,13 +38,14 @@ class ProjectListView(generics.ListCreateAPIView):
         ).distinct()
 
     def perform_create(self, serializer):
-        project = serializer.save(
-            created_by=self.request.user.id
-        )
-        ProjectMember.objects.create(
-            project=project,
-            user_id=self.request.user.id
-        )
+        with transaction.atomic():
+            project = serializer.save(
+                created_by=self.request.user.id
+            )
+            ProjectMember.objects.create(
+                project=project,
+                user_id=self.request.user.id
+            )
 
         try:
             create_project_conversation(project.id)
@@ -50,6 +59,7 @@ class ProjectListView(generics.ListCreateAPIView):
         else:
             project.chat_sync_status = 'ready'
             project.save(update_fields=['chat_sync_status'])
+
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
@@ -96,7 +106,7 @@ class ProjectMemberListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         project = self.get_project()
-        return ProjectMember.objects.filter(project=project)
+        return ProjectMember.objects.filter(project=project).select_related("project")
 
     def list(self, request, *args, **kwargs):
         project = self.get_project()
@@ -127,8 +137,9 @@ class ProjectMemberListView(generics.ListCreateAPIView):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        project = self.get_project()
-        member = serializer.save(project=project)
+        with transaction.atomic():
+            project = self.get_project()
+            member = serializer.save(project=project)
 
         try:
             user_data = get_user(member.user_id)
@@ -162,21 +173,14 @@ class ProjectMemberListView(generics.ListCreateAPIView):
             )
 
 
-
 class ProjectMemberDetailView(generics.DestroyAPIView):
     serializer_class = ProjectMemberSerializer
     permission_classes = [ProjectMemberPermission]
 
     def perform_destroy(self, instance):
-        if instance.user_id == instance.project.created_by:
-            raise PermissionDenied(
-                "The project owner cannot be removed from the project."
-            )
-
         user_id = instance.user_id
         project = instance.project
-
-        instance.delete()
+        is_owner = (str(user_id) == str(project.created_by))
 
         actor_name = ""
         try:
@@ -187,20 +191,77 @@ class ProjectMemberDetailView(generics.DestroyAPIView):
         if not actor_name:
             actor_name = "Project manager"
 
-        notif_text = f"{actor_name} removed you from project {project.name}"
+        if is_owner:
+            next_owner_member = (
+                project.members.exclude(user_id=user_id)
+                .order_by("joined_at")
+                .first()
+            )
+
+            if not next_owner_member:
+                raise PermissionDenied(
+                    "You are the only member in this project. Please delete the project instead of leaving."
+                )
+
+            with transaction.atomic():
+                project.created_by = next_owner_member.user_id
+                project.save(update_fields=["created_by"])
+                instance.delete()
+
+            try:
+                unassign_project_member_tasks(project.id, user_id)
+            except (requests.RequestException, RuntimeError):
+                logger.warning(
+                    "Failed to unassign tasks for departed owner %s in project %s",
+                    user_id,
+                    project.id
+                )
+
+            notif_text = f"{actor_name} left project {project.name}. You are now the project manager."
+            try:
+                create_notification(
+                    user_id=next_owner_member.user_id,
+                    title=f"New project manager of {project.name}",
+                    message=notif_text
+                )
+            except (requests.RequestException, RuntimeError):
+                logger.exception(
+                    "Failed to create notification for new owner %s",
+                    next_owner_member.user_id
+                )
+            return
+
+        with transaction.atomic():
+            instance.delete()
+
+        try:
+            unassign_project_member_tasks(project.id, user_id)
+        except (requests.RequestException, RuntimeError):
+            logger.warning(
+                "Failed to unassign tasks for member %s in project %s",
+                user_id,
+                project.id
+            )
+
+        if str(self.request.user.id) == str(user_id):
+            notif_text = f"{actor_name} left project {project.name}"
+            recipient_id = project.created_by
+        else:
+            notif_text = f"{actor_name} removed you from project {project.name}"
+            recipient_id = user_id
 
         try:
             create_notification(
-                user_id=user_id,
+                user_id=recipient_id,
                 title=notif_text,
                 message=notif_text
             )
         except (requests.RequestException, RuntimeError):
             logger.exception(
                 "Failed to create notification for user %s",
-                user_id
+                recipient_id
             )
-        
+
     def get_project(self):
         return get_object_or_404(
             Project,
@@ -212,4 +273,51 @@ class ProjectMemberDetailView(generics.DestroyAPIView):
 
         return ProjectMember.objects.filter(
             project=project
-        )
+        ).select_related("project")
+
+
+class InternalUserDeleteView(generics.GenericAPIView):
+    """
+    Internal endpoint called when a user account is deleted in auth-service.
+    Automatically reassigns any projects owned by this user to the first member added after the manager,
+    or cancels the project if there are no remaining members.
+    Also unassigns all tasks associated with this user across projects.
+    """
+    permission_classes = [IsInternalService]
+
+    def delete(self, request, user_id):
+        owned_projects = Project.objects.filter(created_by=user_id)
+
+        for project in owned_projects:
+            next_owner = (
+                project.members.exclude(user_id=user_id)
+                .order_by("joined_at")
+                .first()
+            )
+
+            with transaction.atomic():
+                if next_owner:
+                    project.created_by = next_owner.user_id
+                    project.save(update_fields=["created_by"])
+                    try:
+                        create_notification(
+                            user_id=next_owner.user_id,
+                            title=f"New project manager of {project.name}",
+                            message=f"You are now the project manager of {project.name} (ownership automatically transferred).",
+                        )
+                    except Exception:
+                        pass
+                else:
+                    project.status = Project.Status.CANCELLED
+                    project.save(update_fields=["status"])
+
+        memberships = list(ProjectMember.objects.filter(user_id=user_id))
+        for m in memberships:
+            try:
+                unassign_project_member_tasks(m.project_id, user_id)
+            except Exception:
+                pass
+
+        ProjectMember.objects.filter(user_id=user_id).delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
