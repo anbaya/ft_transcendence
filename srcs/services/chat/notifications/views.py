@@ -68,13 +68,29 @@ class InternalNotificationCreateView(APIView):
 
         serializer.is_valid(raise_exception=True)
 
+        title = serializer.validated_data["title"].strip()
+        message = serializer.validated_data["message"].strip()
+        if not title or not message:
+            return Response(
+                {"error": "Title and message cannot be empty."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         notification = create_notification(
             user_id=serializer.validated_data["user_id"],
-            title=serializer.validated_data["title"],
-            message=serializer.validated_data["message"]
+            title=title,
+            message=message
         )
 
         return Response(
             NotificationSerializer(notification).data,
             status=status.HTTP_201_CREATED
         )
+
+class InternalUserNotificationsDeleteView(APIView):
+    authentication_classes = []
+    permission_classes = [IsInternalService]
+
+    def delete(self, request, user_id):
+        Notification.objects.filter(user_id=user_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

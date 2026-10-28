@@ -18,7 +18,6 @@ from .auth_service import get_user
 from notifications.services import create_notification
 
 
-
 logger = logging.getLogger(__name__)
 
 def notify_project_members(project_id, sender_id, message_content, token):
@@ -37,12 +36,16 @@ def notify_project_members(project_id, sender_id, message_content, token):
     sender_name = (
         f"{sender.get('first_name', '')} "
         f"{sender.get('last_name', '')}"
-    ).strip()
+    ).strip() or f"User {sender_id}"
 
     project_name = project.get(
         "name",
         f"Project {project_id}"
     )
+
+    preview = message_content.strip()
+    if len(preview) > 120:
+        preview = preview[:117] + "..."
 
     for member in members:
         user_id = member.get("user_id")
@@ -59,7 +62,7 @@ def notify_project_members(project_id, sender_id, message_content, token):
             message=(
                 f"{sender_name} sent a message "
                 f"in project {project_name}:\n"
-                f"{message_content}"
+                f"{preview}"
             )
         )
     
@@ -250,3 +253,41 @@ class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MessageSerializer
     permission_classes = [IsMessageOwnerOrAdmin]
     http_method_names = ['patch', 'delete', 'options']
+
+    def perform_update(self, serializer):
+        message = serializer.save()
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            project_id = message.conversation.project_id
+            def broadcast_update():
+                try:
+                    async_to_sync(channel_layer.group_send)(
+                        f"project_chat_{project_id}",
+                        {
+                            "type": "chat_message_updated",
+                            "id": message.id,
+                            "content": message.content,
+                        }
+                    )
+                except Exception:
+                    logger.exception("Failed to broadcast message update %s", message.id)
+            transaction.on_commit(broadcast_update)
+
+    def perform_destroy(self, instance):
+        message_id = instance.id
+        project_id = instance.conversation.project_id
+        super().perform_destroy(instance)
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            def broadcast_delete():
+                try:
+                    async_to_sync(channel_layer.group_send)(
+                        f"project_chat_{project_id}",
+                        {
+                            "type": "chat_message_deleted",
+                            "id": message_id,
+                        }
+                    )
+                except Exception:
+                    logger.exception("Failed to broadcast message delete %s", message_id)
+            transaction.on_commit(broadcast_delete)

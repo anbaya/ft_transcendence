@@ -31,14 +31,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     def get_sender(self):
         return get_user(self.user_id)
 
-    
     @database_sync_to_async
-    def conversation_exists(self):
-        return Conversation.objects.filter(
+    def ensure_conversation(self):
+        conversation, _ = Conversation.objects.get_or_create(
             project_id=self.project_id
-        ).exists()
-
-    
+        )
+        return conversation
 
     async def connect(self):
         query_string = self.scope["query_string"].decode()
@@ -80,9 +78,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4403)
             return
 
-        if not await self.conversation_exists():
-            await self.close(code=4404)
-            return
+        await self.ensure_conversation()
 
         self.group_name = f"project_chat_{self.project_id}"
 
@@ -109,8 +105,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             })
             await self.close(code=4403)
             return
-        message = content.get("content")
 
+        message = content.get("content")
         if message is None:
             message = content.get("message")
 
@@ -119,7 +115,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "error": "The message cannot be empty."
             })
             return
-
 
         message = message.strip()
 
@@ -153,13 +148,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 saved_message.content,
                 sender_name
             )
-
         except (requests.RequestException, RuntimeError):
             pass
 
     @database_sync_to_async
     def save_message(self, content):
-        conversation = Conversation.objects.get(
+        conversation, _ = Conversation.objects.get_or_create(
             project_id=self.project_id
         )
 
@@ -176,6 +170,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         message,
         sender_name
     ):
+        preview = message.strip()
+        if len(preview) > 120:
+            preview = preview[:117] + "..."
+
         for member in members:
             user_id = member.get("user_id")
 
@@ -186,7 +184,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     message=(
                         f"{sender_name} sent a message "
                         f"in project {self.project_name}:\n"
-                        f"{message}"
+                        f"{preview}"
                     )
                 )
 
@@ -203,7 +201,21 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         }
 
         await self.send_json({
-            "type": "message.new",
+            "type": "chat_message",
             "payload": data,
             **data,
+        })
+
+    async def chat_message_updated(self, event):
+        await self.send_json({
+            "type": "chat_message_updated",
+            "id": event["id"],
+            "content": event["content"],
+            "message": event["content"],
+        })
+
+    async def chat_message_deleted(self, event):
+        await self.send_json({
+            "type": "chat_message_deleted",
+            "id": event["id"],
         })
