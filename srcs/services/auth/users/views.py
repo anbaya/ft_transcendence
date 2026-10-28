@@ -43,13 +43,42 @@ class RegisterView(generics.CreateAPIView):
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
 
-class MeView(generics.RetrieveUpdateAPIView):
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+
+class MeView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=['is_active'])
+
+        tokens = OutstandingToken.objects.filter(user=instance)
+        for token in tokens:
+            BlacklistedToken.objects.get_or_create(token=token)
+
+
+        project_service_url = getattr(settings, 'PROJECT_SERVICE_URL', 'http://project-service:8000').rstrip('/')
+        internal_token = getattr(settings, 'INTERNAL_SERVICE_TOKEN', '') or os.environ.get('INTERNAL_SERVICE_TOKEN', '')
+        try:
+            import requests
+            requests.delete(
+                f"{project_service_url}/internal/users/{instance.id}/",
+                headers={
+                    'X-Internal-Token': internal_token
+                },
+                timeout=5,
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                "Erreur lors de la notification de suppression de l'utilisateur %s à project-service",
+                instance.id
+            )
 
 class LogoutView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -174,10 +203,8 @@ class ForgotPasswordView(generics.GenericAPIView):
 
             token = default_token_generator.make_token(user)
 
-            reset_url = (
-                f"{os.environ['FRONTEND_RESET_PASSWORD_URL']}"
-                f"?uid={uid}&token={token}"
-            )
+            frontend_base = os.environ.get('FRONTEND_RESET_PASSWORD_URL', 'https://localhost:8443/auth/reset-password')
+            reset_url = f"{frontend_base}?uid={uid}&token={token}" 
 
             html_message = render_to_string("emails/password_reset.html",
             {"reset_url": reset_url,
