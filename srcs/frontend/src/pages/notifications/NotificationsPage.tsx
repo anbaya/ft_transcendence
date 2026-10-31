@@ -32,7 +32,7 @@ export function NotificationsPage() {
     }
   };
 
-  const handleNotificationClick = (id: string | number, link?: string) => {
+  const handleNotificationClick = (id: number, link?: string) => {
     markAsRead(id);
     if (link) {
       navigate(link);

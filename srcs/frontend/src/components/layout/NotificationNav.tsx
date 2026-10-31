@@ -21,7 +21,7 @@ export function NotificationNav() {
     return () => clearInterval(intervalId);
   }, [fetchNotifications]);
 
-  const handleNotificationClick = (id: string | number, link?: string) => {
+  const handleNotificationClick = (id: number, link?: string) => {
     markAsRead(id);
     if (link) {
       navigate(link);

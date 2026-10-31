@@ -22,8 +22,8 @@ export function TaskFeed() {
     fetchProjects();
   }, [fetchMyTasks, fetchProjects]);
 
-  const getProjectName = (projectId: string | number) => {
-    const p = projects.find((proj) => String(proj.id) === String(projectId));
+  const getProjectName = (projectId: number) => {
+    const p = projects.find((proj) => proj.id === projectId);
     return p ? p.name : 'Project';
   };
 

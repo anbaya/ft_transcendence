@@ -145,9 +145,7 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
                 <option value="">Unassigned</option>
                 {activeProjectMembers.map((member) => (
                   <option key={member.user_id} value={member.user_id}>
-                    {member.first_name || member.last_name
-                      ? `${member.first_name || ''} ${member.last_name || ''}`.trim()
-                      : member.email || `Member ${member.user_id}`}
+                    {member.first_name ? `${member.first_name} ${member.last_name}` : member.email}
                   </option>
                 ))}
               </select>
@@ -177,7 +175,6 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
           
           <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none text-primary">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

@@ -111,7 +111,7 @@ export default function ProjectsPage() {
         open={isDeleteOpen} 
         onOpenChange={setIsDeleteOpen} 
         projectName={selectedProject?.name || ''} 
-        projectId={selectedProject?.id || ''}
+        projectId={selectedProject?.id || 0}
       />
     </div>
   );

@@ -12,9 +12,9 @@ interface DocumentState {
   error: string | null;
   
   // Actions
-  uploadFile: (file: File, projectId: string | number) => Promise<Document | undefined>;
-  deleteDocument: (id: string | number) => Promise<void>;
-  fetchDocuments: (projectId: string | number) => Promise<void>;
+  uploadFile: (file: File, projectId: number) => Promise<Document | undefined>;
+  deleteDocument: (id: number) => Promise<void>;
+  fetchDocuments: (projectId: number) => Promise<void>;
   fetchMyDocuments: () => Promise<void>;
   downloadDocument: (doc: Document) => Promise<void>;
   reset: () => void;
@@ -33,7 +33,7 @@ export const useDocumentStore = create<DocumentState>((set) => ({
   ...initialState,
   reset: () => set(initialState),
 
-  uploadFile: async (file: File, projectId: string | number) => {
+  uploadFile: async (file: File, projectId: number) => {
     set({ isUploading: true, uploadProgress: 0, error: null });
     
     const formData = new FormData();
@@ -68,16 +68,12 @@ export const useDocumentStore = create<DocumentState>((set) => ({
     }
   },
 
-  deleteDocument: async (id: string | number) => {
+  deleteDocument: async (id: number) => {
     try {
-      try {
-        await apiClient.delete(`/api/documents/${id}/`);
-      } catch (err) {
-        await apiClient.delete(`/api/documents/documents/${id}/`);
-      }
+      await apiClient.delete(`/api/documents/${id}/`);
       set((state) => ({
-        documents: state.documents.filter((doc) => String(doc.id) !== String(id)),
-        myDocuments: state.myDocuments.filter((doc) => String(doc.id) !== String(id)),
+        documents: state.documents.filter((doc) => doc.id !== id),
+        myDocuments: state.myDocuments.filter((doc) => doc.id !== id),
       }));
     } catch (error: any) {
       console.error('Failed to delete document:', error);
@@ -85,7 +81,7 @@ export const useDocumentStore = create<DocumentState>((set) => ({
     }
   },
 
-  fetchDocuments: async (projectId: string | number) => {
+  fetchDocuments: async (projectId: number) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.get<Document[]>(`/api/documents/projects/${projectId}/documents/`);
@@ -109,16 +105,9 @@ export const useDocumentStore = create<DocumentState>((set) => ({
 
   downloadDocument: async (doc: Document) => {
     try {
-      let response;
-      try {
-        response = await apiClient.get(`/api/documents/${doc.id}/download/`, {
-          responseType: 'blob',
-        });
-      } catch (err) {
-        response = await apiClient.get(`/api/documents/documents/${doc.id}/download/`, {
-          responseType: 'blob',
-        });
-      }
+      const response = await apiClient.get(`/api/documents/${doc.id}/download/`, {
+        responseType: 'blob',
+      });
       const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -127,7 +116,9 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
     } catch (error: any) {
       console.error('Authenticated download failed:', error);
       toast.error('Failed to download file. Please check your permissions.');

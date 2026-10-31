@@ -1,8 +1,8 @@
 type NotificationType = 'task_assigned' | 'message_received' | 'project_update' | 'system';
 
 export interface Notification {
-  id: number | string;
-  user_id: number | string;
+  id: number;
+  user_id: number;
   title: string;
   message: string;
   content?: string;

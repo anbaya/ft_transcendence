@@ -1,14 +1,31 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useTaskStore } from '@/stores/taskStore';
+import { toast } from '@/stores/toastStore';
 
 interface DeleteTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskTitle: string;
+  taskId?: number;
 }
 
-export function DeleteTaskModal({ open, onOpenChange, taskTitle }: DeleteTaskModalProps) {
+export function DeleteTaskModal({ open, onOpenChange, taskTitle, taskId }: DeleteTaskModalProps) {
+  const { deleteTask, isLoading } = useTaskStore();
+
+  const handleDelete = async () => {
+    if (!taskId) return;
+    try {
+      await deleteTask(taskId);
+      toast.success('Task deleted successfully');
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Failed to delete task');
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -31,14 +48,13 @@ export function DeleteTaskModal({ open, onOpenChange, taskTitle }: DeleteTaskMod
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="destructive">
+            <Button variant="destructive" onClick={handleDelete} isLoading={isLoading}>
               Delete Task
             </Button>
           </div>
           
           <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-muted text-primary">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { resetAllStores } from './resetAllStores';
 
 interface User {
-  id: string | number;
+  id: number;
   email: string;
   first_name: string;
   last_name: string;

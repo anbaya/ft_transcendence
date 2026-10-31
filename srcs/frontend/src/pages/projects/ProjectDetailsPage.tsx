@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
 import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveProjectMemberModal';
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
@@ -27,7 +27,7 @@ import { DeleteTaskModal } from '@/features/tasks/components/DeleteTaskModal';
 import { TaskDetailsModal } from '@/features/tasks/components/TaskDetailsModal';
 import { ProjectChatTab } from '@/features/projects/components/ProjectChatTab';
 import { ProjectDocumentsTab } from '@/features/projects/components/ProjectDocumentsTab';
-import type { Task } from '@/types/task';
+import type { Task, TaskStatus } from '@/types/task';
 import type { ProjectMember } from '@/types/project';
 
 import { useProjectStore } from '@/stores/projectStore';
@@ -54,21 +54,22 @@ export default function ProjectDetailsPage() {
 
   useEffect(() => {
     if (id) {
-      fetchProject(id);
-      fetchProjectMembers(id);
-      fetchProjectTasks(id);
+      const numericId = Number(id);
+      fetchProject(numericId);
+      fetchProjectMembers(numericId);
+      fetchProjectTasks(numericId);
     }
   }, [id]);
 
   // Determine permissions: admin, project manager, or creator
   const isProjectManager = activeProjectMembers.some(
-    (m) => String(m.user_id) === String(user?.id) && m.role === 'PROJECT_MANAGER'
-  ) || (project && String(project.created_by) === String(user?.id));
+    (m) => m.user_id === user?.id && m.role === 'PROJECT_MANAGER'
+  ) || (project && project.created_by === user?.id);
   const canManage = user?.role === 'ADMIN' || Boolean(isProjectManager);
 
   // Find Project Manager / Creator info
   const projectManager = activeProjectMembers.find(
-    (m) => m.role === 'PROJECT_MANAGER' || (project && String(m.user_id) === String(project.created_by))
+    (m) => m.role === 'PROJECT_MANAGER' || (project && m.user_id === project.created_by)
   );
 
   // Task Action Handlers
@@ -89,7 +90,7 @@ export default function ProjectDetailsPage() {
     setIsDeleteTaskOpen(true);
   };
 
-  const handleTaskStatusChange = async (taskId: string | number, newStatus: any) => {
+  const handleTaskStatusChange = async (taskId: number, newStatus: TaskStatus) => {
     try {
       await updateTaskStatus(taskId, newStatus);
     } catch (err) {
@@ -132,11 +133,11 @@ export default function ProjectDetailsPage() {
 
   const timeRemaining = calculateDaysRemaining();
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string): BadgeVariant => {
     switch (status) {
       case 'completed': return 'success';
       case 'in_progress': return 'warning';
-      case 'cancelled': return 'destructive';
+      case 'cancelled': return 'error';
       default: return 'default';
     }
   };
@@ -167,7 +168,7 @@ export default function ProjectDetailsPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-2xl font-bold tracking-tight text-primary">{project.name}</h1>
-              <Badge variant={getStatusVariant(project.status) as any} className="text-xs">
+              <Badge variant={getStatusVariant(project.status)} className="text-xs">
                 {formatStatus(project.status)}
               </Badge>
               <Badge variant={project.priority === 'high' ? 'error' : 'default'} className="text-xs capitalize">
@@ -401,7 +402,7 @@ export default function ProjectDetailsPage() {
       <RemoveProjectMemberModal 
         open={!!memberToRemove} 
         onOpenChange={(open) => !open && setMemberToRemove(null)} 
-        memberId={memberToRemove?.id || ''}
+        memberId={memberToRemove ? memberToRemove.id : 0}
         projectId={project.id}
         memberName={
           memberToRemove?.first_name || memberToRemove?.last_name
@@ -443,6 +444,7 @@ export default function ProjectDetailsPage() {
         open={isDeleteTaskOpen} 
         onOpenChange={setIsDeleteTaskOpen} 
         taskTitle={selectedTask?.title || ''} 
+        taskId={selectedTask?.id}
       />
     </div>
   );

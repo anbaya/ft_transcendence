@@ -22,7 +22,7 @@ const getHourBucket = (hour: number): number => {
 };
 
 export function ActivityHeatmap() {
-  const myTasks = useTaskStore((state) => state.myTasks);
+  const myTasks = useTaskStore((state) => state.myTasks); 
 
   // Compute dynamic 5x5 activity matrix for the current week (Mon-Fri)
   const activityMatrix = useMemo(() => {

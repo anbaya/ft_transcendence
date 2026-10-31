@@ -6,7 +6,7 @@ interface DocumentDetailsPanelProps {
   document: Document | null;
   isOpen: boolean;
   onClose: () => void;
-  onDelete: (id: string | number) => void;
+  onDelete: (id: number) => void;
   onDownload: (doc: Document) => void;
 }
 
@@ -30,7 +30,6 @@ export function DocumentDetailsPanel({ document, isOpen, onClose, onDelete, onDo
             <Dialog.Close asChild>
               <button className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary">
                 <X className="h-5 w-5 text-slate-500" />
-                <span className="sr-only">Close</span>
               </button>
             </Dialog.Close>
           </div>

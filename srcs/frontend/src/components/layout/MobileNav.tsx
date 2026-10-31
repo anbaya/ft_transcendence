@@ -82,7 +82,6 @@ export function MobileNav() {
             className="flex h-9 w-9 items-center justify-center rounded-md text-muted hover:bg-slate-100 hover:text-primary focus:outline-none"
           >
             <X className="h-5 w-5" />
-            <span className="sr-only">Close menu</span>
           </button>
         </div>
 

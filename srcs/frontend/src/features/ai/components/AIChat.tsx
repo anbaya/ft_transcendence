@@ -44,7 +44,7 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
   const handleClearHistory = () => {
     const contextLabel = activeProject ? `project "${activeProject.name}"` : 'General Mode';
     if (window.confirm(`Clear chat history for ${contextLabel}?`)) {
-      clearHistory(selectedProjectId);
+      clearHistory();
     }
   };
 

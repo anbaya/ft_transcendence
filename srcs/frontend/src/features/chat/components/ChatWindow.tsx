@@ -3,20 +3,19 @@ import { MessageSquare } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import type { Message } from '@/types/chat';
-import type { ChatThread } from './ConversationList';
+import type { Message, ChatThread } from '@/types/chat';
 
 interface ChatWindowProps {
   conversation: ChatThread | null;
   messages: Message[];
-  currentUserId: string;
+  currentUserId: number;
   onSendMessage: (content: string) => void;
 }
 
 export function ChatWindow({ 
   conversation, 
   messages, 
-  currentUserId,
+  currentUserId, 
   onSendMessage 
 }: ChatWindowProps) {
   
@@ -73,10 +72,10 @@ export function ChatWindow({
           ) : (
             // Map through messages and render individual bubbles
             messages.map((msg, idx) => {
-              const isCurrentUser = String(msg.sender_id) === String(currentUserId);
+              const isCurrentUser = msg.sender_id === currentUserId;
               
               // Only show avatar for the last message in a consecutive group from the same sender
-              const isLastInGroup = idx === messages.length - 1 || String(messages[idx + 1].sender_id) !== String(msg.sender_id);
+              const isLastInGroup = idx === messages.length - 1 || messages[idx + 1].sender_id !== msg.sender_id;
               
               const senderName = isCurrentUser ? 'You' : (msg.sender_name || conversation.name);
               

@@ -1,22 +1,13 @@
 import { Search, MessageSquare } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
-import type { Conversation } from '@/types/chat';
-
-// Extended conversation model with UI-specific properties
-export interface ChatThread extends Conversation {
-  name: string;
-  avatarUrl?: string;
-  lastMessageSnippet?: string;
-  lastMessageTime?: string;
-  unreadCount?: number;
-}
+import type { ChatThread } from '@/types/chat';
 
 interface ConversationListProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   conversations: ChatThread[];
-  selectedId: string | number | null;
-  onSelect: (id: string | number) => void;
+  selectedId: number | null;
+  onSelect: (id: number) => void;
 }
 
 export function ConversationList({ 
@@ -25,8 +16,8 @@ export function ConversationList({
   conversations, 
   selectedId, 
   onSelect 
-}: ConversationListProps) {
   
+}: ConversationListProps) {
   // Filter conversations based on the search query
   const filtered = conversations.filter(c => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -66,7 +57,7 @@ export function ConversationList({
                 <button
                   onClick={() => onSelect(conv.id)}
                   className={`w-full text-left p-4 flex items-start gap-3 transition-colors hover:bg-slate-50 ${
-                    String(selectedId) === String(conv.id) ? 'bg-slate-50 border-l-2 border-primary' : 'border-l-2 border-transparent'
+                    selectedId === conv.id ? 'bg-slate-50 border-l-2 border-primary' : 'border-l-2 border-transparent'
                   }`}
                 >
                   <Avatar 
