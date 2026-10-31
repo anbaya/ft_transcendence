@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (selectedProjectId) {
       fetchAnalytics(selectedProjectId);
-      fetchProjectTasks(selectedProjectId);
+      fetchProjectTasks(Number(selectedProjectId));
     } else {
       clearAnalytics();
     }

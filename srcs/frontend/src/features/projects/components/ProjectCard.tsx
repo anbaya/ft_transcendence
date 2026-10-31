@@ -3,7 +3,7 @@ import { FolderKanban, ArrowRight, MoreHorizontal, Edit, Trash2 } from 'lucide-r
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import type { Project } from '@/types/project';
 
 interface ProjectCardProps {
@@ -14,20 +14,20 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const { user } = useAuthStore();
-  const canManage = user?.role === 'ADMIN' || String(project.created_by) === String(user?.id);
+  const canManage = user?.role === 'ADMIN' || project.created_by === user?.id;
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string): BadgeVariant => {
     switch (status) {
       case 'completed': return 'success';
       case 'in_progress': return 'warning';
-      case 'cancelled': return 'destructive';
+      case 'cancelled': return 'error';
       default: return 'default';
     }
   };
 
   const formatStatus = (status: string) => {
     if (!status) return 'Planned';
-    return status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return status.replace('_', ' ');
   };
 
   return (
@@ -39,7 +39,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <Badge 
-              variant={getStatusVariant(project.status) as any} 
+              variant={getStatusVariant(project.status)} 
               className="text-xs"
             >
               {formatStatus(project.status)}

@@ -29,7 +29,6 @@ export function Header() {
           className="lg:hidden flex h-9 w-9 items-center justify-center rounded-md text-muted hover:bg-slate-100 hover:text-primary focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
         >
           <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle mobile menu</span>
         </button>
         <h1 className="text-lg font-semibold text-primary hidden sm:block">
           {pageTitle}
@@ -46,7 +45,6 @@ export function Header() {
           className="hidden sm:flex h-9 w-9 items-center justify-center rounded-md text-muted hover:bg-indigo-50 hover:text-secondary focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition-colors"
         >
           <Bot className="h-5 w-5" />
-          <span className="sr-only">AI Assistant</span>
         </button>
 
         <NotificationNav />

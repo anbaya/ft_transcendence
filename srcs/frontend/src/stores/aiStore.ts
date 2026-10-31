@@ -14,8 +14,8 @@ interface AIState {
   togglePanel: (open?: boolean) => void;
   setSelectedProjectId: (id: number | null) => void;
   fetchHistory: (projectId?: number | null) => Promise<void>;
-  sendMessage: (content: string, projectIdOverride?: number | null) => Promise<void>;
-  clearHistory: (projectIdOverride?: number | null) => Promise<void>;
+  sendMessage: (content: string) => Promise<void>;
+  clearHistory: () => Promise<void>;
   clearError: () => void;
   reset: () => void;
 }
@@ -80,8 +80,8 @@ export const useAIStore = create<AIState>((set, get) => ({
     }
   },
 
-  sendMessage: async (content: string, projectIdOverride?: number | null) => {
-    const targetId = projectIdOverride !== undefined ? projectIdOverride : get().selectedProjectId;
+  sendMessage: async (content: string) => {
+    const targetId = get().selectedProjectId;
     
     const tempUserMsg: AIMessage = {
       id: `user-${Date.now()}`,
@@ -100,7 +100,7 @@ export const useAIStore = create<AIState>((set, get) => ({
     try {
       const body = {
         question: content,
-        project_id: targetId ? Number(targetId) : null,
+        project_id: targetId,
       };
 
       const response = await apiClient.post<{
@@ -127,8 +127,8 @@ export const useAIStore = create<AIState>((set, get) => ({
     }
   },
 
-  clearHistory: async (projectIdOverride?: number | null) => {
-    const targetId = projectIdOverride !== undefined ? projectIdOverride : get().selectedProjectId;
+  clearHistory: async () => {
+    const targetId = get().selectedProjectId;
     const queryParam = targetId ? String(targetId) : 'general';
 
     try {

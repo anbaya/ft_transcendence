@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowUpDown, CheckCircle2, MoreHorizontal } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import type { Task } from '@/types/task';
@@ -8,9 +8,9 @@ import type { Task } from '@/types/task';
 interface TaskTableProps {
   tasks: Task[];
   showProjectName?: boolean;
-  onViewDetails?: (task: Task) => void;
-  onEdit?: (task: Task) => void;
-  onDelete?: (task: Task) => void;
+  onViewDetails: (task: Task) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
 }
 
 type SortField = 'title' | 'status' | 'priority' | 'deadline';
@@ -55,7 +55,7 @@ export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdi
     return sortOrder === 'asc' ? comparison : -comparison;
   });
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string): BadgeVariant => {
     switch (status) {
       case 'COMPLETED': return 'success';
       case 'IN_PROGRESS': return 'warning';
@@ -73,9 +73,9 @@ export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdi
     }
   };
 
-  const getPriorityVariant = (priority: string) => {
+  const getPriorityVariant = (priority: string): BadgeVariant => {
     switch (priority) {
-      case 'HIGH': return 'destructive';
+      case 'HIGH': return 'error';
       case 'MEDIUM': return 'warning';
       case 'LOW': return 'default';
       default: return 'default';
@@ -165,10 +165,10 @@ export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdi
                 )}
                 {/* Mobile view metadata */}
                 <div className="flex sm:hidden gap-2 mt-2">
-                  <Badge variant={getStatusVariant(task.status) as any} className="text-[10px]">
+                  <Badge variant={getStatusVariant(task.status)} className="text-[10px]">
                     {formatStatus(task.status)}
                   </Badge>
-                  <Badge variant={getPriorityVariant(task.priority) as any} className="text-[10px]">
+                  <Badge variant={getPriorityVariant(task.priority)} className="text-[10px]">
                     {formatPriority(task.priority)}
                   </Badge>
                 </div>
@@ -179,17 +179,17 @@ export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdi
                 </td>
               )}
               <td className="px-6 py-4 hidden sm:table-cell">
-                <Badge variant={getStatusVariant(task.status) as any}>
+                <Badge variant={getStatusVariant(task.status)}>
                   {formatStatus(task.status)}
                 </Badge>
               </td>
               <td className="px-6 py-4 hidden md:table-cell">
-                <Badge variant={getPriorityVariant(task.priority) as any}>
+                <Badge variant={getPriorityVariant(task.priority)}>
                   {formatPriority(task.priority)}
                 </Badge>
               </td>
               <td className="px-6 py-4 hidden md:table-cell text-muted">
-                {task.assignee_name || task.assignee_email || (task.assignee_id ? `User ${task.assignee_id}` : 'Unassigned')}
+                {task.assignee_name || 'Unassigned'}
               </td>
               <td className="px-6 py-4 hidden lg:table-cell text-muted">
                 {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}
@@ -205,29 +205,23 @@ export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdi
                     <DropdownMenu.Content align="end" className="z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-white p-1 shadow-md">
                       <DropdownMenu.Item 
                         className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
-                        onClick={() => onViewDetails && onViewDetails(task)}
+                        onClick={() => onViewDetails(task)}
                       >
                         View Details
                       </DropdownMenu.Item>
-                      {onEdit && (
-                        <DropdownMenu.Item 
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
-                          onClick={() => onEdit(task)}
-                        >
-                          Edit Task
-                        </DropdownMenu.Item>
-                      )}
-                      {onDelete && (
-                        <>
-                          <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
-                          <DropdownMenu.Item 
-                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
-                            onClick={() => onDelete(task)}
-                          >
-                            Delete
-                          </DropdownMenu.Item>
-                        </>
-                      )}
+                      <DropdownMenu.Item 
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
+                        onClick={() => onEdit(task)}
+                      >
+                        Edit Task
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
+                      <DropdownMenu.Item 
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
+                        onClick={() => onDelete(task)}
+                      >
+                        Delete
+                      </DropdownMenu.Item>
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>

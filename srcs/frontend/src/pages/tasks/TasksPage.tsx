@@ -43,7 +43,7 @@ export default function TasksPage() {
     setIsDeleteOpen(true);
   };
 
-  const handleStatusChange = async (taskId: string | number, newStatus: TaskStatus) => {
+  const handleStatusChange = async (taskId: number, newStatus: TaskStatus) => {
     try {
       await updateTaskStatus(taskId, newStatus);
     } catch (err) {
@@ -120,6 +120,7 @@ export default function TasksPage() {
         open={isDeleteOpen} 
         onOpenChange={setIsDeleteOpen} 
         taskTitle={selectedTask?.title || ''} 
+        taskId={selectedTask?.id}
       />
     </div>
   );

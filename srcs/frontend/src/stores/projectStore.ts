@@ -9,15 +9,15 @@ interface ProjectState {
   error: string | null;
 
   fetchProjects: () => Promise<void>;
-  fetchProject: (id: string | number) => Promise<void>;
+  fetchProject: (id: number) => Promise<void>;
   createProject: (data: Partial<Project>) => Promise<Project>;
-  updateProject: (id: string | number, data: Partial<Project>) => Promise<Project>;
-  deleteProject: (id: string | number) => Promise<void>;
+  updateProject: (id: number, data: Partial<Project>) => Promise<Project>;
+  deleteProject: (id: number) => Promise<void>;
 
   activeProjectMembers: ProjectMember[];
-  fetchProjectMembers: (projectId: string | number) => Promise<void>;
-  addProjectMember: (projectId: string | number, email: string) => Promise<ProjectMember>;
-  removeProjectMember: (projectId: string | number, memberId: string | number) => Promise<void>;
+  fetchProjectMembers: (projectId: number) => Promise<void>;
+  addProjectMember: (projectId: number, email: string) => Promise<ProjectMember>;
+  removeProjectMember: (projectId: number, memberId: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -43,7 +43,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  fetchProject: async (id: string | number) => {
+  fetchProject: async (id: number) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.get<Project>(`/api/projects/${id}/`);
@@ -68,7 +68,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  updateProject: async (id: string | number, data: Partial<Project>) => {
+  updateProject: async (id: number, data: Partial<Project>) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.patch<Project>(`/api/projects/${id}/`, data);
@@ -84,7 +84,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  deleteProject: async (id: string | number) => {
+  deleteProject: async (id: number) => {
     set({ isLoading: true, error: null });
     try {
       await apiClient.delete(`/api/projects/${id}/`);
@@ -99,7 +99,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  fetchProjectMembers: async (projectId: string | number) => {
+  fetchProjectMembers: async (projectId: number) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.get<ProjectMember[]>(`/api/projects/${projectId}/members/`);
@@ -109,7 +109,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  addProjectMember: async (projectId: string | number, email: string) => {
+  addProjectMember: async (projectId: number, email: string) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.post<ProjectMember>(`/api/projects/${projectId}/members/`, { email });
@@ -124,7 +124,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
     }
   },
 
-  removeProjectMember: async (projectId: string | number, memberId: string | number) => {
+  removeProjectMember: async (projectId: number, memberId: number) => {
     set({ isLoading: true, error: null });
     try {
       await apiClient.delete(`/api/projects/${projectId}/members/${memberId}/`);

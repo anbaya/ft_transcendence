@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { MessageSquare, AlertCircle, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import apiClient from '@/services/api/client';
 import { createProjectWebSocket, ProjectWebSocketClient } from '@/services/websocket/client';
+import { MessageBubble } from '@/features/chat/components/MessageBubble';
+import { MessageInput } from '@/features/chat/components/MessageInput';
 import type { Message, Conversation } from '@/types/chat';
 
 interface ProjectChatTabProps {
-  projectId: string | number;
+  projectId: number;
 }
 
 export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [wsStatus, setWsStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
@@ -83,12 +83,8 @@ export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
     };
   }, [projectId]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = inputText.trim();
-    if (!text) return;
-
-    setInputText('');
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
 
     // Primary: Send via WebSocket
     if (wsRef.current && wsStatus === 'connected') {
@@ -158,32 +154,16 @@ export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
           </div>
         ) : (
           messages.map((msg) => {
-            const isMe = String(msg.sender_id) === String(user?.id);
+            const isMe = msg.sender_id === user?.id;
+            const senderName = isMe ? 'You' : msg.sender_name || `Member #${msg.sender_id}`;
             return (
-              <div
+              <MessageBubble
                 key={msg.id}
-                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-              >
-                <div className="flex items-center gap-2 mb-1 px-1">
-                  <span className="text-xs font-medium text-slate-600">
-                    {isMe ? 'You' : msg.sender_name || `Member #${msg.sender_id}`}
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {msg.created_at
-                      ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : ''}
-                  </span>
-                </div>
-                <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm break-words ${
-                    isMe
-                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-br-xs'
-                      : 'bg-slate-100 text-slate-800 rounded-bl-xs border border-slate-200/60'
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                </div>
-              </div>
+                message={msg}
+                isCurrentUser={isMe}
+                senderName={senderName}
+                showAvatar={!isMe}
+              />
             );
           })
         )}
@@ -191,19 +171,7 @@ export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
       </div>
 
       {/* Message Input Box */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-slate-50 flex items-center gap-2">
-        <input
-          type="text"
-          placeholder="Type a message to your team..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          className="flex-1 rounded-md border border-border bg-white px-3.5 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
-        />
-        <Button type="submit" disabled={!inputText.trim()}>
-          <Send className="h-4 w-4 mr-1.5" />
-          Send
-        </Button>
-      </form>
+      <MessageInput onSend={handleSendMessage} />
     </div>
   );
 }

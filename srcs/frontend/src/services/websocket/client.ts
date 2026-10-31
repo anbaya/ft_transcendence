@@ -4,7 +4,7 @@ type MessageHandler = (data: any) => void;
 
 export class ProjectWebSocketClient {
   private ws: WebSocket | null = null;
-  private projectId: string | number;
+  private projectId: number;
   private onMessageCallback: MessageHandler;
   private onStatusChange?: (status: 'connected' | 'disconnected' | 'connecting') => void;
   private reconnectTimeout: any = null;
@@ -14,7 +14,7 @@ export class ProjectWebSocketClient {
   private isExplicitlyClosed = false;
 
   constructor(
-    projectId: string | number,
+    projectId: number,
     onMessage: MessageHandler,
     onStatusChange?: (status: 'connected' | 'disconnected' | 'connecting') => void
   ) {
@@ -119,7 +119,7 @@ export class ProjectWebSocketClient {
 
 // Factory function
 export function createProjectWebSocket(
-  projectId: string | number,
+  projectId: number,
   onMessage: MessageHandler,
   onStatusChange?: (status: 'connected' | 'disconnected' | 'connecting') => void
 ) {

@@ -2,14 +2,16 @@ import type { Document } from '@/types/document';
 import { FileText, Image as ImageIcon, MoreHorizontal, Download, Eye, Trash2 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
+// Props for the documents table component
 interface DocumentListTableProps {
   documents: Document[];
   onViewDetails: (doc: Document) => void;
   onDownload: (doc: Document) => void;
-  onDelete: (id: string | number) => void;
+  onDelete: (id: number) => void;
 }
 
 export function DocumentListTable({ documents, onViewDetails, onDownload, onDelete }: DocumentListTableProps) {
+  // Returns an image icon for graphic files, or a generic document icon otherwise
   const getIcon = (name: string) => {
     if (name.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i)) {
       return <ImageIcon className="h-5 w-5 text-indigo-500" />;
@@ -20,6 +22,7 @@ export function DocumentListTable({ documents, onViewDetails, onDownload, onDele
   return (
     <div className="w-full overflow-x-auto rounded-lg border border-border bg-white shadow-sm">
       <table className="w-full text-left text-sm text-muted">
+        {/* Table Header with responsive column visibility */}
         <thead className="border-b border-border bg-slate-50/50 text-xs uppercase text-muted/70">
           <tr>
             <th className="px-6 py-4 font-medium">Name</th>
@@ -30,6 +33,7 @@ export function DocumentListTable({ documents, onViewDetails, onDownload, onDele
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
+          {/* Empty State */}
           {documents.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-6 py-12 text-center">
@@ -38,14 +42,16 @@ export function DocumentListTable({ documents, onViewDetails, onDownload, onDele
               </td>
             </tr>
           ) : (
+            /* Document Rows */
             documents.map((doc) => {
               const docName = doc.name || doc.filename || 'Untitled Document';
               return (
                 <tr 
                   key={doc.id} 
                   className="group hover:bg-slate-50 transition-colors cursor-pointer"
-                  onClick={() => onViewDetails(doc)}
+                  onClick={() => onViewDetails(doc)} // Clicking row opens detail drawer
                 >
+                  {/* File Name & Mobile Sub-label */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded bg-slate-100 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-slate-200 transition-all">
@@ -53,29 +59,37 @@ export function DocumentListTable({ documents, onViewDetails, onDownload, onDele
                       </div>
                       <div>
                         <span className="font-medium text-primary line-clamp-1">{docName}</span>
+                        {/* Summary shown only on mobile where other columns are hidden */}
                         <span className="text-xs text-slate-400 sm:hidden">
                           {doc.project_name || 'Project'} · {doc.uploaded_by_name || 'Member'}
                         </span>
                       </div>
                     </div>
                   </td>
+
+                  {/* Project Name Badge */}
                   <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <span className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
                       {doc.project_name || `Project #${doc.project_id}`}
                     </span>
                   </td>
+
+                  {/* Uploader Name */}
                   <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell text-slate-600">
                     {doc.uploaded_by_name || 'Member'}
                   </td>
+
+                  {/* Upload Date */}
                   <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell text-slate-500">
                     {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : '-'}
                   </td>
+
+                  {/* Actions Dropdown (stops click propagation so it doesn't trigger row click) */}
                   <td className="px-6 py-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger asChild>
                         <button className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-primary focus:outline-none focus:ring-2 focus:ring-secondary ml-auto">
                           <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
                         </button>
                       </DropdownMenu.Trigger>
                       <DropdownMenu.Portal>

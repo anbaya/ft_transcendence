@@ -1,8 +1,8 @@
 type ConversationType = 'Direct' | 'Project' | 'Group';
 
 export interface Conversation {
-  id: number | string;
-  project_id: number | string;
+  id: number;
+  project_id: number;
   project_name?: string;
   created_at: string;
   type?: ConversationType;
@@ -12,12 +12,21 @@ export interface Conversation {
 }
 
 export interface Message {
-  id: number | string;
-  conversation: number | string;
-  conversation_id?: number | string;
-  sender_id: number | string;
+  id: number;
+  conversation: number;
+  conversation_id?: number;
+  sender_id: number;
   sender_name?: string;
   content: string;
   created_at: string;
   sent_at?: string;
+}
+
+// Extended conversation model with UI-specific properties
+export interface ChatThread extends Conversation {
+  name: string;
+  avatarUrl?: string;
+  lastMessageSnippet?: string;
+  lastMessageTime?: string;
+  unreadCount?: number;
 }

@@ -11,13 +11,12 @@ import type { TaskStatus, TaskPriority } from '@/types/task';
 interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId?: string | number;
+  projectId: number;
 }
 
 export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskModalProps) {
   const { createTask, isLoading } = useTaskStore();
-  const { activeProject, activeProjectMembers } = useProjectStore();
-  const currentProjectId = projectId || activeProject?.id;
+  const { activeProjectMembers } = useProjectStore();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -32,13 +31,13 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
   const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
   
   const handleSubmit = async () => {
-    if (!formData.title.trim() || !currentProjectId) return;
+    if (!formData.title.trim() || !projectId) return;
     if (isDeadlineInvalid) {
       toast.error('Deadline cannot be in the past');
       return;
     }
     try {
-      await createTask(currentProjectId, {
+      await createTask(Number(projectId), {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         status: formData.status,
@@ -141,9 +140,7 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
                 <option value="">Unassigned</option>
                 {activeProjectMembers.map((member) => (
                   <option key={member.user_id} value={member.user_id}>
-                    {member.first_name || member.last_name
-                      ? `${member.first_name || ''} ${member.last_name || ''}`.trim()
-                      : member.email || `Member ${member.user_id}`}
+                    {member.first_name ? `${member.first_name} ${member.last_name}` : member.email}
                   </option>
                 ))}
               </select>
@@ -174,7 +171,6 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
           
           <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none text-primary">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

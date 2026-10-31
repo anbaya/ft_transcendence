@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { useAuthStore } from '@/stores/authStore';
 import type { Task, TaskStatus } from '@/types/task';
 
@@ -12,7 +12,7 @@ interface TaskDetailsModalProps {
   task?: Task;
   onEditClick: () => void;
   onDeleteClick: () => void;
-  onStatusChange?: (taskId: string | number, status: TaskStatus) => Promise<void>;
+  onStatusChange?: (taskId: number, status: TaskStatus) => Promise<void>;
 }
 
 export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDeleteClick, onStatusChange }: TaskDetailsModalProps) {
@@ -21,7 +21,7 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
 
   if (!task) return null;
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string): BadgeVariant => {
     switch (status) {
       case 'COMPLETED': return 'success';
       case 'IN_PROGRESS': return 'warning';
@@ -39,9 +39,9 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
     }
   };
 
-  const getPriorityVariant = (priority: string) => {
+  const getPriorityVariant = (priority: string): BadgeVariant => {
     switch (priority) {
-      case 'HIGH': return 'destructive';
+      case 'HIGH': return 'error';
       case 'MEDIUM': return 'warning';
       case 'LOW': return 'default';
       default: return 'default';
@@ -70,7 +70,7 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
               <div className="flex items-center gap-2 mb-3">
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger className="outline-none">
-                    <Badge variant={getStatusVariant(task.status) as any} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
+                    <Badge variant={getStatusVariant(task.status)} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
                       {formatStatus(task.status)}
                       <ChevronDown className="h-3 w-3" />
                     </Badge>
@@ -93,7 +93,7 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
-                <Badge variant={getPriorityVariant(task.priority) as any}>
+                <Badge variant={getPriorityVariant(task.priority)}>
                   {formatPriority(task.priority)}
                 </Badge>
               </div>
@@ -103,7 +103,6 @@ export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDele
             </div>
             <Dialog.Close className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2">
               <X className="h-5 w-5 text-muted" />
-              <span className="sr-only">Close</span>
             </Dialog.Close>
           </div>
 

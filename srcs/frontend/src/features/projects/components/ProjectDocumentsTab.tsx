@@ -25,17 +25,18 @@ export function ProjectDocumentsTab({ projectId, canManage }: ProjectDocumentsTa
   } = useDocumentStore();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const numericProjectId = Number(projectId);
 
   useEffect(() => {
-    fetchDocuments(projectId);
-  }, [projectId]);
+    fetchDocuments(numericProjectId);
+  }, [numericProjectId]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      await uploadFile(file, projectId);
+      await uploadFile(file, numericProjectId);
       toast.success('Document uploaded successfully!');
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: any) {
@@ -141,7 +142,7 @@ export function ProjectDocumentsTab({ projectId, canManage }: ProjectDocumentsTa
               {documents.map((doc) => {
                 const canDelete =
                   canManage ||
-                  String(doc.uploaded_by_id) === String(user?.id);
+                  doc.uploaded_by_id === user?.id;
 
                 return (
                   <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">

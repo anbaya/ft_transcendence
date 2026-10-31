@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ConversationList, type ChatThread } from '@/features/chat/components/ConversationList';
+import { ConversationList } from '@/features/chat/components/ConversationList';
 import { ChatWindow } from '@/features/chat/components/ChatWindow';
-import type { Message, Conversation } from '@/types/chat';
+import type { Message, Conversation, ChatThread } from '@/types/chat';
 import { useAuthStore } from '@/stores/authStore';
 import apiClient from '@/services/api/client';
 import { createProjectWebSocket, ProjectWebSocketClient } from '@/services/websocket/client';
@@ -10,7 +10,7 @@ export default function ChatPage() {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<ChatThread[]>([]);
-  const [selectedConvId, setSelectedConvId] = useState<string | number | null>(null);
+  const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
 
   const wsRef = useRef<ProjectWebSocketClient | null>(null);
@@ -22,7 +22,6 @@ export default function ChatPage() {
         const response = await apiClient.get<Conversation[]>('/api/conversations/my/');
         const threads: ChatThread[] = response.data.map((conv) => ({
           ...conv,
-          id: String(conv.id),
           name: conv.project_name ? `${conv.project_name} Chat` : `Project #${conv.project_id} Chat`,
         }));
         setConversations(threads);
@@ -37,7 +36,7 @@ export default function ChatPage() {
   }, []);
 
   // 2. When selected conversation changes, load messages & connect its WebSocket
-  const selectedConversation = conversations.find((c) => String(c.id) === String(selectedConvId)) || null;
+  const selectedConversation = conversations.find((c) => c.id === selectedConvId) || null;
 
   useEffect(() => {
     if (!selectedConversation) {
@@ -65,7 +64,7 @@ export default function ChatPage() {
     const ws = createProjectWebSocket(currentConv.project_id, (incomingMsg) => {
       if (!isMounted) return;
       setMessages((prev) => {
-        if (incomingMsg.id && prev.some((m) => String(m.id) === String(incomingMsg.id))) {
+        if (incomingMsg.id && prev.some((m) => m.id === incomingMsg.id)) {
           return prev;
         }
         return [...prev, incomingMsg];
@@ -85,14 +84,14 @@ export default function ChatPage() {
     // Try WS first
     if (wsRef.current) {
       wsRef.current.sendMessage(content);
-    }else if (selectedConvId){
+    } else if (selectedConvId) {
       // Fallback to REST API
       try {
         const res = await apiClient.post<Message>(`/api/conversations/${selectedConversation.id}/messages/`, {
           content,
         });
         setMessages((prev) => {
-          if (prev.some((m) => String(m.id) === String(res.data.id))) return prev;
+          if (prev.some((m) => m.id === res.data.id)) return prev;
           return [...prev, res.data];
         });
       } catch (err) {
@@ -117,7 +116,7 @@ export default function ChatPage() {
         <ChatWindow 
           conversation={selectedConversation}
           messages={messages}
-          currentUserId={String(user?.id || '')}
+          currentUserId={user?.id || 0}
           onSendMessage={handleSendMessage}
         />
       </div>

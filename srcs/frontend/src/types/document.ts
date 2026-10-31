@@ -1,8 +1,8 @@
 export interface Document {
-  id: number | string;
-  project_id: number | string;
+  id: number;
+  project_id: number;
   project_name?: string;
-  uploaded_by_id?: number | string;
+  uploaded_by_id?: number;
   uploaded_by_name?: string;
   name: string;
   file: string;

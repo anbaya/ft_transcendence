@@ -9,7 +9,7 @@ interface NotificationState {
   isLoading: boolean;
   error: string | null;
   fetchNotifications: () => Promise<void>;
-  markAsRead: (id: string | number) => Promise<void>;
+  markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   reset: () => void;
 }
@@ -33,8 +33,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const items = response.data || [];
       // If this is a background poll (not the first page load)
       if (hasInitialFetchCompleted) {
-        const existingIds = new Set(get().notifications.map((n) => String(n.id)));
-        const newUnreadItems = items.filter((n) => !existingIds.has(String(n.id)) && !n.is_read);
+        const existingIds = new Set(get().notifications.map((n) => n.id));
+        const newUnreadItems = items.filter((n) => !existingIds.has(n.id) && !n.is_read);
         // Pop a toast for every new notification that arrived
         newUnreadItems.forEach((n) => {
           const messageText = n.message || n.content || '';
@@ -55,12 +55,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
-  markAsRead: async (id: string | number) => {
+  markAsRead: async (id: number) => {
     try {
       await apiClient.patch(`/api/notifications/${id}/read/`);
       set((state) => {
         const updatedNotifications = state.notifications.map((n) =>
-          String(n.id) === String(id) ? { ...n, is_read: true } : n
+          n.id === id ? { ...n, is_read: true } : n
         );
         return {
           notifications: updatedNotifications,
