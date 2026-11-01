@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { cn } from '@/utils/cn';
 import { useTaskStore } from '@/stores/taskStore';
 
@@ -25,7 +24,7 @@ export function ActivityHeatmap() {
   const myTasks = useTaskStore((state) => state.myTasks); 
 
   // Compute dynamic 5x5 activity matrix for the current week (Mon-Fri)
-  const activityMatrix = useMemo(() => {
+  const activityMatrix =  () => {
     const matrix: number[][] = Array.from({ length: 5 }, () => Array(5).fill(0));
 
     const now = new Date();
@@ -58,7 +57,7 @@ export function ActivityHeatmap() {
     });
 
     return matrix;
-  }, [myTasks]);
+  };
 
   return (
     <div className="rounded-lg border border-border bg-white shadow-sm">

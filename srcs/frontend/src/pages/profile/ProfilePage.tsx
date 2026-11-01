@@ -228,11 +228,11 @@ export default function ProfilePage() {
             </form>
           </Card>
 
-          {/* Danger Zone */}
+          {/* Account Actions */}
           <Card className="border-red-200">
             <CardHeader>
-              <CardTitle className="text-red-600">Danger Zone</CardTitle>
-              <CardDescription>Manage irreversible actions and device sessions.</CardDescription>
+              <CardTitle className="text-primary">Account Actions</CardTitle>
+              <CardDescription>Manage your account actions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-red-100">
