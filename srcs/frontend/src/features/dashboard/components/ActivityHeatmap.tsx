@@ -24,40 +24,38 @@ export function ActivityHeatmap() {
   const myTasks = useTaskStore((state) => state.myTasks); 
 
   // Compute dynamic 5x5 activity matrix for the current week (Mon-Fri)
-  const activityMatrix =  () => {
-    const matrix: number[][] = Array.from({ length: 5 }, () => Array(5).fill(0));
+  const matrix: number[][] = Array.from({ length: 5 }, () => Array(5).fill(0));
 
-    const now = new Date();
-    const currentDay = now.getDay(); // 0 is Sunday, 1 is Monday...
-    const diffToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() + diffToMonday);
-    monday.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 is Sunday, 1 is Monday...
+  const diffToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
 
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
 
-    // Aggregate user task activity events
-    myTasks.forEach((task) => {
-      const dates = [new Date(task.created_at)];
-      if (task.updated_at && task.updated_at !== task.created_at) {
-        dates.push(new Date(task.updated_at));
-      }
+  // Aggregate user task activity events
+  myTasks.forEach((task) => {
+    const dates = [new Date(task.created_at)];
+    if (task.updated_at && task.updated_at !== task.created_at) {
+      dates.push(new Date(task.updated_at));
+    }
 
-      dates.forEach((date) => {
-        if (date >= monday && date <= sunday) {
-          const dayIndex = date.getDay() - 1; // 0 for Mon, 4 for Fri
-          if (dayIndex >= 0 && dayIndex < 5) {
-            const hourBucket = getHourBucket(date.getHours());
-            matrix[dayIndex][hourBucket] = Math.min(matrix[dayIndex][hourBucket] + 1, 3);
-          }
+    dates.forEach((date) => {
+      if (date >= monday && date <= sunday) {
+        const dayIndex = date.getDay() - 1; // 0 for Mon, 4 for Fri
+        if (dayIndex >= 0 && dayIndex < 5) {
+          const hourBucket = getHourBucket(date.getHours());
+          matrix[dayIndex][hourBucket] = Math.min(matrix[dayIndex][hourBucket] + 1, 3);
         }
-      });
+      }
     });
+  });
 
-    return matrix;
-  };
+  const activityMatrix = matrix;
 
   return (
     <div className="rounded-lg border border-border bg-white shadow-sm">
