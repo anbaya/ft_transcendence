@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useAuthStore } from '@/stores/authStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
-import { Camera, Save, LogOut, Shield } from 'lucide-react';
+import { Camera, Save, LogOut, Shield, Trash2, AlertTriangle, X } from 'lucide-react';
 import apiClient from '@/services/api/client';
 import { toast } from '@/stores/toastStore';
 
@@ -12,6 +13,8 @@ export default function ProfilePage() {
   const { user, logout } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
@@ -63,6 +66,21 @@ export default function ProfilePage() {
   const handleLogout = () => {
     logout();
     window.location.href = '/auth/login';
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await apiClient.delete('/api/auth/me/');
+      toast.success('Your account has been deleted.');
+      logout();
+      localStorage.clear();
+      window.location.href = '/login';
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || error.response?.data?.error || 'Failed to delete account');
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   return (
@@ -211,20 +229,85 @@ export default function ProfilePage() {
           </Card>
 
           {/* Danger Zone */}
-          <Card className="border-red-100">
+          <Card className="border-red-200">
             <CardHeader>
               <CardTitle className="text-red-600">Danger Zone</CardTitle>
-              <CardDescription>Log out of your account on this device.</CardDescription>
+              <CardDescription>Manage irreversible actions and device sessions.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button variant="destructive" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-red-100">
+                <div>
+                  <h4 className="font-medium text-slate-900 text-sm">Sign Out</h4>
+                  <p className="text-xs text-slate-500">Log out of your account on this device.</p>
+                </div>
+                <Button variant="secondary" onClick={handleLogout} className="gap-2 shrink-0">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-medium text-red-600 text-sm">Delete Account</h4>
+                  <p className="text-xs text-slate-500">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                </div>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setIsDeleteDialogOpen(true)} 
+                  className="gap-2 shrink-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Account
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      <Dialog.Root open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+              <div className="flex items-center gap-2 text-error mb-2">
+                <AlertTriangle className="h-5 w-5" />
+                <Dialog.Title className="text-lg font-semibold leading-none tracking-tight">
+                  Delete Account
+                </Dialog.Title>
+              </div>
+              <Dialog.Description className="text-sm text-muted">
+                Are you sure you want to delete your account? This action is permanent and cannot be undone. All your personal data and access will be permanently removed.
+              </Dialog.Description>
+            </div>
+
+            <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+              <Button 
+                variant="secondary" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteAccount} 
+                isLoading={isDeleting}
+              >
+                Delete Account
+              </Button>
+            </div>
+
+            <Dialog.Close 
+              disabled={isDeleting}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-muted text-primary"
+            >
+              <X className="h-4 w-4" />
+            </Dialog.Close>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }

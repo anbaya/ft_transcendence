@@ -1,17 +1,9 @@
-export interface RAGSource {
-  document_id: string;
-  filename: string;
-  page_number?: number;
-  snippet?: string;
-}
-
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
   projectId?: number | null;
-  sources?: RAGSource[];
 }
 
 export interface AIInteraction {

@@ -35,6 +35,7 @@ export default function AppRoutes() {
       <Route path="/terms-of-service" element={<Navigate to="/terms" replace />} />
 
       {/* Public Routes with AuthLayout */}
+      <Route path="/login" element={<Navigate to="/auth/login" replace />} />
       <Route element={<AuthLayout />}>
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/register" element={<RegisterPage />} />

@@ -1,7 +1,5 @@
 import React from 'react';
 import { Bot, User, Copy, Check } from 'lucide-react';
-import { AISourceCitation } from './AISourceCitation';
-import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import type { AIMessage } from '@/types/ai';
 import { cn } from '@/utils/cn';
 
@@ -39,19 +37,12 @@ export function AIMessageBubble({ message }: AIMessageBubbleProps) {
           isUser ? "items-end" : "items-start"
         )}>
           <div className={cn(
-            "px-4 py-3 text-sm rounded-2xl",
+            "px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap",
             isUser 
-              ? "bg-secondary text-white rounded-tr-sm whitespace-pre-wrap" 
+              ? "bg-secondary text-white rounded-tr-sm" 
               : "bg-muted/30 text-foreground border border-border/50 rounded-tl-sm shadow-sm"
           )}>
-            {isUser ? (
-              message.content
-            ) : (
-              <MarkdownRenderer content={message.content} />
-            )}
-            {!isUser && message.sources && (
-              <AISourceCitation sources={message.sources} />
-            )}
+            {message.content}
           </div>
 
           <div className="flex items-center gap-2 mt-1">
