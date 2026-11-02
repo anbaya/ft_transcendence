@@ -9,8 +9,8 @@ prepare:
 	@mkdir -p $(DATA_DIR)/mysql $(DATA_DIR)/elasticsearch $(DATA_DIR)/prometheus $(DATA_DIR)/grafana/dashboards
 	@mkdir -p secrets
 	@test -f .env
-	@if [ ! -s secrets/db_password.txt ]; then grep '^DB_PASSWORD=' .env | cut -d= -f2- > secrets/db_password.txt; fi
-	@if [ ! -s secrets/db_root_password.txt ]; then grep '^DB_ROOT_PASSWORD=' .env | cut -d= -f2- > secrets/db_root_password.txt; fi
+	@grep '^DB_PASSWORD=' .env | cut -d= -f2- > secrets/db_password.txt
+	@grep '^DB_ROOT_PASSWORD=' .env | cut -d= -f2- > secrets/db_root_password.txt
 
 up: prepare
 	@echo "Starting containers..."

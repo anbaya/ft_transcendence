@@ -15,3 +15,5 @@ chroma_data
 **/.env
 .env
 *.log
+*.egg-info
+*.pytest_cache
