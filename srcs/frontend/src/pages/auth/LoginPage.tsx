@@ -84,19 +84,7 @@ export default function LoginPage() {
           {...register('password')}
         />
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 rounded border-border text-secondary focus:ring-secondary"
-            />
-            <label htmlFor="remember-me" className="text-sm text-primary">
-              Remember me
-            </label>
-          </div>
-          
+        <div className="flex items-center justify-end">
           <Link
             to="/auth/forgot-password"
             className="text-sm font-medium text-secondary hover:text-indigo-600 hover:underline"
@@ -122,6 +110,7 @@ export default function LoginPage() {
           to="/auth/register"
           className="font-medium text-secondary hover:text-indigo-600 hover:underline"
         >
+          {/* &rarr hya arrow icon */}
           Sign up &rarr;
         </Link>
       </div>

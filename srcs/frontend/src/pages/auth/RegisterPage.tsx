@@ -29,7 +29,6 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -48,27 +47,11 @@ export default function RegisterPage() {
       // Navigate to login after successful registration
       navigate('/auth/login');
     } catch (err: any) {
-      const errorData = err.response?.data;
-      if (typeof errorData === 'object' && errorData !== null) {
-        if (errorData.detail) {
-          setGlobalError(errorData.detail);
-        } else {
-          const generalErrors: string[] = [];
-          Object.entries(errorData).forEach(([field, msgs]) => {
-            const message = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
-            if (['first_name', 'last_name', 'email', 'password'].includes(field)) {
-              setError(field as keyof RegisterFormValues, { type: 'server', message });
-            } else {
-              generalErrors.push(`${field}: ${message}`);
-            }
-          });
-          if (generalErrors.length > 0) {
-            setGlobalError(generalErrors.join(' | '));
-          }
-        }
-      } else {
-        setGlobalError('Failed to create account. Please try again.');
-      }
+      setGlobalError(
+        err.response?.data?.email?.[0] ||
+        err.response?.data?.detail ||
+        'Failed to create account. Please try again.'
+      );
     }
   };
 
