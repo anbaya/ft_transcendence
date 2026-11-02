@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTaskStore } from '@/stores/taskStore';
 import { TaskFilters } from '@/features/tasks/components/TaskFilters';
 import { TaskTable } from '@/features/tasks/components/TaskTable';
@@ -52,20 +52,18 @@ export default function TasksPage() {
   };
 
   // Filter logic on myTasks
-  const filteredTasks = useMemo(() => {
-    return myTasks.filter((task) => {
-      const title = task.title || '';
-      const description = task.description || '';
-      const matchesSearch = 
-        title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        description.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-      const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
+  const filteredTasks = myTasks.filter((task) => {
+    const title = task.title || '';
+    const description = task.description || '';
+    const matchesSearch = 
+      title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
+    const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
 
-      return matchesSearch && matchesStatus && matchesPriority;
-    });
-  }, [myTasks, searchQuery, statusFilter, priorityFilter]);
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   return (
     <div className="space-y-6">

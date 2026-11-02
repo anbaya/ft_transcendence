@@ -8,67 +8,44 @@ import { createProjectWebSocket, ProjectWebSocketClient } from '@/services/webso
 
 export default function ChatPage() {
   const { user } = useAuthStore();
-  const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<ChatThread[]>([]);
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-
+  const [searchQuery, setSearchQuery] = useState('');
   const wsRef = useRef<ProjectWebSocketClient | null>(null);
 
-  // 1. Fetch user's active conversations on mount
-  useEffect(() => {
-    async function loadMyConversations() {
-      try {
-        const response = await apiClient.get<Conversation[]>('/api/conversations/my/');
-        const threads: ChatThread[] = response.data.map((conv) => ({
-          ...conv,
-          name: conv.project_name ? `${conv.project_name} Chat` : `Project #${conv.project_id} Chat`,
-        }));
-        setConversations(threads);
-        if (threads.length > 0 && !selectedConvId) {
-          setSelectedConvId(threads[0].id);
-        }
-      } catch (err) {
-        console.error('Failed to load conversations:', err);
-      }
-    }
-    loadMyConversations();
-  }, []);
-
-  // 2. When selected conversation changes, load messages & connect its WebSocket
   const selectedConversation = conversations.find((c) => c.id === selectedConvId) || null;
 
+  const pushMessage = (msg: Message) => {
+    setMessages((prev) => (msg.id && prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+  };
+
+  // 1. Load active conversations
+  useEffect(() => {
+    apiClient.get<Conversation[]>('/api/conversations/my/').then((res) => {
+      const threads = res.data.map((c) => ({
+        ...c,
+        name: c.project_name ? `${c.project_name} Chat` : `Project #${c.project_id} Chat`,
+      }));
+      setConversations(threads);
+      if (threads.length > 0) setSelectedConvId(threads[0].id);
+    }).catch(console.error);
+  }, []);
+
+  // 2. Load messages & manage WebSocket for active conversation
   useEffect(() => {
     if (!selectedConversation) {
       setMessages([]);
       return;
     }
 
-    const currentConv = selectedConversation;
     let isMounted = true;
+    apiClient.get<Message[]>(`/api/conversations/${selectedConversation.id}/messages/`)
+      .then((res) => isMounted && setMessages(res.data))
+      .catch(console.error);
 
-    // Load message history
-    async function loadMessages() {
-      try {
-        const msgRes = await apiClient.get<Message[]>(`/api/conversations/${currentConv.id}/messages/`);
-        if (isMounted) {
-          setMessages(msgRes.data);
-        }
-      } catch (err) {
-        console.error('Failed to load conversation messages:', err);
-      }
-    }
-    loadMessages();
-
-    // Connect WebSocket for this project
-    const ws = createProjectWebSocket(currentConv.project_id, (incomingMsg) => {
-      if (!isMounted) return;
-      setMessages((prev) => {
-        if (incomingMsg.id && prev.some((m) => m.id === incomingMsg.id)) {
-          return prev;
-        }
-        return [...prev, incomingMsg];
-      });
+    const ws = createProjectWebSocket(selectedConversation.project_id, (msg) => {
+      if (isMounted) pushMessage(msg);
     });
     wsRef.current = ws;
 
@@ -78,25 +55,14 @@ export default function ChatPage() {
     };
   }, [selectedConversation?.id, selectedConversation?.project_id]);
 
+  // 3. Send message (WS with REST fallback)
   const handleSendMessage = async (content: string) => {
     if (!selectedConversation || !user?.id) return;
-
-    // Try WS first
-    if (wsRef.current) {
-      wsRef.current.sendMessage(content);
-    } else if (selectedConvId) {
-      // Fallback to REST API
-      try {
-        const res = await apiClient.post<Message>(`/api/conversations/${selectedConversation.id}/messages/`, {
-          content,
-        });
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === res.data.id)) return prev;
-          return [...prev, res.data];
-        });
-      } catch (err) {
-        console.error('Failed to post message:', err);
-      }
+    try {
+      wsRef.current?.sendMessage(content);
+    } catch {
+      const res = await apiClient.post<Message>(`/api/conversations/${selectedConversation.id}/messages/`, { content });
+      pushMessage(res.data);
     }
   };
 
@@ -108,7 +74,7 @@ export default function ChatPage() {
           onSearchChange={setSearchQuery}
           conversations={conversations}
           selectedId={selectedConvId}
-          onSelect={(id) => setSelectedConvId(id)}
+          onSelect={setSelectedConvId}
         />
       </div>
 

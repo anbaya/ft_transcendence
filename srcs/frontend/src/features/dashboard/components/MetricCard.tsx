@@ -3,10 +3,10 @@ import type { LucideIcon } from 'lucide-react';
 interface MetricCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  Icon: LucideIcon;
 }
 
-export function MetricCard({ title, value, icon: Icon }: MetricCardProps) {
+export function MetricCard({ title, value, Icon }: MetricCardProps) {
   return (
     <div className="rounded-lg border border-border bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-center justify-between">

@@ -11,10 +11,10 @@ import { toast } from '@/stores/toastStore';
 
 export default function ProfilePage() {
   const { user, logout } = useAuthStore();
-
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
@@ -26,6 +26,14 @@ export default function ProfilePage() {
     newPassword: '',
     confirmPassword: '',
   });
+
+  const setProfileField = (key: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFormData((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const setPasswordField = (key: keyof typeof passwordData) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setPasswordData((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const isPasswordReady = Object.values(passwordData).every(Boolean);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +83,7 @@ export default function ProfilePage() {
       toast.success('Your account has been deleted.');
       logout();
       localStorage.clear();
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
     } catch (error: any) {
       toast.error(error.response?.data?.detail || error.response?.data?.error || 'Failed to delete account');
       setIsDeleting(false);
@@ -85,9 +93,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-4xl mx-auto w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">My Profile</h2>
-      </div>
+      <h2 className="text-3xl font-bold tracking-tight text-slate-900">My Profile</h2>
 
       <div className="grid gap-6 md:grid-cols-12">
         {/* Left Column: Avatar & Quick Info */}
@@ -104,9 +110,7 @@ export default function ProfilePage() {
                   <Camera className="h-6 w-6 text-white" />
                 </div>
               </div>
-              <h3 className="font-semibold text-lg text-slate-900">
-                {formData.first_name} {formData.last_name}
-              </h3>
+              <h3 className="font-semibold text-lg text-slate-900">{formData.first_name} {formData.last_name}</h3>
               <p className="text-sm text-slate-500 mb-4">{formData.email}</p>
               
               <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
@@ -128,44 +132,13 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="firstName">
-                      First Name
-                    </label>
-                    <Input 
-                      id="firstName" 
-                      value={formData.first_name}
-                      onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="lastName">
-                      Last Name
-                    </label>
-                    <Input 
-                      id="lastName" 
-                      value={formData.last_name}
-                      onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <Input label="First Name" value={formData.first_name} onChange={setProfileField('first_name')} disabled={isLoading} />
+                  <Input label="Last Name" value={formData.last_name} onChange={setProfileField('last_name')} disabled={isLoading} />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
-                    Email Address
-                  </label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    disabled={isLoading}
-                  />
-                </div>
+                <Input label="Email Address" type="email" value={formData.email} onChange={setProfileField('email')} disabled={isLoading} />
               </CardContent>
               <CardFooter className="justify-end border-t p-6">
-                <Button type="submit" disabled={isLoading} className="gap-2">
+                <Button type="submit" isLoading={isLoading} className="gap-2">
                   <Save className="h-4 w-4" />
                   Save Changes
                 </Button>
@@ -181,47 +154,14 @@ export default function ProfilePage() {
                 <CardDescription>Update your password to keep your account secure.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="currentPassword">
-                    Current Password
-                  </label>
-                  <Input 
-                    id="currentPassword" 
-                    type="password" 
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                    disabled={isLoading}
-                  />
-                </div>
+                <Input label="Current Password" type="password" value={passwordData.currentPassword} onChange={setPasswordField('currentPassword')} disabled={isLoading} />
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="newPassword">
-                      New Password
-                    </label>
-                    <Input 
-                      id="newPassword" 
-                      type="password" 
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="confirmPassword">
-                      Confirm Password
-                    </label>
-                    <Input 
-                      id="confirmPassword" 
-                      type="password" 
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <Input label="New Password" type="password" value={passwordData.newPassword} onChange={setPasswordField('newPassword')} disabled={isLoading} />
+                  <Input label="Confirm Password" type="password" value={passwordData.confirmPassword} onChange={setPasswordField('confirmPassword')} disabled={isLoading} />
                 </div>
               </CardContent>
               <CardFooter className="justify-end border-t p-6">
-                <Button type="submit" disabled={isLoading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}>
+                <Button type="submit" isLoading={isLoading} disabled={!isPasswordReady}>
                   Update Password
                 </Button>
               </CardFooter>
@@ -249,13 +189,9 @@ export default function ProfilePage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h4 className="font-medium text-red-600 text-sm">Delete Account</h4>
-                  <p className="text-xs text-slate-500">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                  <p className="text-xs text-slate-500">Permanently delete your account and all associated data.</p>
                 </div>
-                <Button 
-                  variant="destructive" 
-                  onClick={() => setIsDeleteDialogOpen(true)} 
-                  className="gap-2 shrink-0"
-                >
+                <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} className="gap-2 shrink-0">
                   <Trash2 className="h-4 w-4" />
                   Delete Account
                 </Button>
@@ -268,14 +204,12 @@ export default function ProfilePage() {
       {/* Delete Account Confirmation Modal */}
       <Dialog.Root open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
-            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-              <div className="flex items-center gap-2 text-error mb-2">
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 border border-border bg-white p-6 shadow-lg sm:rounded-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-error">
                 <AlertTriangle className="h-5 w-5" />
-                <Dialog.Title className="text-lg font-semibold leading-none tracking-tight">
-                  Delete Account
-                </Dialog.Title>
+                <Dialog.Title className="text-lg font-semibold">Delete Account</Dialog.Title>
               </div>
               <Dialog.Description className="text-sm text-muted">
                 Are you sure you want to delete your account? This action is permanent and cannot be undone. All your personal data and access will be permanently removed.
@@ -283,26 +217,15 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-              <Button 
-                variant="secondary" 
-                onClick={() => setIsDeleteDialogOpen(false)}
-                disabled={isDeleting}
-              >
+              <Button variant="secondary" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
                 Cancel
               </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleDeleteAccount} 
-                isLoading={isDeleting}
-              >
+              <Button variant="destructive" onClick={handleDeleteAccount} isLoading={isDeleting}>
                 Delete Account
               </Button>
             </div>
 
-            <Dialog.Close 
-              disabled={isDeleting}
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-muted text-primary"
-            >
+            <Dialog.Close disabled={isDeleting} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 text-primary">
               <X className="h-4 w-4" />
             </Dialog.Close>
           </Dialog.Content>
