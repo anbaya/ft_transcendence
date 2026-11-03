@@ -16,18 +16,19 @@ services:
     restart: always
     env_file:
       - .env
-      - ./srcs/services/auth/.env
+    environment:
+      DB_NAME: ${AUTH_DB_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "python manage.py check"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
-      start_period: 5s
+      start_period: 45s
 
   project-service:
     build:
@@ -37,18 +38,19 @@ services:
     restart: always
     env_file:
       - .env
-      - ./srcs/services/project/.env
+    environment:
+      DB_NAME: ${PROJECT_DB_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "python manage.py check"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
-      start_period: 5s
+      start_period: 45s
 
   task-service:
     build:
@@ -58,18 +60,19 @@ services:
     restart: always
     env_file:
       - .env
-      - ./srcs/services/task/.env
+    environment:
+      DB_NAME: ${TASK_DB_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "python manage.py check"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
-      start_period: 5s
+      start_period: 45s
 
   chat-service:
     build:
@@ -79,18 +82,19 @@ services:
     restart: always
     env_file:
       - .env
-      - ./srcs/services/chat/.env
+    environment:
+      DB_NAME: ${CHAT_DB_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "python manage.py check"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
-      start_period: 5s
+      start_period: 45s
 
   document-service:
     build:
@@ -100,18 +104,19 @@ services:
     restart: always
     env_file:
       - .env
-      - ./srcs/services/document/.env
+    environment:
+      DB_NAME: ${DOCUMENT_DB_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "python manage.py check"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
-      start_period: 5s
+      start_period: 45s
 
   ai-service:
     build:
@@ -121,18 +126,19 @@ services:
     restart: always
     env_file:
       - .env
-      - ./srcs/services/ai/.env
+    environment:
+      DB_NAME: ${AI_DB_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      database-init:
+        condition: service_completed_successfully
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "python manage.py check"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 10
-      start_period: 5s
+      start_period: 45s
 
   db:
     image: mysql:8.4
@@ -141,10 +147,9 @@ services:
     env_file:
       - .env
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
     secrets:
       - db_password
       - db_root_password
@@ -153,14 +158,35 @@ services:
         condition: service_started
     volumes:
       - db_data_mysql:/var/lib/mysql
+      - ./srcs/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
       - transcendence_net
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u\"$${DB_USER}\" -p\"$${DB_PASSWORD}\" --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u\"$${DB_USER}\" -p\"$$(cat /run/secrets/db_password)\" --silent"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 20s
+
+  database-init:
+    image: mysql:8.4
+    container_name: database_init
+    restart: "no"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    secrets:
+      - db_root_password
+    command:
+      - /bin/sh
+      - -c
+      - mysql --protocol=TCP --host=db --user=root --password=\"$$(cat /run/secrets/db_root_password)\" < /docker-entrypoint-initdb.d/01-init.sql
+    volumes:
+      - ./srcs/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - transcendence_net
 
   api-gateway:
     build:
