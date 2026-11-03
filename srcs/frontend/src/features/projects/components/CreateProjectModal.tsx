@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import {
+  Modal, ModalPortal, ModalOverlay, ModalContent,
+  ModalHeader, ModalTitle, ModalDescription, ModalFooter, ModalClose
+} from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
@@ -49,18 +51,16 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
-          <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-            <Dialog.Title className="text-lg font-semibold leading-none tracking-tight text-primary">
-              Create Project
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-muted">
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalPortal>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <ModalTitle>Create Project</ModalTitle>
+            <ModalDescription>
               Add a new project to start collaborating with your team.
-            </Dialog.Description>
-          </div>
+            </ModalDescription>
+          </ModalHeader>
           
           <div className="py-4 space-y-4">
             <Input
@@ -73,26 +73,22 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             />
 
             <div className="space-y-1">
-              <label className="text-sm font-medium leading-none text-primary">
-                Description
-              </label>
+              <label className="field-label">Description</label>
               <textarea
                 placeholder="Brief description of the project..."
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="flex min-h-[80px] w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                className="field min-h-[80px]"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none text-primary">
-                  Status
-                </label>
+                <label className="field-label">Status</label>
                 <select 
                   value={formData.status}
                   onChange={(e) => setFormData({...formData, status: e.target.value as ProjectStatus})}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
+                  className="field h-10"
                 >
                   <option value="planned">Planned</option>
                   <option value="in_progress">In Progress</option>
@@ -101,13 +97,11 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium leading-none text-primary">
-                  Priority
-                </label>
+                <label className="field-label">Priority</label>
                 <select 
                   value={formData.priority}
                   onChange={(e) => setFormData({...formData, priority: e.target.value as ProjectPriority})}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-border bg-white px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary"
+                  className="field h-10"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -126,7 +120,7 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          <ModalFooter>
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
@@ -137,13 +131,11 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
             >
               Create Project
             </Button>
-          </div>
+          </ModalFooter>
           
-          <Dialog.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-slate-100 data-[state=open]:text-muted text-primary">
-            <X className="h-4 w-4" />
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          <ModalClose />
+        </ModalContent>
+      </ModalPortal>
+    </Modal>
   );
 }

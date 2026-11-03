@@ -21,32 +21,25 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // Base classes
-    const baseStyles =
-      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-
-    // Variant classes
     const variants = {
-      primary: 'bg-primary text-white hover:bg-slate-800', // Deep ink
-      accent: 'bg-secondary text-white hover:bg-indigo-600', // Indigo highlight
-      secondary:
-        'bg-transparent border border-border text-primary hover:bg-slate-100', // Outline
-      ghost: 'bg-transparent text-muted hover:text-primary hover:bg-slate-100', // No border
-      destructive: 'bg-error text-white hover:bg-red-700', // Red
+      primary:     'btn-primary',
+      accent:      'btn-accent',
+      secondary:   'btn-secondary',
+      ghost:       'btn-ghost',
+      destructive: 'btn-destructive',
     };
 
-    // Size classes
     const sizes = {
-      sm: 'h-8 px-3 text-xs',
-      md: 'h-10 px-4 text-sm',
-      lg: 'h-12 px-6 text-base',
-      icon: 'h-10 w-10',
+      sm:   'btn-sm',
+      md:   'btn-md',
+      lg:   'btn-lg',
+      icon: 'btn-icon',
     };
 
     return (
       <button
         ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={cn('btn', variants[variant], sizes[size], className)}
         disabled={disabled || isLoading}
         {...props}
       >

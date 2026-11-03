@@ -9,24 +9,17 @@ export interface AvatarProps {
 }
 
 const sizeClasses = {
-  sm: 'h-8 w-8 text-xs',
-  md: 'h-10 w-10 text-sm',
-  lg: 'h-12 w-12 text-base',
-  xl: 'h-16 w-16 text-lg',
+  sm: 'avatar-sm',
+  md: 'avatar-md',
+  lg: 'avatar-lg',
+  xl: 'avatar-xl',
 };
 
 export function Avatar({ src, fallback, size = 'md', className }: AvatarProps) {
   return (
-    <RadixAvatar.Root className={cn('relative flex shrink-0 overflow-hidden rounded-full bg-slate-100', sizeClasses[size], className)}>
-      <RadixAvatar.Image
-        className="aspect-square h-full w-full object-cover"
-        src={src}
-        alt="Avatar"
-      />
-      <RadixAvatar.Fallback
-        className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-700 font-medium"
-        delayMs={600}
-      >
+    <RadixAvatar.Root className={cn('avatar', sizeClasses[size], className)}>
+      <RadixAvatar.Image className="avatar-img" src={src} alt="Avatar" />
+      <RadixAvatar.Fallback className="avatar-fall" delayMs={600}>
         {fallback}
       </RadixAvatar.Fallback>
     </RadixAvatar.Root>

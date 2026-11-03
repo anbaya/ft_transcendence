@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
+import {
+  Modal, ModalPortal, ModalOverlay, ModalContent,
+  ModalTitle, ModalDescription, ModalFooter, ModalClose
+} from '@/components/ui/Modal';
 import { useAuthStore } from '@/stores/authStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
-import { Camera, Save, LogOut, Shield, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Save, LogOut, Shield, Trash2, AlertTriangle } from 'lucide-react';
 import apiClient from '@/services/api/client';
 import { toast } from '@/stores/toastStore';
 
@@ -92,8 +95,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-4xl mx-auto w-full">
-      <h2 className="text-3xl font-bold tracking-tight text-slate-900">My Profile</h2>
+    <div className="page-wrapper">
+      <h2 className="text-3xl font-bold tracking-tight text-primary">My Profile</h2>
 
       <div className="grid gap-6 md:grid-cols-12">
         {/* Left Column: Avatar & Quick Info */}
@@ -101,19 +104,16 @@ export default function ProfilePage() {
           <Card>
             <CardContent className="pt-6 flex flex-col items-center text-center">
               <div className="relative group cursor-pointer">
-                <Avatar 
-                  fallback={(formData.first_name?.[0] || 'A').toUpperCase()} 
-                  size="xl" 
+                <Avatar
+                  fallback={(formData.first_name?.[0] || 'A').toUpperCase()}
+                  size="xl"
                   className="h-24 w-24 mb-4 ring-4 ring-white shadow-lg"
                 />
-                <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="h-6 w-6 text-white" />
-                </div>
               </div>
-              <h3 className="font-semibold text-lg text-slate-900">{formData.first_name} {formData.last_name}</h3>
-              <p className="text-sm text-slate-500 mb-4">{formData.email}</p>
-              
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+              <h3 className="font-semibold text-lg text-primary">{formData.first_name} {formData.last_name}</h3>
+              <p className="text-sm text-muted mb-4">{formData.email}</p>
+
+              <div className="role-pill">
                 <Shield className="h-4 w-4" />
                 {user?.role === 'ADMIN' ? 'Administrator' : 'Member'}
               </div>
@@ -175,10 +175,10 @@ export default function ProfilePage() {
               <CardDescription>Manage your account actions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-red-100">
+              <div className="action-row action-row-sep">
                 <div>
-                  <h4 className="font-medium text-slate-900 text-sm">Sign Out</h4>
-                  <p className="text-xs text-slate-500">Log out of your account on this device.</p>
+                  <h4 className="font-medium text-primary text-sm">Sign Out</h4>
+                  <p className="text-xs text-muted">Log out of your account on this device.</p>
                 </div>
                 <Button variant="secondary" onClick={handleLogout} className="gap-2 shrink-0">
                   <LogOut className="h-4 w-4" />
@@ -186,10 +186,10 @@ export default function ProfilePage() {
                 </Button>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="action-row">
                 <div>
                   <h4 className="font-medium text-red-600 text-sm">Delete Account</h4>
-                  <p className="text-xs text-slate-500">Permanently delete your account and all associated data.</p>
+                  <p className="text-xs text-muted">Permanently delete your account and all associated data.</p>
                 </div>
                 <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)} className="gap-2 shrink-0">
                   <Trash2 className="h-4 w-4" />
@@ -202,35 +202,33 @@ export default function ProfilePage() {
       </div>
 
       {/* Delete Account Confirmation Modal */}
-      <Dialog.Root open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 border border-border bg-white p-6 shadow-lg sm:rounded-lg">
+      <Modal open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <ModalPortal>
+          <ModalOverlay />
+          <ModalContent>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-error">
                 <AlertTriangle className="h-5 w-5" />
-                <Dialog.Title className="text-lg font-semibold">Delete Account</Dialog.Title>
+                <ModalTitle>Delete Account</ModalTitle>
               </div>
-              <Dialog.Description className="text-sm text-muted">
+              <ModalDescription>
                 Are you sure you want to delete your account? This action is permanent and cannot be undone. All your personal data and access will be permanently removed.
-              </Dialog.Description>
+              </ModalDescription>
             </div>
 
-            <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+            <ModalFooter className="mt-4">
               <Button variant="secondary" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleDeleteAccount} isLoading={isDeleting}>
                 Delete Account
               </Button>
-            </div>
+            </ModalFooter>
 
-            <Dialog.Close disabled={isDeleting} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 text-primary">
-              <X className="h-4 w-4" />
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+            <ModalClose disabled={isDeleting} />
+          </ModalContent>
+        </ModalPortal>
+      </Modal>
     </div>
   );
 }

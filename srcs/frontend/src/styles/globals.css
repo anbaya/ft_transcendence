@@ -6,3 +6,132 @@
     @apply bg-background text-primary font-sans antialiased;
   }
 }
+
+/* ─────────────────────────────────────────────────────────
+   COMPONENT LAYER
+   One class per pattern. Use these in JSX instead of
+   long inline utility strings.
+────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Card ─────────────────────────────────────────────── */
+  .card          { @apply rounded-lg border border-border bg-white text-primary; }
+  .card-header   { @apply flex flex-col space-y-1.5 p-6; }
+  .card-title    { @apply font-semibold leading-none tracking-tight; }
+  .card-desc     { @apply text-sm text-muted; }
+  .card-content  { @apply p-6 pt-0; }
+  .card-footer   { @apply flex items-center p-6 pt-0; }
+
+  /* ── Button base + variants ───────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md font-medium transition-colors
+           focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary     { @apply bg-primary text-white hover:bg-slate-800; }
+  .btn-accent      { @apply bg-secondary text-white hover:bg-indigo-600; }
+  .btn-secondary   { @apply bg-transparent border border-border text-primary hover:bg-slate-100; }
+  .btn-ghost       { @apply bg-transparent text-muted hover:text-primary hover:bg-slate-100; }
+  .btn-destructive { @apply bg-error text-white hover:bg-red-700; }
+
+  /* Button sizes */
+  .btn-sm   { @apply h-8 px-3 text-xs; }
+  .btn-md   { @apply h-10 px-4 text-sm; }
+  .btn-lg   { @apply h-12 px-6 text-base; }
+  .btn-icon { @apply h-10 w-10; }
+
+  /* Icon button in header / toolbar */
+  .icon-btn {
+    @apply flex h-9 w-9 items-center justify-center rounded-md text-muted
+           hover:bg-slate-100 hover:text-primary
+           focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2
+           transition-colors;
+  }
+  .icon-btn-accent { @apply hover:bg-indigo-50 hover:text-secondary; }
+
+  /* ── Badge ────────────────────────────────────────────── */
+  .badge         { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium h-5 transition-colors; }
+  .badge-default { @apply bg-slate-100 text-slate-700; }
+  .badge-success { @apply bg-success-light text-success; }
+  .badge-error   { @apply bg-error-light text-error; }
+  .badge-warning { @apply bg-warning-light text-warning; }
+  .badge-info    { @apply bg-info-light text-info; }
+
+  /* ── Input / Textarea / Select (shared field base) ────── */
+  .field {
+    @apply flex w-full rounded-md border border-border bg-white px-3 py-2
+           text-sm text-primary placeholder:text-muted
+           focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/10
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .field-error   { @apply border-error focus:border-error focus:ring-error/10; }
+  .field-label   { @apply text-[13px] font-medium text-primary; }
+  .field-wrapper { @apply flex flex-col space-y-1.5 w-full; }
+
+  /* ── Avatar ───────────────────────────────────────────── */
+  .avatar      { @apply relative flex shrink-0 overflow-hidden rounded-full bg-slate-100; }
+  .avatar-img  { @apply aspect-square h-full w-full object-cover; }
+  .avatar-fall { @apply flex h-full w-full items-center justify-center bg-slate-200 text-slate-700 font-medium; }
+
+  /* Avatar sizes */
+  .avatar-sm { @apply h-8  w-8  text-xs; }
+  .avatar-md { @apply h-10 w-10 text-sm; }
+  .avatar-lg { @apply h-12 w-12 text-base; }
+  .avatar-xl { @apply h-16 w-16 text-lg; }
+
+  /* ── Skeleton ─────────────────────────────────────────── */
+  .skeleton { @apply animate-pulse rounded-md bg-slate-100; }
+
+  /* ── Progress ─────────────────────────────────────────── */
+  .progress           { @apply relative h-2 w-full overflow-hidden rounded-full bg-slate-100; }
+  .progress-indicator { @apply h-full w-full flex-1 bg-primary transition-all; }
+
+  /* ── Modal (Radix Dialog) ─────────────────────────────── */
+  /* All modal styles live in components/ui/Modal.tsx — the component
+     abstraction handles the data-[state=*] variants that @apply can't. */
+
+  /* ── Sidebar / Nav ────────────────────────────────────── */
+  .nav-link {
+    @apply flex items-center justify-between rounded-md px-3 py-2
+           text-sm font-medium transition-colors;
+  }
+  .nav-link-active   { @apply bg-slate-100 text-primary; }
+  .nav-link-inactive { @apply text-muted hover:bg-slate-50 hover:text-primary; }
+  .nav-section-label { @apply mb-2 px-3 text-xs font-semibold tracking-wider text-muted/70; }
+  .nav-badge         { @apply text-xs font-semibold text-muted bg-slate-100 py-0.5 px-2 rounded-full; }
+  .nav-link:hover .nav-badge { @apply bg-slate-200; }
+
+  /* Brand icon (sidebar logo box) */
+  .brand-icon {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-lg
+           bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-sm;
+  }
+
+  /* ── Header ───────────────────────────────────────────── */
+  .app-header {
+    @apply sticky top-0 z-40 flex h-16 w-full items-center justify-between
+           border-b border-border bg-white/80 px-4 backdrop-blur-md md:px-6;
+  }
+
+  /* ── Empty State ──────────────────────────────────────── */
+  .empty-state       { @apply flex flex-col items-center justify-center p-8 text-center; }
+  .empty-state-icon  { @apply mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100; }
+
+  /* ── Metric Card (dashboard) ──────────────────────────── */
+  .metric-card        { @apply rounded-lg border border-border bg-white p-5 shadow-sm transition-shadow hover:shadow-md; }
+  .metric-card-icon   { @apply flex h-9 w-9 items-center justify-center rounded-md bg-indigo-50 text-secondary; }
+
+  /* ── Misc layout helpers ──────────────────────────────── */
+  .page-wrapper { @apply flex-1 space-y-6 p-4 md:p-8 pt-6 max-w-4xl mx-auto w-full; }
+  .divider-v    { @apply h-6 w-px bg-border; }
+
+  /* Role pill (profile page) */
+  .role-pill {
+    @apply flex items-center gap-1.5 px-3 py-1
+           bg-primary/10 text-primary rounded-full text-sm font-medium;
+  }
+
+  /* Danger zone row (profile page account actions) */
+  .action-row      { @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4; }
+  .action-row-sep  { @apply pb-4 border-b border-red-100; }
+}
