@@ -29,7 +29,7 @@ The main entrypoint is `https://localhost:8443/`. The certificate is self-signed
 - HTTPS gateway: `https://localhost:8443`
 - Elasticsearch: `http://localhost:9200`
 - Logstash TCP input: `localhost:5000`
-- Kibana: `http://localhost:5601`
+- Kibana: `http://localhost:5601`u
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3001`
 

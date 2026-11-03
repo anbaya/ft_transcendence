@@ -11,7 +11,7 @@ RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false upd
 
 COPY task/requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --default-timeout=600 --retries=10 --no-cache-dir -r requirements.txt
 
 COPY task/ .
 COPY shared/start-django.sh ./start-django.sh

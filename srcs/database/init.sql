@@ -5,6 +5,8 @@ CREATE DATABASE IF NOT EXISTS `chat_db`;
 CREATE DATABASE IF NOT EXISTS `document_db`;
 CREATE DATABASE IF NOT EXISTS `ai_db`;
 
+CREATE USER IF NOT EXISTS 'transcendence_user'@'%' IDENTIFIED BY 'roma';
+
 GRANT ALL PRIVILEGES ON `auth_db`.* TO 'transcendence_user'@'%';
 GRANT ALL PRIVILEGES ON `project_db`.* TO 'transcendence_user'@'%';
 GRANT ALL PRIVILEGES ON `task_db`.* TO 'transcendence_user'@'%';

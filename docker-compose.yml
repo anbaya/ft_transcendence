@@ -106,6 +106,8 @@ services:
       - .env
     environment:
       DB_NAME: ${DOCUMENT_DB_NAME}
+    volumes:
+      - document-data:/app/media
     depends_on:
       database-init:
         condition: service_completed_successfully
@@ -128,6 +130,8 @@ services:
       - .env
     environment:
       DB_NAME: ${AI_DB_NAME}
+    volumes:
+      - ai-chroma-data:/app/chroma_data
     depends_on:
       database-init:
         condition: service_completed_successfully
@@ -148,6 +152,7 @@ services:
       - .env
     environment:
       MYSQL_USER: ${DB_USER}
+      MYSQL_DATABASE: ${LEGACY_DB_NAME:-transcendence_db}
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       MYSQL_PASSWORD_FILE: /run/secrets/db_password
     secrets:
@@ -182,7 +187,7 @@ services:
     command:
       - /bin/sh
       - -c
-      - mysql --protocol=TCP --host=db --user=root --password=\"$$(cat /run/secrets/db_root_password)\" < /docker-entrypoint-initdb.d/01-init.sql
+      - mysql --protocol=TCP --host=db --user=root --password="$$(cat /run/secrets/db_root_password)" < /docker-entrypoint-initdb.d/01-init.sql
     volumes:
       - ./srcs/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
@@ -354,6 +359,10 @@ volumes:
       type: none
       o: bind
       device: ${DATA_DIR}/grafana
+  document-data:
+    name: transcendence_document_data
+  ai-chroma-data:
+    name: transcendence_ai_chroma_data
 
 networks:
   transcendence_net:
