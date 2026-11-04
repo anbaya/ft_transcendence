@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
+import { formatDistanceToNow, isToday, isPast } from 'date-fns';
 import {
   FolderKanban,
   Settings,
@@ -40,10 +41,12 @@ const STATUS_CONFIG: Record<string, { label: string; variant: BadgeVariant }> = 
 
 const getDaysRemaining = (deadline?: string | null) => {
   if (!deadline) return { text: 'No deadline', isOverdue: false };
-  const diffDays = Math.ceil((new Date(deadline).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000);
-  if (diffDays < 0) return { text: `${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'Day' : 'Days'} Overdue`, isOverdue: true };
-  if (diffDays === 0) return { text: 'Due Today', isOverdue: false };
-  return { text: `${diffDays} ${diffDays === 1 ? 'Day' : 'Days'}`, isOverdue: false };
+  const date = new Date(deadline);
+  if (isToday(date)) return { text: 'Due Today', isOverdue: false };
+  return {
+    text: formatDistanceToNow(date, { addSuffix: true }),
+    isOverdue: isPast(date),
+  };
 };
 
 export default function ProjectDetailsPage() {
