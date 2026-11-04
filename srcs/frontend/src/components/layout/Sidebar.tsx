@@ -62,25 +62,18 @@ export function Sidebar() {
           <NavLink
             to={item.href}
             className={({ isActive }) =>
-              cn(
-                'group flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-slate-100 text-primary'
-                  : 'text-muted hover:bg-slate-50 hover:text-primary'
-              )
+              cn('nav-link', isActive ? 'nav-link-active' : 'nav-link-inactive')
             }
           >
             <div className="flex items-center gap-3">
               <item.icon className="h-5 w-5 shrink-0" />
               {isSidebarExpanded && <span>{item.name}</span>}
             </div>
-            
+
             {isSidebarExpanded && (
               <div className="flex items-center">
                 {item.count !== undefined && (
-                  <span className="text-xs font-semibold text-muted bg-slate-100 py-0.5 px-2 rounded-full group-hover:bg-slate-200">
-                    {item.count}
-                  </span>
+                  <span className="nav-badge">{item.count}</span>
                 )}
                 {item.isNew && (
                   <Badge variant="info" className="ml-2 h-4 px-1.5 text-[10px]">
@@ -106,7 +99,7 @@ export function Sidebar() {
       <div className="flex h-16 shrink-0 items-center px-4 border-b border-border">
         {isSidebarExpanded ? (
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-sm">
+            <div className="brand-icon">
               <Hexagon className="h-5 w-5" />
             </div>
             <div className="flex flex-col truncate">
@@ -116,7 +109,7 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="flex w-full items-center justify-center">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-sm">
+            <div className="brand-icon">
               <Hexagon className="h-5 w-5" />
             </div>
           </div>
@@ -127,23 +120,19 @@ export function Sidebar() {
       <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden p-3 gap-6 scrollbar-hide">
         <div>
           {isSidebarExpanded && (
-            <div className="mb-2 px-3 text-xs font-semibold tracking-wider text-muted/70">
-              MAIN
-            </div>
+            <div className="nav-section-label">MAIN</div>
           )}
           {renderNavItems(mainNavigation)}
         </div>
-
-
       </div>
 
       {/* Bottom Section */}
       <div className="border-t border-border p-3 space-y-1">
         {renderNavItems(helpNavigation)}
-        
+
         <button
           onClick={toggleSidebar}
-          className="group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-slate-50 hover:text-primary transition-colors"
+          className="nav-link nav-link-inactive w-full"
         >
           <div className="flex items-center gap-3">
             {isSidebarExpanded ? (

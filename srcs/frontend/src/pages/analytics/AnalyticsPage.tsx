@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -50,7 +50,7 @@ export default function AnalyticsPage() {
   // 1. On mount: fetch all user projects for the dropdown selector
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+  }, []);
 
   // 2. Auto-select the first project once projects list is available
   useEffect(() => {
@@ -70,45 +70,38 @@ export default function AnalyticsPage() {
   }, [selectedProjectId]);
 
   // Compute live 7-day completion trend (Mon-Sun) from the project tasks
-  const trendData = useMemo(() => {
-    const counts: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
-    
-    tasks.forEach((task) => {
-      if (task.status === 'COMPLETED') {
-        const date = new Date(task.updated_at || task.created_at);
-        const dayIndex = (date.getDay() + 6) % 7; // Convert to Mon=0 ... Sun=6
-        const dayName = daysOfWeek[dayIndex];
-        if (dayName) counts[dayName] = (counts[dayName] || 0) + 1;
-      }
-    });
+  const counts: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+  
+  tasks.forEach((task) => {
+    if (task.status === 'COMPLETED') {
+      const date = new Date(task.updated_at || task.created_at);
+      const dayIndex = (date.getDay() + 6) % 7; // Convert to Mon=0 ... Sun=6
+      const dayName = daysOfWeek[dayIndex];
+      if (dayName) counts[dayName] = (counts[dayName] || 0) + 1;
+    }
+  });
 
-    // Outer return: gives useMemo the array of 7 day items for the LineChart
-    return daysOfWeek.map((name) => ({
-      name,
-      completed: counts[name] || 0,
-    }));
-  }, [tasks]);
+  const trendData = daysOfWeek.map((name) => ({
+    name,
+    completed: counts[name] || 0,
+  }));
 
   // Compute the 5 most recent task actions for the project's Activity Feed
-  const recentActivities = useMemo(() => {
-    // Outer return: gives useMemo the sorted & formatted top 5 tasks
-    return [...tasks]
-      .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
-      .slice(0, 5)
-      .map((task) => {
-        const isDone = task.status === 'COMPLETED';
-        const isInProgress = task.status === 'IN_PROGRESS';
-        const action = isDone ? 'completed' : isInProgress ? 'updated' : 'created';
-        // Inner return: transforms each individual task into an activity feed object
-        return {
-          id: task.id,
-          task: task.title,
-          action,
-          status: task.status.replace('_', ' '),
-          time: new Date(task.updated_at || task.created_at).toLocaleDateString(),
-        };
-      });
-  }, [tasks]);
+  const recentActivities = [...tasks]
+    .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+    .slice(0, 5)
+    .map((task) => {
+      const isDone = task.status === 'COMPLETED';
+      const isInProgress = task.status === 'IN_PROGRESS';
+      const action = isDone ? 'completed' : isInProgress ? 'updated' : 'created';
+      return {
+        id: task.id,
+        task: task.title,
+        action,
+        status: task.status.replace('_', ' '),
+        time: new Date(task.updated_at || task.created_at).toLocaleDateString(),
+      };
+    });
 
   // Overall task completion percentage (returns 0 if data isn't loaded or total is 0)
   const completionRate = analytics && analytics.tasks.total > 0

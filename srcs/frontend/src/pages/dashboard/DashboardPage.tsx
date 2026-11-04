@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchMyTasks();
-  }, [fetchMyTasks, user?.id]);
+  }, [user?.id]);
 
   const displayName = user?.first_name || user?.email?.split('@')[0] || 'there';
 
@@ -46,17 +46,17 @@ export default function DashboardPage() {
         <MetricCard
           title="Pending Tasks"
           value={pendingTasks}
-          icon={ListTodo}
+          Icon={ListTodo}
         />
         <MetricCard
           title="Completed Tasks"
           value={completedTasks}
-          icon={CheckCircle2}
+          Icon={CheckCircle2}
         />
         <MetricCard
           title="Completion Rate"
           value={`${completionRate}%`}
-          icon={TrendingUp}
+          Icon={TrendingUp}
         />
       </div>
 

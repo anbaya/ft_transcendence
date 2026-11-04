@@ -12,7 +12,7 @@ export function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]);
+  }, []);
 
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'unread') return !n.is_read;
