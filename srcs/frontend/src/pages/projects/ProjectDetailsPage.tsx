@@ -33,10 +33,10 @@ import { ProjectDocumentsTab } from '@/features/projects/components/ProjectDocum
 import type { Task } from '@/types/task';
 import type { ProjectMember } from '@/types/project';
 
-const STATUS_CONFIG: Record<string, { label: string; variant: BadgeVariant }> = {
-  completed: { label: 'Completed', variant: 'success' },
-  in_progress: { label: 'In Progress', variant: 'warning' },
-  cancelled: { label: 'Cancelled', variant: 'error' },
+const STATUS_VARIANTS: Record<string, BadgeVariant> = {
+  completed: 'success',
+  in_progress: 'warning',
+  cancelled: 'error',
 };
 
 const getDaysRemaining = (deadline?: string | null) => {
@@ -80,17 +80,15 @@ export default function ProjectDetailsPage() {
 
   // Permissions & computed values
   const isPM = activeProjectMembers.some((m) => m.user_id === user?.id && m.role === 'PROJECT_MANAGER') || project.created_by === user?.id;
-  const canManage = user?.role === 'ADMIN' || Boolean(isPM);
+  const canManage = user?.role === 'ADMIN' || isPM;
   const projectManager = activeProjectMembers.find((m) => m.role === 'PROJECT_MANAGER' || m.user_id === project.created_by);
-  const pmName = projectManager?.first_name || projectManager?.last_name
-    ? `${projectManager?.first_name || ''} ${projectManager?.last_name || ''}`.trim()
-    : projectManager?.email || 'Assigned Manager';
+  const pmFullName = [projectManager?.first_name, projectManager?.last_name].filter(Boolean).join(' ');
+  const pmName = pmFullName || projectManager?.email || 'Unassigned';
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === 'COMPLETED').length;
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   const timeRemaining = getDaysRemaining(project.deadline);
-  const statusInfo = STATUS_CONFIG[project.status] || { label: project.status ? project.status.replace('_', ' ') : 'Planned', variant: 'default' };
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
@@ -121,7 +119,9 @@ export default function ProjectDetailsPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-2xl font-bold tracking-tight text-primary">{project.name}</h1>
-              <Badge variant={statusInfo.variant} className="text-xs capitalize">{statusInfo.label}</Badge>
+              <Badge variant={STATUS_VARIANTS[project.status] || 'default'} className="text-xs capitalize">
+                {project.status.replace('_', ' ')}
+              </Badge>
               <Badge variant={project.priority === 'high' ? 'error' : 'default'} className="text-xs capitalize">{project.priority} priority</Badge>
             </div>
             <p className="text-sm text-muted">
