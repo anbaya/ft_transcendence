@@ -4,7 +4,7 @@ from .models import Task
 from .serializers import TaskSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsInternalService
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from .project_service import get_project, get_project_members
 from .notification_service import send_notification
 
@@ -106,6 +106,16 @@ class ProjectTaskListCreateView(generics.ListCreateAPIView):
             raise PermissionDenied(
                 "Only the project creator or ADMIN can create tasks."
             )
+
+        task_deadline = serializer.validated_data.get("deadline")
+        project_deadline = project.get("deadline")
+        if task_deadline and project_deadline:
+            task_dl_str = str(task_deadline)
+            proj_dl_str = str(project_deadline).split("T")[0]
+            if task_dl_str > proj_dl_str:
+                raise ValidationError({
+                    "deadline": ["Task deadline cannot exceed project deadline."]
+                })
 
         assignee_id = serializer.validated_data.get(
             "assignee_id"
@@ -239,21 +249,29 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if role != "ADMIN":
-            access_token = self.get_access_token()
+        access_token = self.get_access_token()
+        project = get_project(
+            task.project_id,
+            access_token
+        )
 
-            project = get_project(
-                task.project_id,
-                access_token
+        if project is None:
+            raise NotFound("Project not found.")
+
+        if role != "ADMIN" and str(project.get("created_by")) != str(user_id):
+            raise PermissionDenied(
+                "Only the project creator or ADMIN can update tasks."
             )
 
-            if project is None:
-                raise NotFound("Project not found.")
-
-            if str(project.get("created_by")) != str(user_id):
-                raise PermissionDenied(
-                    "Only the project creator or ADMIN can update tasks."
-                )
+        task_deadline = request.data.get("deadline")
+        project_deadline = project.get("deadline")
+        if task_deadline and project_deadline:
+            task_dl_str = str(task_deadline).split("T")[0]
+            proj_dl_str = str(project_deadline).split("T")[0]
+            if task_dl_str > proj_dl_str:
+                raise ValidationError({
+                    "deadline": ["Task deadline cannot exceed project deadline."]
+                })
 
         assignee_id = request.data.get("assignee_id")
         if assignee_id is not None and str(assignee_id) != str(task.assignee_id):
