@@ -94,8 +94,8 @@ export default function ProjectDetailsPage() {
     { id: 'overview', label: 'Overview' },
     { id: 'tasks', label: `Tasks (${totalTasks})` },
     { id: 'members', label: `Members (${activeProjectMembers.length})` },
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
-    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'chat', label: 'Chat', Icon: MessageSquare },
+    { id: 'documents', label: 'Documents', Icon: FileText },
   ];
 
   return (
@@ -140,7 +140,7 @@ export default function ProjectDetailsPage() {
       {/* Tabs */}
       <Tabs.Root defaultValue="overview" className="flex flex-col w-full">
         <Tabs.List className="flex shrink-0 border-b border-border overflow-x-auto hide-scrollbar">
-          {tabs.map(({ id: tabId, label, icon: Icon }) => (
+          {tabs.map(({ id: tabId, label, Icon }) => (
             <Tabs.Trigger
               key={tabId}
               value={tabId}
