@@ -10,6 +10,7 @@ from .models import Document
 from .serializers import DocumentSerializer
 from .project_service import get_project, get_project_members
 from .permissions import IsInternalService
+from .ai_service import notify_document_created, notify_document_deleted
 
 class ProjectDocumentListCreateView(generics.ListCreateAPIView):
     serializer_class = DocumentSerializer
@@ -95,15 +96,18 @@ class ProjectDocumentListCreateView(generics.ListCreateAPIView):
                     "You cannot upload documents to this project."
                 )
 
-        serializer.save(
+        doc = serializer.save(
             project_id=project_id,
             uploaded_by_id=user_id
         )
+        doc_filename = getattr(doc, "name", None) or (doc.file.name if doc.file else "document")
+        notify_document_created(doc.id, project_id, doc_filename)
 
-class DocumentDetailView(generics.RetrieveDestroyAPIView):
+class DocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_access_token(self):
         auth_header = self.request.headers.get("Authorization", "")
@@ -115,14 +119,12 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
 
         return auth_header.split(" ", 1)[1]
 
-    
     def retrieve(self, request, *args, **kwargs):
         document = self.get_object()
 
         user_id = request.user.id
         role = request.user.role
 
-        
         if role == "ADMIN":
             return Response(
                 DocumentSerializer(document).data,
@@ -139,7 +141,6 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
         if project is None:
             raise NotFound("Project not found.")
 
-        
         if str(project.get("created_by")) == str(user_id):
             return Response(
                 DocumentSerializer(document).data,
@@ -169,6 +170,32 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
             status=status.HTTP_200_OK
         )
 
+    def perform_update(self, serializer):
+        document = self.get_object()
+        user_id = self.request.user.id
+        role = self.request.user.role
+
+        if role != "ADMIN":
+            access_token = self.get_access_token()
+            project = get_project(
+                document.project_id,
+                access_token
+            )
+            if project is None:
+                raise NotFound("Project not found.")
+
+            is_project_owner = str(project.get("created_by")) == str(user_id)
+            is_uploader = str(document.uploaded_by_id) == str(user_id)
+
+            if not is_project_owner and not is_uploader:
+                raise PermissionDenied(
+                    "Only the uploader, project creator, or ADMIN can update documents."
+                )
+
+        updated_doc = serializer.save()
+        doc_filename = getattr(updated_doc, "name", None) or (updated_doc.file.name if updated_doc.file else "document")
+        notify_document_created(updated_doc.id, updated_doc.project_id, doc_filename)
+
     def destroy(self, request, *args, **kwargs):
         document = self.get_object()
 
@@ -194,10 +221,14 @@ class DocumentDetailView(generics.RetrieveDestroyAPIView):
                     "Only the uploader, project creator, or ADMIN can delete documents."
                 )
 
+        doc_id = document.id
+        doc_project_id = document.project_id
+
         if document.file:
             document.file.delete(save=False)
 
         document.delete()
+        notify_document_deleted(doc_id, doc_project_id)
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
@@ -268,6 +299,10 @@ class DocumentDownloadView(generics.GenericAPIView):
 class ProjectDocumentsDeleteView(generics.GenericAPIView):
     permission_classes = [IsInternalService]
 
+    def get(self, request, project_id, *args, **kwargs):
+        documents = list(Document.objects.filter(project_id=project_id).values("id", "name", "file"))
+        return Response(documents, status=status.HTTP_200_OK)
+
     def delete(self, request, project_id, *args, **kwargs):
         documents = Document.objects.filter(
             project_id=project_id
@@ -311,3 +346,22 @@ class UserDocumentsListView(generics.ListAPIView):
             pass
 
         return Document.objects.none()
+
+
+class InternalDocumentDownloadView(generics.GenericAPIView):
+    queryset = Document.objects.all()
+    permission_classes = [IsInternalService]
+
+    def get(self, request, *args, **kwargs):
+        document = self.get_object()
+        if not document.file:
+            raise NotFound("File not found.")
+        try:
+            return FileResponse(
+                document.file.open('rb'),
+                as_attachment=True,
+                filename=document.name,
+            )
+        except FileNotFoundError:
+            raise NotFound("File not found.")
+

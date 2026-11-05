@@ -17,8 +17,9 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Charger document/.env
+# Charger .env
 load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent.parent.parent / ".env")
 
 
 REST_FRAMEWORK = {
@@ -146,3 +147,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://ai-service:8000")
+INTERNAL_SERVICE_TOKEN = os.environ["INTERNAL_SERVICE_TOKEN"]
