@@ -34,9 +34,8 @@ export class ProjectWebSocketClient {
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
     this.onStatusChange?.('connecting');
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/projects/${this.projectId}/chat/?token=${encodeURIComponent(token)}`;
+    const wsUrl = `wss://${host}/ws/projects/${this.projectId}/chat/?token=${encodeURIComponent(token)}`;
 
     try {
       this.ws = new WebSocket(wsUrl);
