@@ -33,7 +33,6 @@ def clean_text(text: str) -> str:
     text = re.sub(r"(?i)\bpage\s+\d+\s*(?:/|of|-)\s*\d+\b", "", text)
     text = re.sub(r"(?i)\bpage\s+\d+\b", "", text)
     text = re.sub(r"^\s*-\s*\d+\s*-\s*$", "", text, flags=re.MULTILINE)
-    text = re.sub(r"^\s*\d+\s*$", "", text, flags=re.MULTILINE)
 
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
     text = "\n".join(lines)
@@ -140,11 +139,37 @@ def extract_xlsx(file_bytes):
         return ""
 
 
+# correction: extracteur de texte pour images (png, jpg, jpeg, webp) via OCR multimodal
+def extract_image(file_bytes, extension):
+    """
+    Extracts text from image files (png, jpg, jpeg, webp) using Gemini Multimodal OCR.
+    """
+    mime_map = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "webp": "image/webp",
+    }
+    mime_type = mime_map.get(extension.lower(), "image/png")
+    try:
+        from .gemini_service import ocr_file_multimodal
+        text = ocr_file_multimodal(file_bytes, mime_type=mime_type)
+        if text:
+            return clean_text(text)
+    except Exception:
+        pass
+    return ""
+
+
 def extract_text(file_bytes, filename):
     if not file_bytes:
         return ""
 
     extension = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+
+    # correction: support de l'OCR pour les formats d'images (PNG, JPG, JPEG, WEBP)
+    if extension in ("png", "jpg", "jpeg", "webp"):
+        return extract_image(file_bytes, extension)
 
     if extension == "pdf":
         return extract_pdf(file_bytes)

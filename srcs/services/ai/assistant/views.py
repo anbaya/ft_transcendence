@@ -1,3 +1,4 @@
+import threading
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,8 +8,14 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 
 from .models import AIInteraction
 from .serializers import AIInteractionSerializer
-from .rag import answer_project_question, answer_general_question
+from .rag import (
+    answer_project_question,
+    answer_general_question,
+    index_single_document_by_id,
+    delete_single_document_data,
+)
 from .project_service import get_project
+from .permissions import IsInternalService
 
 class AskAssistantView(APIView):
     def post(self, request, project_id=None):
@@ -149,3 +156,76 @@ class AIInteractionHistoryView(ListAPIView):
             AIInteraction.objects.filter(user_id=user_id).delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InternalDocumentIndexWebhookView(APIView):
+    authentication_classes = []
+    permission_classes = [IsInternalService]
+
+    def post(self, request):
+        document_id = request.data.get("document_id")
+        project_id = request.data.get("project_id")
+        filename = request.data.get("filename")
+
+        if not document_id or not project_id:
+            return Response(
+                {"error": "document_id and project_id are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        threading.Thread(
+            target=index_single_document_by_id,
+            args=(project_id, document_id, filename),
+            daemon=True,
+        ).start()
+
+        return Response(
+            {
+                "status": "indexing_scheduled",
+                "document_id": document_id,
+                "project_id": project_id,
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class InternalDocumentDeleteWebhookView(APIView):
+    authentication_classes = []
+    permission_classes = [IsInternalService]
+
+    def delete(self, request, document_id):
+        threading.Thread(
+            target=delete_single_document_data,
+            args=(document_id,),
+            daemon=True,
+        ).start()
+
+        return Response(
+            {
+                "status": "deletion_scheduled",
+                "document_id": document_id,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class ProjectDocumentsSyncView(APIView):
+    def post(self, request, project_id):
+        authorization = request.headers.get("Authorization", "")
+        try:
+            get_project(project_id, authorization)
+        except Exception:
+            raise PermissionDenied("Access to project denied.")
+
+        from .rag import index_project_documents
+        threading.Thread(
+            target=index_project_documents,
+            args=(project_id, authorization),
+            daemon=True,
+        ).start()
+
+        return Response(
+            {"status": "sync_scheduled", "project_id": project_id},
+            status=status.HTTP_202_ACCEPTED,
+        )
+

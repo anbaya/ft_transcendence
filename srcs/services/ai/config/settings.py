@@ -1,11 +1,16 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "transcendence-ai-secret-key-2026")
+# Load environment files if present
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent.parent.parent / ".env")
 
-DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1")
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -54,7 +59,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": os.environ.get("DB_NAME", "ai_db"),
         "USER": os.environ.get("DB_USER", "transcendence_user"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "transcendence_pass"),
+        "PASSWORD": os.environ["DB_PASSWORD"],
         "HOST": os.environ.get("DB_HOST", "db"),
         "PORT": os.environ.get("DB_PORT", "3306"),
     }
@@ -96,7 +101,8 @@ REST_FRAMEWORK = {
     ),
 }
 
-JWT_SIGNING_KEY = os.environ.get("JWT_SIGNING_KEY", "transcendence_shared_jwt_secret_key_2026_very_long_and_secure")
+JWT_SIGNING_KEY = os.environ["JWT_SIGNING_KEY"]
+INTERNAL_SERVICE_TOKEN = os.environ["INTERNAL_SERVICE_TOKEN"]
 
 SIMPLE_JWT = {
     "ALGORITHM": "HS256",
@@ -108,7 +114,7 @@ PROJECT_SERVICE_URL = os.environ.get("PROJECT_SERVICE_URL", "http://project-serv
 DOCUMENT_SERVICE_URL = os.environ.get("DOCUMENT_SERVICE_URL", "http://document-service:8000")
 TASK_SERVICE_URL = os.environ.get("TASK_SERVICE_URL", "http://task-service:8000")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-GEMINI_EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "text-embedding-004")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
 
 CHROMA_PERSIST_DIR = os.environ.get("CHROMA_PERSIST_DIR", str(BASE_DIR / "chroma_data"))

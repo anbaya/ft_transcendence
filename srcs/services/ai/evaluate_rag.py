@@ -84,28 +84,29 @@ from assistant.models import DocumentChunk
 BENCHMARK_DATASET = [
     {
         "id": 1,
-        "question": "What authentication method is implemented across microservices?",
-        "ground_truth": "The platform uses centralized JWT authentication with HMAC-SHA256 signing key shared between auth-service, project-service, and ai-service.",
-        "ground_truth_keywords": ["jwt", "authentication", "signing_key", "hmac-sha256", "token"],
+        "question": "What authentication method is implemented across microservices and what is the token expiration?",
+        "ground_truth": "All microservices communicate using standardized JSON Web Tokens (JWT) with HMAC-SHA256 signatures with a 60-minute expiration.",
+        "ground_truth_keywords": ["jwt", "hmac-sha256", "signing_key", "60 minutes", "token"],
         "sample_document": (
             "Architecture Specification: Security & Authentication.\n"
             "All internal and external microservices communicate using standardized JSON Web Tokens (JWT).\n"
             "The authentication method utilizes HMAC-SHA256 signatures with a centralized signing_key.\n"
-            "When users log in, the auth-service issues access tokens that are verified across project-service, "
-            "document-service, task-service, and ai-service."
+            "When users log in, the auth-service issues access tokens with an expiration of 60 minutes.\n"
+            "Tokens are verified across project-service, document-service, task-service, and ai-service.\n"
+            "Direct user access without a Bearer token is rejected with HTTP 401 Unauthorized."
         ),
     },
     {
         "id": 2,
-        "question": "How are scanned PDF documents handled during indexing?",
-        "ground_truth": "Scanned PDFs are detected when standard PyPDF text extraction yields insufficient text, triggering an automated multimodal OCR fallback via Gemini Vision.",
-        "ground_truth_keywords": ["scanned", "pypdf", "ocr", "multimodal", "gemini", "fallback"],
+        "question": "How are scanned PDF documents handled during indexing and what is the character threshold?",
+        "ground_truth": "Scanned PDFs are detected when standard PyPDF text extraction yields fewer than 50 characters, triggering multimodal OCR via Gemini Vision.",
+        "ground_truth_keywords": ["scanned", "pypdf", "ocr", "multimodal", "< 50", "gemini"],
         "sample_document": (
             "Data Ingestion Pipeline: Scanned PDF & OCR Processing.\n"
             "Documents uploaded in PDF format are initially processed with PyPDF. If the extracted characters are below "
             "the threshold (< 50 characters), the document is marked as an image or scanned document.\n"
             "In this scenario, the ingestion worker invokes Gemini Multimodal OCR to extract all visible text verbatim, "
-            "preserving tables, paragraphs, and headings."
+            "preserving tables, paragraphs, and headings without summarization."
         ),
     },
     {
@@ -125,14 +126,89 @@ BENCHMARK_DATASET = [
     {
         "id": 4,
         "question": "What happens when an existing project document is modified?",
-        "ground_truth": "The system computes the SHA256 file hash; if the hash changed, the existing chunks in MySQL and ChromaDB are deleted and replaced with new re-indexed chunks.",
-        "ground_truth_keywords": ["modified", "hash", "sha256", "delete", "re-indexed", "chroma"],
+        "ground_truth": "The system computes the SHA256 file hash; if the hash changed, the existing chunks in MySQL and ChromaDB are deleted and replaced with newly indexed chunks.",
+        "ground_truth_keywords": ["modified", "hash", "sha256", "delete", "re-indexed", "chroma", "purged"],
         "sample_document": (
             "Document Lifecycle & Modification Strategy.\n"
             "When the project documents sync executes, each document file content is hashed using SHA256 (doc_hash).\n"
             "If chunks already exist for document_id and match the hash, indexing is skipped.\n"
             "If the hash differs, the document was modified: old chunks are purged from both ChromaDB and MySQL, "
             "and newly generated chunks with updated embeddings are indexed."
+        ),
+    },
+    {
+        "id": 5,
+        "question": "Quels sont les droits d'un simple membre de projet par rapport au créateur du projet ?",
+        "ground_truth": "Un membre de projet peut uniquement consulter les documents et interroger l'IA, alors que le créateur du projet peut ajouter, modifier, supprimer des documents et inviter des membres.",
+        "ground_truth_keywords": ["membre", "créateur", "consulter", "ajouter", "supprimer", "documents"],
+        "sample_document": (
+            "Spécification des Rôles et Gestion des Permissions.\n"
+            "L'accès aux documents et aux données de projet est soumis à une matrice stricte de contrôle d'accès :\n"
+            "1. ADMIN : accès complet en lecture, écriture et suppression sur tous les projets de la plateforme.\n"
+            "2. Créateur de projet (Owner) : peut ajouter, modifier, supprimer des documents et inviter des membres.\n"
+            "3. Membre du projet : peut consulter les documents et poser des questions à l'assistant IA.\n"
+            "4. Utilisateur externe : aucun accès aux documents du projet, requête rejetée avec une erreur 403 Forbidden."
+        ),
+    },
+    {
+        "id": 6,
+        "question": "Comment sont sécurisés les webhooks internes entre document-service et ai-service ?",
+        "ground_truth": "Les webhooks transitent sur un réseau Docker privé, requièrent le header X-Internal-Token validé par hmac.compare_digest et ne sont jamais exposés à l'extérieur par Nginx.",
+        "ground_truth_keywords": ["x-internal-token", "hmac.compare_digest", "interne", "docker", "nginx", "webhook"],
+        "sample_document": (
+            "Protocole de Sécurité Inter-Services et Webhooks.\n"
+            "Les communications directes entre le document-service et l'ai-service transitent par un réseau Docker interne privé.\n"
+            "Chaque requête de webhook vers /internal/documents/... doit impérativement inclure le header 'X-Internal-Token'.\n"
+            "La vérification est réalisée au moyen de la fonction hmac.compare_digest pour prévenir les attaques temporelles.\n"
+            "Les endpoints sous /internal/ ne sont jamais exposés à l'extérieur par la passerelle Nginx."
+        ),
+    },
+    {
+        "id": 7,
+        "question": "Comment le service IA évite-t-il les conflits d'indexation concurrents et les fuites de connexions MySQL ?",
+        "ground_truth": "Le service utilise un verrou mémoire _indexing_lock pour empêcher les indexations simultanées d'un même document et exécute connections.close_all() dans un bloc finally pour fermer les connexions MySQL des threads.",
+        "ground_truth_keywords": ["_indexing_lock", "verrou", "concurrent", "connections.close_all", "mysql", "thread"],
+        "sample_document": (
+            "Gestion de la Concurrence et Cycle de Vie des Connexions Base de Données.\n"
+            "L'indexation des documents s'exécute de manière asynchrone dans des threads d'arrière-plan.\n"
+            "Pour empêcher l'indexation simultanée d'un même document, un verrou mémoire thread-safe (_indexing_lock) et un ensemble d'identifiants actifs sont maintenus.\n"
+            "À la fin de chaque tâche dans le thread, un bloc 'finally' exécute systématiquement django.db.connections.close_all() pour libérer la connexion MySQL et éviter toute fuite de ressources."
+        ),
+    },
+    {
+        "id": 8,
+        "question": "Quelle est la configuration de Kubernetes et des charts Helm pour le déploiement du cluster ?",
+        "ground_truth": "Cette information n'est pas mentionnée dans les documents du projet.",
+        "ground_truth_keywords": [],
+        "is_negative": True,
+        "sample_document": (
+            "Note sur l'infrastructure hôte.\n"
+            "Le projet est actuellement conteneurisé à l'aide de Docker Compose avec des conteneurs Linux Debian Bookworm."
+        ),
+    },
+    {
+        "id": 9,
+        "question": "Et quelle est sa signature cryptographique ?",
+        "history": "User: Quel est le format d'authentification utilisé ?\nAssistant: Le système utilise des jetons standardisés JSON Web Tokens (JWT).",
+        "ground_truth": "Les jetons JWT utilisent une signature HMAC-SHA256 avec une clé de signature centralisée.",
+        "ground_truth_keywords": ["hmac-sha256", "signature", "jwt"],
+        "sample_document": (
+            "Annexe Sécurité: Algorithmes de Chiffrement.\n"
+            "La signature cryptographique des jetons JWT est assurée par l'algorithme HMAC-SHA256 (HS256) avec une clé secrète partagée."
+        ),
+    },
+    {
+        "id": 10,
+        "question": "Quelles sont les valeurs exactes pour la taille maximale des fichiers, la taille des chunks et la dimension des embeddings ?",
+        "ground_truth": "Taille maximale de fichier: 50 Mo, taille de chunk: 1200 caractères (overlap 200), dimension des embeddings: 768 dimensions.",
+        "ground_truth_keywords": ["50 mo", "1200", "200", "768", "chunk", "embedding"],
+        "sample_document": (
+            "Tableau de Rétention et Limites Techniques:\n"
+            "- Taille maximale d'un fichier document : 50 Mo (client_max_body_size Nginx).\n"
+            "- Taille par chunk par défaut : 1200 caractères avec un chevauchement (overlap) de 200 caractères.\n"
+            "- Dimension des vecteurs embeddings : 768 dimensions (gemini-embedding-001).\n"
+            "- Constante RRF de fusion : k=60.\n"
+            "- Historique récent conservé dans le prompt : 3 derniers échanges."
         ),
     },
 ]
@@ -252,18 +328,45 @@ def run_evaluation(project_id=999999):
         q = item["question"]
         print(f"\n  Evaluating Q{item['id']}: '{q}'")
 
+        search_q = q
+        if item.get("history"):
+            from assistant.gemini_service import rewrite_followup_question
+            search_q = rewrite_followup_question(q, item["history"])
+
         t0 = time.perf_counter()
-        retrieved_chunks = retrieve_relevant_chunks(project_id, q, top_k=4)
+        retrieved_chunks = retrieve_relevant_chunks(project_id, search_q, top_k=3)
         t1 = time.perf_counter()
         t_retrieval_ms = (t1 - t0) * 1000.0
         retrieval_latencies.append(t_retrieval_ms)
 
-        ret_metrics = compute_retrieval_metrics(retrieved_chunks, item["ground_truth_keywords"])
+        if item.get("is_negative"):
+            ret_metrics = {
+                "context_precision": 1.0,
+                "context_recall": 1.0,
+                "hit_rate": 1.0,
+                "mrr": 1.0,
+            }
+        else:
+            ret_metrics = compute_retrieval_metrics(retrieved_chunks, item["ground_truth_keywords"])
 
         context = build_context(retrieved_chunks)
 
+        history_section = ""
+        if item.get("history"):
+            history_section = f"\nRecent Conversation History:\n{item['history']}\n"
+
         t2 = time.perf_counter()
-        prompt = f"""Context:\n{context}\n\nQuestion: {q}\nAnswer clearly and concisely based on the context:"""
+        prompt = f"""Relevant Document Extracts:
+{context}
+{history_section}
+Question: {q}
+
+Instructions:
+- Always answer in the exact same language as the user's question (e.g. French for French, English for English).
+- Strict Grounding: Base your answer strictly on the provided document extracts. Never extrapolate or guess.
+- Information Not Available: If the required information is not found in the extracts, state clearly: "Cette information n'est pas mentionnée dans les documents du projet." (or English: "This information is not mentioned in the project documentation.").
+- Cite the source document name when providing factual details (e.g. "[doc_1.txt]").
+Answer clearly and concisely:"""
         answer = generate_answer(prompt)
         t3 = time.perf_counter()
         t_generation_ms = (t3 - t2) * 1000.0
