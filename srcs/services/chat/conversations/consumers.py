@@ -60,7 +60,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4401)
             return
 
-        self.user_id = user_id
+        try:
+            self.user_id = int(user_id)
+        except (ValueError, TypeError):
+            self.user_id = user_id
         self.role = role
         self.token = token
 
@@ -189,10 +192,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 )
 
     async def chat_message(self, event):
+        try:
+            sender_id_val = int(event["sender_id"])
+        except (ValueError, TypeError):
+            sender_id_val = event["sender_id"]
+
         data = {
             "id": event["id"],
-            "sender_id": event["sender_id"],
-            "sender": event["sender_id"],
+            "sender_id": sender_id_val,
+            "sender": sender_id_val,
             "sender_name": event.get("sender_name", f"User {event['sender_id']}"),
             "message": event["message"],
             "content": event["message"],
