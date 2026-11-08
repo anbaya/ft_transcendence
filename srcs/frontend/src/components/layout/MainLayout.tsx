@@ -35,7 +35,7 @@ export function MainLayout() {
           {/* App Footer */}
           <footer className="border-t border-border bg-white/70 backdrop-blur-xs py-3.5 px-6 mt-auto">
             <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-muted">
-              <p>&copy; {new Date().getFullYear()} Astra Workspace. All rights reserved.</p>
+              <p>&copy; {new Date().getFullYear()} TeamUP Workspace. All rights reserved.</p>
               <div className="flex items-center gap-3.5">
                 <Link to="/privacy" className="hover:text-primary hover:underline transition-colors">
                   Privacy Policy

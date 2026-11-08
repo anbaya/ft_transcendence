@@ -91,6 +91,7 @@ export default function TasksPage() {
         <TaskTable 
           tasks={filteredTasks}
           showProjectName={true}
+          isProjectManager={false}
           onViewDetails={handleViewDetails}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -102,6 +103,7 @@ export default function TasksPage() {
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         task={selectedTask || undefined}
+        canManage={false}
         onEditClick={() => selectedTask && handleEdit(selectedTask)}
         onDeleteClick={() => selectedTask && handleDelete(selectedTask)}
         onStatusChange={handleStatusChange}

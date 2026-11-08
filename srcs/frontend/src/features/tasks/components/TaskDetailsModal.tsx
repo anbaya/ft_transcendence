@@ -11,14 +11,15 @@ interface TaskDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task;
+  canManage?: boolean;
   onEditClick: () => void;
   onDeleteClick: () => void;
   onStatusChange?: (taskId: number, status: TaskStatus) => Promise<void>;
 }
 
-export function TaskDetailsModal({ open, onOpenChange, task, onEditClick, onDeleteClick, onStatusChange }: TaskDetailsModalProps) {
+export function TaskDetailsModal({ open, onOpenChange, task, canManage: canManageProp, onEditClick, onDeleteClick, onStatusChange }: TaskDetailsModalProps) {
   const { user } = useAuthStore();
-  const canManage = user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER';
+  const canManage = canManageProp !== undefined ? canManageProp : (user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER');
 
   if (!task) return null;
 

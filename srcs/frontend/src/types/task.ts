@@ -9,7 +9,6 @@ export interface Task {
   description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  created_by?: number;
   creator_id?: number;
   assignee_id?: number | null;
   assignee_name?: string | null;

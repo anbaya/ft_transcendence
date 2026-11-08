@@ -178,7 +178,7 @@ All authenticated pages share this shell layout.
 ```
 EXPANDED (240px)                COLLAPSED (64px)
 +------------------------+     +--------+
-| [Logo] Astra           |     | [Logo] |
+| [Logo] TeamUP          |     | [Logo] |
 | [Acme Corp         ▾]  |     +--------+
 +------------------------+     | [#]    |
 | MAIN                   |     | [□]    |

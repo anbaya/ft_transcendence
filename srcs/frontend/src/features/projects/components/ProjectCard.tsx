@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FolderKanban, ArrowRight, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { FolderKanban, ArrowRight, MoreHorizontal, Edit, Trash2, LogOut } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
@@ -10,9 +10,10 @@ interface ProjectCardProps {
   project: Project;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
+  onLeave?: (project: Project) => void;
 }
 
-export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete, onLeave }: ProjectCardProps) {
   const { user } = useAuthStore();
   const canManage = user?.role === 'ADMIN' || project.created_by === user?.id;
 
@@ -44,7 +45,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             >
               {formatStatus(project.status)}
             </Badge>
-            {canManage && (
+            {(canManage || onLeave) && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
@@ -53,21 +54,33 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content align="end" className="z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-white p-1 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
-                    <DropdownMenu.Item 
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100 focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onClick={() => onEdit(project)}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
-                    <DropdownMenu.Item 
-                      className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                      onClick={() => onDelete(project)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenu.Item>
+                    {canManage ? (
+                      <>
+                        <DropdownMenu.Item 
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100 focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onClick={() => onEdit(project)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
+                        <DropdownMenu.Item 
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onClick={() => onDelete(project)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenu.Item>
+                      </>
+                    ) : onLeave ? (
+                      <DropdownMenu.Item 
+                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-warning outline-none transition-colors focus:bg-warning/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                        onClick={() => onLeave(project)}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Leave Project
+                      </DropdownMenu.Item>
+                    ) : null}
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>

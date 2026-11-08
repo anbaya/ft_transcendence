@@ -103,7 +103,7 @@ export function Sidebar() {
               <Hexagon className="h-5 w-5" />
             </div>
             <div className="flex flex-col truncate">
-              <span className="text-base font-bold text-slate-900 tracking-tight leading-tight">Astra</span>
+              <span className="text-base font-bold text-slate-900 tracking-tight leading-tight">TeamUP</span>
               <span className="text-[11px] font-medium text-slate-400">Workspace</span>
             </div>
           </div>

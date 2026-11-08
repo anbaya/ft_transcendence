@@ -21,7 +21,7 @@ export function AuthLayout() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
             <Hexagon className="h-6 w-6" />
           </div>
-          <span className="text-xl font-bold text-primary tracking-tight">Astra</span>
+          <span className="text-xl font-bold text-primary tracking-tight">TeamUP</span>
         </div>
 
         <div className="relative z-10 max-w-lg mt-12 lg:mt-24">
@@ -40,7 +40,7 @@ export function AuthLayout() {
         </div>
 
         <div className="relative z-10 text-sm text-slate-700 font-semibold drop-shadow-sm flex items-center justify-between">
-          <span>&copy; {new Date().getFullYear()} Astra Inc. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} TeamUP Inc. All rights reserved.</span>
           <div className="flex items-center gap-3 text-xs">
             <Link to="/privacy" className="hover:underline">Privacy Policy</Link>
             <span>•</span>
@@ -56,7 +56,7 @@ export function AuthLayout() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
             <Hexagon className="h-6 w-6" />
           </div>
-          <span className="text-2xl font-bold text-primary tracking-tight">Astra</span>
+          <span className="text-2xl font-bold text-primary tracking-tight">TeamUP</span>
         </div>
 
         <div className="mx-auto w-full max-w-sm">

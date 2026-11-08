@@ -225,7 +225,7 @@ Backend `User` schema only has `role: ADMIN | USER`. Project Manager is a **per-
 
 **Issue Found in Sidebar:** The entire top section of the sidebar is dedicated to an "Organization Switcher" dropdown (lines 142–209). It shows "Organizations", "Manage Organizations", "Create Organization" links. All must be removed. Replace the sidebar header with just the app name/logo.
 
-**Fix for Sidebar header:** Replace the org-switcher dropdown with a simple branded header showing "Astra" or project name.
+**Fix for Sidebar header:** Replace the org-switcher dropdown with a simple branded header showing "TeamUP" or project name.
 
 - [ ] **Subtask:** Remove org routes from `AppRoutes.tsx`  
 - [ ] **Subtask:** Rewrite sidebar header — remove org dropdown, replace with simple app logo  

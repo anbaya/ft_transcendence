@@ -16,7 +16,7 @@ export default function TermsOfServicePage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
                 <Hexagon className="h-5 w-5" />
               </div>
-              <span className="text-xl font-bold text-primary tracking-tight">Astra</span>
+              <span className="text-xl font-bold text-primary tracking-tight">TeamUP</span>
             </Link>
             <span className="text-xs text-muted font-medium bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 hidden sm:inline-block">
               Legal Documentation
@@ -53,7 +53,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-base text-muted max-w-2xl leading-relaxed">
-            Please read these Terms of Service carefully before utilizing Astra. By accessing or using our
+            Please read these Terms of Service carefully before utilizing TeamUP. By accessing or using our
             workspace, you agree to comply with and be bound by these legal terms.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium">
@@ -77,7 +77,7 @@ export default function TermsOfServicePage() {
               <h2>Acceptance of Terms</h2>
             </div>
             <p className="mb-3">
-              By registering an account, accessing, or using <strong>Astra</strong> (including its web application,
+              By registering an account, accessing, or using <strong>TeamUP</strong> (including its web application,
               REST APIs, and WebSocket messaging services), you agree to be bound by these Terms of Service
               and our{' '}
               <Link to="/privacy" className="text-secondary hover:underline font-medium">
@@ -86,7 +86,7 @@ export default function TermsOfServicePage() {
               . If you do not agree to these terms, you must discontinue your use of the platform immediately.
             </p>
             <p>
-              If you access Astra on behalf of an educational cohort, organization, or enterprise, you confirm that you have
+              If you access TeamUP on behalf of an educational cohort, organization, or enterprise, you confirm that you have
               the necessary authority to bind that entity to these Terms.
             </p>
           </section>
@@ -150,10 +150,10 @@ export default function TermsOfServicePage() {
             </div>
             <p className="mb-3">
               <strong>Your Content Remains Yours:</strong> You retain full copyright and ownership rights to all project assets,
-              documents, code snippets, task descriptions, and messages uploaded or generated in Astra.
+              documents, code snippets, task descriptions, and messages uploaded or generated in TeamUP.
             </p>
             <p className="text-muted text-xs sm:text-sm">
-              By uploading content, you grant Astra solely the limited license necessary to host, store, index, and transmit
+              By uploading content, you grant TeamUP solely the limited license necessary to host, store, index, and transmit
               your content to authorized members of your projects as required for normal workspace collaboration.
             </p>
           </section>
@@ -168,7 +168,7 @@ export default function TermsOfServicePage() {
               <Sparkles className="h-5 w-5 text-indigo-500 mt-0.5 shrink-0" />
               <div>
                 <p className="mb-2">
-                  Astra includes an AI Assistant designed to help synthesize tasks, answer project questions, and assist team workflow.
+                  TeamUP includes an AI Assistant designed to help synthesize tasks, answer project questions, and assist team workflow.
                 </p>
                 <ul className="text-xs sm:text-sm text-muted space-y-2 list-disc list-inside">
                   <li>AI outputs are generated algorithmically and provided for informational purposes. Users must independently verify critical code, security, or legal decisions.</li>
@@ -186,7 +186,7 @@ export default function TermsOfServicePage() {
               <h2>Role-Based Governance & Permissions</h2>
             </div>
             <p className="mb-3">
-              Permissions within Astra are segmented according to role:
+              Permissions within TeamUP are segmented according to role:
             </p>
             <div className="space-y-2 text-xs sm:text-sm">
               <p><strong>Administrators:</strong> Hold full rights to manage users, assign system roles, and oversee all workspace operations.</p>
@@ -202,12 +202,12 @@ export default function TermsOfServicePage() {
               <h2>Service Availability & Limitation of Liability</h2>
             </div>
             <p className="mb-3">
-              Astra is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis. While we strive to maintain
+              TeamUP is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis. While we strive to maintain
               high availability and perform periodic backups, we do not warrant that service will be uninterrupted, error-free,
               or completely secure at all times.
             </p>
             <p className="text-xs text-muted leading-relaxed">
-              To the maximum extent permitted by applicable law, the authors and contributors of Astra shall not be held liable
+              To the maximum extent permitted by applicable law, the authors and contributors of TeamUP shall not be held liable
               for any direct, indirect, incidental, or consequential damages resulting from data loss, downtime, unauthorized
               access, or inability to use the platform.
             </p>
@@ -227,7 +227,7 @@ export default function TermsOfServicePage() {
               <Mail className="h-5 w-5 text-secondary" />
               <div>
                 <p className="font-semibold text-primary text-sm">Legal & Compliance Department</p>
-                <p className="text-xs text-muted">legal@astra-workspace.local • ft_transcendence project</p>
+                <p className="text-xs text-muted">legal@teamup-workspace.local • ft_transcendence project</p>
               </div>
             </div>
           </section>
@@ -239,7 +239,7 @@ export default function TermsOfServicePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
           <div className="flex items-center gap-2">
             <Hexagon className="h-4 w-4 text-secondary" />
-            <span className="font-semibold text-primary">Astra Workspace</span>
+            <span className="font-semibold text-primary">TeamUP Workspace</span>
             <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
           </div>
           <div className="flex items-center gap-4">

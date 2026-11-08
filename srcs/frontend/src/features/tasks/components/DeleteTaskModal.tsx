@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useTaskStore } from '@/stores/taskStore';
 import { toast } from '@/stores/toastStore';
+import { getApiErrorMessage } from '@/utils/errors';
 
 interface DeleteTaskModalProps {
   open: boolean;
@@ -25,7 +26,7 @@ export function DeleteTaskModal({ open, onOpenChange, taskTitle, taskId }: Delet
       onOpenChange(false);
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || 'Failed to delete task');
+      toast.error(getApiErrorMessage(error, 'Failed to delete task'));
     }
   };
 

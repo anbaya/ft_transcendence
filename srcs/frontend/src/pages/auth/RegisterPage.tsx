@@ -49,6 +49,7 @@ export default function RegisterPage() {
     } catch (err: any) {
       setGlobalError(
         err.response?.data?.email?.[0] ||
+        err.response?.data?.password?.[0] ||
         err.response?.data?.detail ||
         'Failed to create account. Please try again.'
       );

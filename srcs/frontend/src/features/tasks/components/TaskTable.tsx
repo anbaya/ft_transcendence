@@ -8,6 +8,7 @@ import type { Task } from '@/types/task';
 interface TaskTableProps {
   tasks: Task[];
   showProjectName?: boolean;
+  isProjectManager?: boolean;
   onViewDetails: (task: Task) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -16,7 +17,7 @@ interface TaskTableProps {
 type SortField = 'title' | 'status' | 'priority' | 'deadline';
 type SortOrder = 'asc' | 'desc';
 
-export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdit, onDelete }: TaskTableProps) {
+export function TaskTable({ tasks, showProjectName = false, isProjectManager = false, onViewDetails, onEdit, onDelete }: TaskTableProps) {
   const [sortField, setSortField] = useState<SortField>('deadline');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
@@ -209,19 +210,25 @@ export function TaskTable({ tasks, showProjectName = false, onViewDetails, onEdi
                       >
                         View Details
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item 
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
-                        onClick={() => onEdit(task)}
-                      >
-                        Edit Task
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
-                      <DropdownMenu.Item 
-                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
-                        onClick={() => onDelete(task)}
-                      >
-                        Delete
-                      </DropdownMenu.Item>
+                      {isProjectManager && (
+                        <DropdownMenu.Item 
+                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-slate-100"
+                          onClick={() => onEdit(task)}
+                        >
+                          Edit Task
+                        </DropdownMenu.Item>
+                      )}
+                      {isProjectManager && (
+                        <>
+                          <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-border" />
+                          <DropdownMenu.Item 
+                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-error outline-none transition-colors focus:bg-error/10"
+                            onClick={() => onDelete(task)}
+                          >
+                            Delete
+                          </DropdownMenu.Item>
+                        </>
+                      )}
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
