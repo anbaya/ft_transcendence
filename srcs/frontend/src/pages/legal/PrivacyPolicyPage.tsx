@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
                 <Hexagon className="h-5 w-5" />
               </div>
-              <span className="text-xl font-bold text-primary tracking-tight">Astra</span>
+              <span className="text-xl font-bold text-primary tracking-tight">TeamUP</span>
             </Link>
             <span className="text-xs text-muted font-medium bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 hidden sm:inline-block">
               Legal Documentation
@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-base text-muted max-w-2xl leading-relaxed">
-            This Privacy Policy explains how Astra collects, utilizes, stores, and protects your personal
+            This Privacy Policy explains how TeamUP collects, utilizes, stores, and protects your personal
             information and project data across our collaboration platform and microservices architecture.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium">
@@ -77,7 +77,7 @@ export default function PrivacyPolicyPage() {
               <h2>Introduction & Scope</h2>
             </div>
             <p className="mb-3">
-              Welcome to <strong>Astra</strong>, an integrated team workspace developed for project planning, task tracking,
+              Welcome to <strong>TeamUP</strong>, an integrated team workspace developed for project planning, task tracking,
               real-time discussion, document management, and AI assistance. We respect your fundamental right to privacy
               and are committed to safeguarding personal data in accordance with international standards, including the
               European Union General Data Protection Regulation (GDPR).
@@ -208,7 +208,7 @@ export default function PrivacyPolicyPage() {
                   <strong>We do not use advertising, marketing, or tracking cookies.</strong>
                 </p>
                 <p className="text-xs text-muted leading-relaxed">
-                  Astra uses browser LocalStorage strictly for functional session persistence: storing your authenticated JWT tokens
+                  TeamUP uses browser LocalStorage strictly for functional session persistence: storing your authenticated JWT tokens
                   (`auth-storage`) and interface preferences (such as collapsed/expanded sidebar state). Clearing your browser
                   cache or logging out immediately removes all stored session tokens.
                 </p>
@@ -259,7 +259,7 @@ export default function PrivacyPolicyPage() {
               <Mail className="h-5 w-5 text-secondary" />
               <div>
                 <p className="font-semibold text-primary text-sm">Privacy & Compliance Office</p>
-                <p className="text-xs text-muted">privacy@astra-workspace.local • ft_transcendence project</p>
+                <p className="text-xs text-muted">privacy@teamup-workspace.local • ft_transcendence project</p>
               </div>
             </div>
           </section>
@@ -271,7 +271,7 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
           <div className="flex items-center gap-2">
             <Hexagon className="h-4 w-4 text-secondary" />
-            <span className="font-semibold text-primary">Astra Workspace</span>
+            <span className="font-semibold text-primary">TeamUP Workspace</span>
             <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
           </div>
           <div className="flex items-center gap-4">

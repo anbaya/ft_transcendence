@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from '@/stores/toastStore';
+import { getApiErrorMessage } from '@/utils/errors';
 import type { Project, ProjectStatus, ProjectPriority } from '@/types/project';
 
 interface EditProjectModalProps {
@@ -59,7 +60,7 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
       toast.success('Project updated successfully!');
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.name?.[0] || error.message || 'Failed to update project');
+      toast.error(getApiErrorMessage(error, 'Failed to update project'));
     }
   };
 

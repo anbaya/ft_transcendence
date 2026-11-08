@@ -16,6 +16,7 @@ interface AIState {
   fetchHistory: (projectId?: number | null) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   clearHistory: () => Promise<void>;
+  deleteConversation: () => Promise<void>;
   clearError: () => void;
   reset: () => void;
 }
@@ -141,9 +142,13 @@ export const useAIStore = create<AIState>((set, get) => ({
         error: null,
       });
     } catch (err: any) {
-      const errMsg = err?.response?.data?.error || 'Failed to clear conversation history.';
+      const errMsg = err?.response?.data?.detail || err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to delete conversation.';
       set({ error: errMsg });
     }
+  },
+
+  deleteConversation: async () => {
+    return get().clearHistory();
   },
 
   clearError: () => set({ error: null }),

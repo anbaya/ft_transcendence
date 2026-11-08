@@ -8,15 +8,17 @@ import { Input } from '@/components/ui/Input';
 import { useTaskStore } from '@/stores/taskStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from '@/stores/toastStore';
+import { getApiErrorMessage } from '@/utils/errors';
 import type { TaskStatus, TaskPriority } from '@/types/task';
 
 interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: number;
+  projectDeadline?: string | null;
 }
 
-export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskModalProps) {
+export function CreateTaskModal({ open, onOpenChange, projectId, projectDeadline }: CreateTaskModalProps) {
   const { createTask, isLoading } = useTaskStore();
   const { activeProjectMembers } = useProjectStore();
   
@@ -31,11 +33,17 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
   
   const today = new Date().toLocaleDateString('en-CA');
   const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
+  const projectDeadlineDate = projectDeadline ? projectDeadline.split('T')[0] : null;
+  const isDeadlineExceedsProject = Boolean(projectDeadlineDate && formData.deadline && formData.deadline > projectDeadlineDate);
   
   const handleSubmit = async () => {
     if (!formData.title.trim() || !projectId) return;
     if (isDeadlineInvalid) {
       toast.error('Deadline cannot be in the past');
+      return;
+    }
+    if (isDeadlineExceedsProject) {
+      toast.error('Task deadline cannot exceed project deadline.');
       return;
     }
     try {
@@ -59,7 +67,7 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
       });
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.title?.[0] || error.message || 'Failed to create task');
+      toast.error(getApiErrorMessage(error, 'Failed to create task'));
     }
   };
 
@@ -150,9 +158,10 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
               label="Deadline"
               type="date"
               min={today}
+              max={projectDeadlineDate || undefined}
               value={formData.deadline}
               onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-              error={isDeadlineInvalid ? 'Deadline cannot be in the past' : undefined}
+              error={isDeadlineInvalid ? 'Deadline cannot be in the past' : isDeadlineExceedsProject ? 'Task deadline cannot exceed project deadline.' : undefined}
             />
           </div>
 
@@ -163,7 +172,7 @@ export function CreateTaskModal({ open, onOpenChange, projectId }: CreateTaskMod
             <Button 
               onClick={handleSubmit} 
               isLoading={isLoading} 
-              disabled={!formData.title.trim() || isDeadlineInvalid}
+              disabled={!formData.title.trim() || isDeadlineInvalid || isDeadlineExceedsProject}
             >
               Create Task
             </Button>

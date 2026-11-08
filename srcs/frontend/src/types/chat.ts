@@ -1,14 +1,10 @@
-type ConversationType = 'Direct' | 'Project' | 'Group';
-
 export interface Conversation {
   id: number;
   project_id: number;
   project_name?: string;
   created_at: string;
-  type?: ConversationType;
   name?: string;
   last_message?: string;
-  last_message_at?: string;
 }
 
 export interface Message {

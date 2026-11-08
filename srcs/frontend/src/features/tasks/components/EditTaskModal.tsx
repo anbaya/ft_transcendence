@@ -8,15 +8,17 @@ import { Input } from '@/components/ui/Input';
 import { useTaskStore } from '@/stores/taskStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from '@/stores/toastStore';
+import { getApiErrorMessage } from '@/utils/errors';
 import type { Task, TaskStatus, TaskPriority } from '@/types/task';
 
 interface EditTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task;
+  projectDeadline?: string | null;
 }
 
-export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) {
+export function EditTaskModal({ open, onOpenChange, task, projectDeadline }: EditTaskModalProps) {
   const { updateTask, isLoading } = useTaskStore();
   const { activeProjectMembers } = useProjectStore();
 
@@ -31,6 +33,8 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
 
   const today = new Date().toLocaleDateString('en-CA');
   const isDeadlineInvalid = Boolean(formData.deadline && formData.deadline < today);
+  const projectDeadlineDate = projectDeadline ? projectDeadline.split('T')[0] : null;
+  const isDeadlineExceedsProject = Boolean(projectDeadlineDate && formData.deadline && formData.deadline > projectDeadlineDate);
 
   useEffect(() => {
     if (task) {
@@ -53,6 +57,10 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
       toast.error('Deadline cannot be in the past');
       return;
     }
+    if (isDeadlineExceedsProject) {
+      toast.error('Task deadline cannot exceed project deadline.');
+      return;
+    }
     try {
       await updateTask(task.id, {
         title: formData.title.trim(),
@@ -66,7 +74,7 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
       toast.success('Task updated successfully!');
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.title?.[0] || error.message || 'Failed to update task');
+      toast.error(getApiErrorMessage(error, 'Failed to update task'));
     }
   };
 
@@ -154,9 +162,10 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
               label="Deadline"
               type="date"
               min={today}
+              max={projectDeadlineDate || undefined}
               value={formData.deadline}
               onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-              error={isDeadlineInvalid ? 'Deadline cannot be in the past' : undefined}
+              error={isDeadlineInvalid ? 'Deadline cannot be in the past' : isDeadlineExceedsProject ? 'Task deadline cannot exceed project deadline.' : undefined}
             />
           </div>
 
@@ -167,7 +176,7 @@ export function EditTaskModal({ open, onOpenChange, task }: EditTaskModalProps) 
             <Button 
               onClick={handleSubmit} 
               isLoading={isLoading} 
-              disabled={!formData.title.trim() || isDeadlineInvalid}
+              disabled={!formData.title.trim() || isDeadlineInvalid || isDeadlineExceedsProject}
             >
               Save Changes
             </Button>

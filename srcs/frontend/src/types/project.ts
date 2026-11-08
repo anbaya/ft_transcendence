@@ -5,12 +5,10 @@ export interface Project {
   id: number;
   name: string;
   description?: string | null;
-  start_date?: string | null;
   deadline?: string | null;
   status: ProjectStatus;
   priority: ProjectPriority;
   created_by: number;
-  chat_sync_status?: 'pending' | 'ready' | 'failed';
   created_at: string;
   updated_at: string;
 }

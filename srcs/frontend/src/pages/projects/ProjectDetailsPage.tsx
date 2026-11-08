@@ -14,6 +14,7 @@ import {
   Plus,
   MessageSquare,
   FileText,
+  LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
@@ -23,6 +24,7 @@ import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
 import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveProjectMemberModal';
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
+import { LeaveProjectModal } from '@/features/projects/components/LeaveProjectModal';
 import { TaskTable } from '@/features/tasks/components/TaskTable';
 import { CreateTaskModal } from '@/features/tasks/components/CreateTaskModal';
 import { EditTaskModal } from '@/features/tasks/components/EditTaskModal';
@@ -58,6 +60,7 @@ export default function ProjectDetailsPage() {
   // Modals state
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<ProjectMember | null>(null);
   const [taskModal, setTaskModal] = useState<{ type: 'create' | 'details' | 'edit' | 'delete'; task?: Task } | null>(null);
 
@@ -133,6 +136,12 @@ export default function ProjectDetailsPage() {
           <Button variant="secondary" className="shrink-0" onClick={() => setIsEditOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             Edit Project
+          </Button>
+        )}
+        {!canManage && (
+          <Button variant="secondary" className="shrink-0 text-warning border-warning/30 hover:bg-warning/10" onClick={() => setIsLeaveOpen(true)}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Leave Project
           </Button>
         )}
       </div>
@@ -212,6 +221,7 @@ export default function ProjectDetailsPage() {
           </div>
           <TaskTable
             tasks={tasks}
+            isProjectManager={canManage}
             onViewDetails={(task) => setTaskModal({ type: 'details', task })}
             onEdit={(task) => setTaskModal({ type: 'edit', task })}
             onDelete={(task) => setTaskModal({ type: 'delete', task })}
@@ -297,6 +307,7 @@ export default function ProjectDetailsPage() {
       {/* Modals */}
       <AddProjectMemberModal open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen} projectId={project.id} />
       <EditProjectModal open={isEditOpen} onOpenChange={setIsEditOpen} project={project} />
+      <LeaveProjectModal open={isLeaveOpen} onOpenChange={setIsLeaveOpen} projectName={project.name} projectId={project.id} />
       <RemoveProjectMemberModal
         open={Boolean(memberToRemove)}
         onOpenChange={(open) => !open && setMemberToRemove(null)}
@@ -306,11 +317,12 @@ export default function ProjectDetailsPage() {
       />
 
       {/* Task Modals */}
-      <CreateTaskModal open={taskModal?.type === 'create'} onOpenChange={(o) => !o && setTaskModal(null)} projectId={project.id} />
+      <CreateTaskModal open={taskModal?.type === 'create'} onOpenChange={(o) => !o && setTaskModal(null)} projectId={project.id} projectDeadline={project.deadline} />
       <TaskDetailsModal
         open={taskModal?.type === 'details'}
         onOpenChange={(o) => !o && setTaskModal(null)}
         task={taskModal?.task}
+        canManage={canManage}
         onEditClick={() => taskModal?.task && setTaskModal({ type: 'edit', task: taskModal.task })}
         onDeleteClick={() => taskModal?.task && setTaskModal({ type: 'delete', task: taskModal.task })}
         onStatusChange={(taskId, status) => updateTaskStatus(taskId, status)}
@@ -320,6 +332,7 @@ export default function ProjectDetailsPage() {
         open={taskModal?.type === 'edit'}
         onOpenChange={(o) => !o && setTaskModal(null)}
         task={taskModal?.task}
+        projectDeadline={project.deadline}
       />
       <DeleteTaskModal
         open={taskModal?.type === 'delete'}

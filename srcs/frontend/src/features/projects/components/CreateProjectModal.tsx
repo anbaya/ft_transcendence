@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from '@/stores/toastStore';
+import { getApiErrorMessage } from '@/utils/errors';
 import type { ProjectStatus, ProjectPriority } from '@/types/project';
 
 interface CreateProjectModalProps {
@@ -46,7 +47,7 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
       setFormData({ name: '', description: '', status: 'planned', priority: 'medium', deadline: '' });
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.name?.[0] || error.message || 'Failed to create project');
+      toast.error(getApiErrorMessage(error, 'Failed to create project'));
     }
   };
 

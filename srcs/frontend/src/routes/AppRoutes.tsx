@@ -7,8 +7,6 @@ import { AuthLayout } from '@/components/layout/AuthLayout';
 // Auth Pages
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 
 // Protected Pages
 import DashboardPage from '@/pages/dashboard/DashboardPage';
@@ -39,8 +37,6 @@ export default function AppRoutes() {
       <Route element={<AuthLayout />}>
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/register" element={<RegisterPage />} />
-        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Protected Routes */}

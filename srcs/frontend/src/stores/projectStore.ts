@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Project, ProjectMember } from '@/types/project';
 import apiClient from '@/services/api/client';
+import { getApiErrorMessage } from '@/utils/errors';
+import { useAuthStore } from '@/stores/authStore';
 
 interface ProjectState {
   projects: Project[];
@@ -18,6 +20,7 @@ interface ProjectState {
   fetchProjectMembers: (projectId: number) => Promise<void>;
   addProjectMember: (projectId: number, email: string) => Promise<ProjectMember>;
   removeProjectMember: (projectId: number, memberId: number) => Promise<void>;
+  leaveProject: (projectId: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -29,7 +32,7 @@ const initialState = {
   error: null,
 };
 
-export const useProjectStore = create<ProjectState>((set) => ({
+export const useProjectStore = create<ProjectState>((set, get) => ({
   ...initialState,
   reset: () => set(initialState),
 
@@ -39,7 +42,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       const response = await apiClient.get<Project[]>('/api/projects/');
       set({ projects: response.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch projects', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to fetch projects'), isLoading: false });
     }
   },
 
@@ -49,7 +52,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       const response = await apiClient.get<Project>(`/api/projects/${id}/`);
       set({ activeProject: response.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch project', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to fetch project'), isLoading: false });
     }
   },
 
@@ -63,7 +66,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }));
       return response.data;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to create project', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to create project'), isLoading: false });
       throw error;
     }
   },
@@ -79,7 +82,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }));
       return response.data;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update project', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to update project'), isLoading: false });
       throw error;
     }
   },
@@ -94,7 +97,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ error: error.message || 'Failed to delete project', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to delete project'), isLoading: false });
       throw error;
     }
   },
@@ -105,7 +108,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       const response = await apiClient.get<ProjectMember[]>(`/api/projects/${projectId}/members/`);
       set({ activeProjectMembers: response.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch project members', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to fetch project members'), isLoading: false });
     }
   },
 
@@ -119,7 +122,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
       }));
       return response.data;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to add project member', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to add project member'), isLoading: false });
       throw error;
     }
   },
@@ -133,7 +136,43 @@ export const useProjectStore = create<ProjectState>((set) => ({
         isLoading: false
       }));
     } catch (error: any) {
-      set({ error: error.message || 'Failed to remove project member', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to remove project member'), isLoading: false });
+      throw error;
+    }
+  },
+
+  leaveProject: async (projectId: number) => {
+    set({ isLoading: true, error: null });
+    try {
+      const currentUserId = useAuthStore.getState().user?.id;
+      if (!currentUserId) {
+        throw new Error('User not authenticated');
+      }
+
+      let members = get().activeProjectMembers;
+      let myMember = members.find(
+        (m) => m.user_id === currentUserId && ((m.project && m.project === projectId) || (m.project_id && m.project_id === projectId))
+      );
+
+      if (!myMember) {
+        const response = await apiClient.get<ProjectMember[]>(`/api/projects/${projectId}/members/`);
+        members = response.data;
+        myMember = members.find((m) => m.user_id === currentUserId);
+      }
+
+      if (!myMember) {
+        throw new Error('You are not registered as a member of this project');
+      }
+
+      await apiClient.delete(`/api/projects/${projectId}/members/${myMember.id}/`);
+      set((state) => ({
+        projects: state.projects.filter((p) => p.id !== projectId),
+        activeProject: state.activeProject?.id === projectId ? null : state.activeProject,
+        activeProjectMembers: state.activeProjectMembers.filter((m) => m.id !== myMember!.id),
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ error: getApiErrorMessage(error, 'Failed to leave project'), isLoading: false });
       throw error;
     }
   },

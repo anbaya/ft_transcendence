@@ -7,6 +7,7 @@ import { ProjectCard } from '@/features/projects/components/ProjectCard';
 import { CreateProjectModal } from '@/features/projects/components/CreateProjectModal';
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
 import { DeleteProjectModal } from '@/features/projects/components/DeleteProjectModal';
+import { LeaveProjectModal } from '@/features/projects/components/LeaveProjectModal';
 import type { Project } from '@/types/project';
 
 
@@ -23,6 +24,7 @@ export default function ProjectsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   // Opens the edit modal with the selected project's data pre-filled
@@ -35,6 +37,12 @@ export default function ProjectsPage() {
   const handleDelete = (project: Project) => {
     setSelectedProject(project);
     setIsDeleteOpen(true);
+  };
+
+  // Opens the leave project confirmation modal
+  const handleLeave = (project: Project) => {
+    setSelectedProject(project);
+    setIsLeaveOpen(true);
   };
 
   // Filter projects by name (case-insensitive) based on the search query
@@ -82,6 +90,7 @@ export default function ProjectsPage() {
               project={project} 
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onLeave={handleLeave}
             />
           ))}
         </div>
@@ -115,6 +124,14 @@ export default function ProjectsPage() {
         open={isDeleteOpen} 
         onOpenChange={setIsDeleteOpen} 
         projectName={selectedProject?.name || ''} 
+        projectId={selectedProject?.id || 0}
+      />
+
+      {/* Leave Modal: Confirms and executes leaving a project */}
+      <LeaveProjectModal
+        open={isLeaveOpen}
+        onOpenChange={setIsLeaveOpen}
+        projectName={selectedProject?.name || ''}
         projectId={selectedProject?.id || 0}
       />
     </div>

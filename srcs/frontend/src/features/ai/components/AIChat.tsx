@@ -43,7 +43,7 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
 
   const handleClearHistory = () => {
     const contextLabel = activeProject ? `project "${activeProject.name}"` : 'General Mode';
-    if (window.confirm(`Clear chat history for ${contextLabel}?`)) {
+    if (window.confirm(`Delete conversation for ${contextLabel}? All messages will be permanently removed.`)) {
       clearHistory();
     }
   };
@@ -95,7 +95,7 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
             <button 
               onClick={handleClearHistory}
               className="p-1.5 rounded-md hover:bg-error/10 hover:text-error transition-colors"
-              title="Clear History"
+              title="Delete Conversation"
             >
               <Trash2 className="w-4 h-4" />
             </button>

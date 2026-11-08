@@ -18,18 +18,65 @@ export default function ChatPage() {
 
   const pushMessage = (msg: Message) => {
     setMessages((prev) => (msg.id && prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+    setConversations((prev) =>
+      prev.map((c) => {
+        const convId = msg.conversation || msg.conversation_id;
+        if (convId && c.id === convId) {
+          return {
+            ...c,
+            lastMessageSnippet: msg.content,
+            lastMessageTime: new Date(msg.created_at || Date.now()).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          };
+        }
+        return c;
+      })
+    );
   };
 
   // 1. Load active conversations
   useEffect(() => {
-    apiClient.get<Conversation[]>('/api/conversations/my/').then((res) => {
-      const threads = res.data.map((c) => ({
-        ...c,
-        name: c.project_name ? `${c.project_name} Chat` : `Project #${c.project_id} Chat`,
-      }));
-      setConversations(threads);
-      if (threads.length > 0) setSelectedConvId(threads[0].id);
+    let isMounted = true;
+    apiClient.get<Conversation[]>('/api/conversations/my/').then(async (res) => {
+      const threads: ChatThread[] = await Promise.all(
+        res.data.map(async (c) => {
+          let lastMessageSnippet = c.last_message;
+          let lastMessageTime: string | undefined;
+
+          try {
+            const msgRes = await apiClient.get<Message[]>(`/api/conversations/${c.id}/messages/`);
+            const lastMsg = msgRes.data.at(-1);
+            if (lastMsg) {
+              lastMessageSnippet = lastMsg.content;
+              lastMessageTime = new Date(lastMsg.created_at).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+            }
+          } catch (err) {
+            console.error(`Failed to load last message for conversation ${c.id}:`, err);
+          }
+
+          return {
+            ...c,
+            name: c.project_name ? `${c.project_name} Chat` : `Project #${c.project_id} Chat`,
+            lastMessageSnippet,
+            lastMessageTime,
+          };
+        })
+      );
+
+      if (isMounted) {
+        setConversations(threads);
+        if (threads.length > 0) setSelectedConvId(threads[0].id);
+      }
     }).catch(console.error);
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // 2. Load messages & manage WebSocket for active conversation

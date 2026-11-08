@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Task, TaskStatus } from '@/types/task';
 import apiClient from '@/services/api/client';
+import { getApiErrorMessage } from '@/utils/errors';
 
 interface TaskState {
   tasks: Task[];
@@ -35,7 +36,7 @@ export const useTaskStore = create<TaskState>((set) => ({
       const response = await apiClient.get<Task[]>(`/api/tasks/projects/${projectId}/tasks/`);
       set({ tasks: response.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch tasks', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to fetch tasks'), isLoading: false });
     }
   },
 
@@ -45,7 +46,7 @@ export const useTaskStore = create<TaskState>((set) => ({
       const response = await apiClient.get<Task[]>('/api/tasks/users/me/tasks/');
       set({ myTasks: response.data, isLoading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch your tasks', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to fetch your tasks'), isLoading: false });
     }
   },
 
@@ -59,7 +60,7 @@ export const useTaskStore = create<TaskState>((set) => ({
       }));
       return response.data;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to create task', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to create task'), isLoading: false });
       throw error;
     }
   },
@@ -75,7 +76,7 @@ export const useTaskStore = create<TaskState>((set) => ({
       }));
       return response.data;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update task', isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to update task'), isLoading: false });
       throw error;
     }
   },
@@ -93,7 +94,7 @@ export const useTaskStore = create<TaskState>((set) => ({
         myTasks: state.myTasks.map((t) => t.id === taskId ? { ...t, status: validStatus } : t),
       }));
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update status' });
+      set({ error: getApiErrorMessage(error, 'Failed to update status') });
       throw error;
     }
   },
@@ -107,7 +108,7 @@ export const useTaskStore = create<TaskState>((set) => ({
         myTasks: state.myTasks.map((t) => t.id === taskId ? response.data : t),
       }));
     } catch (error: any) {
-      set({ error: error.message || 'Failed to update assignee' });
+      set({ error: getApiErrorMessage(error, 'Failed to update assignee') });
       throw error;
     }
   },
@@ -120,7 +121,7 @@ export const useTaskStore = create<TaskState>((set) => ({
         myTasks: state.myTasks.filter((t) => t.id !== taskId),
       }));
     } catch (error: any) {
-      set({ error: error.message || 'Failed to delete task' });
+      set({ error: getApiErrorMessage(error, 'Failed to delete task') });
       throw error;
     }
   },

@@ -75,7 +75,7 @@ export function MobileNav() {
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-white">
               <Hexagon className="h-5 w-5" />
             </div>
-            <span className="text-sm font-bold text-primary">Astra</span>
+            <span className="text-sm font-bold text-primary">TeamUP</span>
           </div>
           <button
             onClick={closeMobileNav}
