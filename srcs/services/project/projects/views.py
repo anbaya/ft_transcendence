@@ -192,44 +192,9 @@ class ProjectMemberDetailView(generics.DestroyAPIView):
             actor_name = "Project manager"
 
         if is_owner:
-            next_owner_member = (
-                project.members.exclude(user_id=user_id)
-                .order_by("joined_at")
-                .first()
+            raise PermissionDenied(
+                "The project manager cannot leave or be removed from the project. Please delete the project instead."
             )
-
-            if not next_owner_member:
-                raise PermissionDenied(
-                    "You are the only member in this project. Please delete the project instead of leaving."
-                )
-
-            with transaction.atomic():
-                project.created_by = next_owner_member.user_id
-                project.save(update_fields=["created_by"])
-                instance.delete()
-
-            try:
-                unassign_project_member_tasks(project.id, user_id)
-            except (requests.RequestException, RuntimeError):
-                logger.warning(
-                    "Failed to unassign tasks for departed owner %s in project %s",
-                    user_id,
-                    project.id
-                )
-
-            notif_text = f"{actor_name} left project {project.name}. You are now the project manager."
-            try:
-                create_notification(
-                    user_id=next_owner_member.user_id,
-                    title=f"New project manager of {project.name}",
-                    message=notif_text
-                )
-            except (requests.RequestException, RuntimeError):
-                logger.exception(
-                    "Failed to create notification for new owner %s",
-                    next_owner_member.user_id
-                )
-            return
 
         with transaction.atomic():
             instance.delete()
