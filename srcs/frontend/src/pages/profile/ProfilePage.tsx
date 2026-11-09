@@ -135,14 +135,13 @@ export default function ProfilePage() {
                   <Input label="First Name" value={formData.first_name} onChange={setProfileField('first_name')} disabled={isLoading} />
                   <Input label="Last Name" value={formData.last_name} onChange={setProfileField('last_name')} disabled={isLoading} />
                 </div>
-                <Input label="Email Address" type="email" value={formData.email} onChange={setProfileField('email')} disabled={isLoading} />
-              </CardContent>
-              <CardFooter className="justify-end border-t p-6">
                 <Button type="submit" isLoading={isLoading} className="gap-2">
                   <Save className="h-4 w-4" />
                   Save Changes
                 </Button>
-              </CardFooter>
+              </CardContent>
+              {/* <CardFooter className="justify-end border-t p-6">
+              </CardFooter> */}
             </form>
           </Card>
 

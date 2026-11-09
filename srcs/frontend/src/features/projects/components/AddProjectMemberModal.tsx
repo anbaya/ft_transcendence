@@ -5,6 +5,8 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
+import { getApiErrorMessage } from '@/utils/errors';
+import { toast } from '@/stores/toastStore';
 import { useState } from 'react';
 
 interface AddProjectMemberModalProps {
@@ -19,55 +21,72 @@ export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProj
   const [error, setError] = useState<string | null>(null);
   const { addProjectMember } = useProjectStore();
 
-  const handleAdd = async () => {
-    if (!email.trim()) return;
+  const handleAdd = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!email.trim()) {
+      setError('Please enter a user email address.');
+      return;
+    }
     setIsAdding(true);
     setError(null);
     try {
       await addProjectMember(projectId, email.trim());
+      toast.success('Member added successfully');
       setEmail('');
+      setError(null);
       onOpenChange(false);
     } catch (err: any) {
-      const msg = err.response?.data?.email?.[0] || err.response?.data?.detail || err.message || 'Failed to add member';
+      const msg = getApiErrorMessage(err, 'Failed to add member');
       setError(msg);
-    } finally {
+      toast.error(msg);
       setIsAdding(false);
     }
   };
 
+  const handleClose = () => {
+    setError(null);
+    setEmail('');
+    onOpenChange(false);
+  };
+
   return (
-    <Modal open={open} onOpenChange={onOpenChange}>
+    <Modal open={open} onOpenChange={handleClose}>
       <ModalPortal>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            <ModalTitle>Add Project Member</ModalTitle>
-            <ModalDescription>
-              Invite a registered user to this project by their email address.
-            </ModalDescription>
-          </ModalHeader>
-          
-          <div className="py-4 space-y-4">
-            <Input
-              label="User Email"
-              placeholder="collaborator@example.com"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={error || undefined}
-            />
-          </div>
+          <form noValidate onSubmit={handleAdd}>
+            <ModalHeader>
+              <ModalTitle>Add Project Member</ModalTitle>
+              <ModalDescription>
+                Invite a registered user to this project by their email address.
+              </ModalDescription>
+            </ModalHeader>
+            
+            <div className="py-4 space-y-2">
+              <Input
+                label="User Email"
+                placeholder="collaborator@example.com"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
+                error={error || undefined}
+              />
+            </div>
 
-          <ModalFooter>
-            <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={isAdding}>
-              Cancel
-            </Button>
-            <Button onClick={handleAdd} disabled={isAdding || !email.trim()}>
-              {isAdding ? 'Adding...' : 'Add Member'}
-            </Button>
-          </ModalFooter>
-          
-          <ModalClose />
+            <ModalFooter>
+              <Button type="button" variant="secondary" onClick={handleClose} disabled={isAdding}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isAdding}>
+                {isAdding ? 'Adding...' : 'Add Member'}
+              </Button>
+            </ModalFooter>
+            
+            <ModalClose />
+          </form>
         </ModalContent>
       </ModalPortal>
     </Modal>

@@ -113,30 +113,26 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   addProjectMember: async (projectId: number, email: string) => {
-    set({ isLoading: true, error: null });
     try {
       const response = await apiClient.post<ProjectMember>(`/api/projects/${projectId}/members/`, { email });
       set((state) => ({
         activeProjectMembers: [...state.activeProjectMembers, response.data],
-        isLoading: false
       }));
       return response.data;
     } catch (error: any) {
-      set({ error: getApiErrorMessage(error, 'Failed to add project member'), isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to add project member') });
       throw error;
     }
   },
 
   removeProjectMember: async (projectId: number, memberId: number) => {
-    set({ isLoading: true, error: null });
     try {
       await apiClient.delete(`/api/projects/${projectId}/members/${memberId}/`);
       set((state) => ({
         activeProjectMembers: state.activeProjectMembers.filter((m) => m.id !== memberId),
-        isLoading: false
       }));
     } catch (error: any) {
-      set({ error: getApiErrorMessage(error, 'Failed to remove project member'), isLoading: false });
+      set({ error: getApiErrorMessage(error, 'Failed to remove project member') });
       throw error;
     }
   },
