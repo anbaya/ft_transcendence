@@ -22,6 +22,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         allow_blank=False
     )
 
+    avatar = serializers.FileField(
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = User
         fields = [
@@ -30,7 +35,21 @@ class RegisterSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "password",
+            "avatar",
         ]
+        extra_kwargs = {
+            "email": {"validators": []}
+        }
+
+    def validate_email(self, value):
+        email = value.lower().strip()
+        existing_user = User.objects.filter(email__iexact=email).first()
+        if existing_user:
+            if not existing_user.is_active:
+                existing_user.delete()
+            else:
+                raise serializers.ValidationError("A user with this email already exists.")
+        return email
 
     def create(self, validated_data):
         validated_data["role"] = "USER"
@@ -47,6 +66,8 @@ class LoginSerializer(TokenObtainPairSerializer):
         return token
 
 class UserSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -55,10 +76,16 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "role",
+            "avatar",
         ]
-        read_only_fields = ["id", "email", "role"]
+        read_only_fields = ["id", "email", "role", "avatar"]
+
+    def get_avatar(self, obj):
+        return f"/api/auth/users/{obj.id}/avatar/"
 
 class InternalUserSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -66,8 +93,12 @@ class InternalUserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "avatar",
         ]
         read_only_fields = fields
+
+    def get_avatar(self, obj):
+        return f"/api/auth/users/{obj.id}/avatar/"
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
