@@ -92,6 +92,13 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "ai_rate_limit_cache",
+    }
+}
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "assistant.authentication.ServiceJWTAuthentication",
@@ -99,6 +106,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "assistant.throttling.AIRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "ai_user": os.environ.get("AI_RATE_LIMIT_USER", "15/minute"),
+        "ai_anon": os.environ.get("AI_RATE_LIMIT_ANON", "5/minute"),
+    },
 }
 
 JWT_SIGNING_KEY = os.environ["JWT_SIGNING_KEY"]

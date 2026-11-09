@@ -1,5 +1,8 @@
+import json
+import logging
 import threading
 import requests
+from django.http import StreamingHttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,21 +11,38 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 
 from .models import AIInteraction
 from .serializers import AIInteractionSerializer
+from .throttling import AIRateThrottle
+from .gemini_service import LLMServiceError
 from .rag import (
     answer_project_question,
     answer_general_question,
+    answer_project_question_stream,
+    answer_general_question_stream,
     index_single_document_by_id,
     delete_single_document_data,
 )
+
+logger = logging.getLogger(__name__)
 from .project_service import get_project
 from .permissions import IsInternalService
 
 class AskAssistantView(APIView):
-    def post(self, request, project_id=None):
+    throttle_classes = [AIRateThrottle]
+
+    def post(self, request, project_id=None, stream=False):
         question = request.data.get("question", "").strip()
         if not question:
             return Response(
-                {"error": "Question is required."},
+                {"error": "Question is required.", "code": "QUESTION_REQUIRED"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(question) > 4000:
+            return Response(
+                {
+                    "error": "Question is too long (maximum 4000 characters allowed).",
+                    "code": "QUESTION_TOO_LONG"
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -32,6 +52,14 @@ class AskAssistantView(APIView):
 
         authorization = request.headers.get("Authorization", "")
 
+        is_stream = (
+            stream
+            or request.query_params.get("stream", "").lower() in ("true", "1")
+            or request.data.get("stream") is True
+            or "text/event-stream" in request.headers.get("Accept", "")
+        )
+
+        project_data = None
         if target_project_id:
             try:
                 project_data = get_project(target_project_id, authorization)
@@ -62,61 +90,119 @@ class AskAssistantView(APIView):
                     project_id=target_project_id,
                 ).order_by('-created_at', '-id')[:3]
             )
-            recent_interactions.reverse()
-            history_text = "\n".join(
-                f"User: {item.question}\nAssistant: {item.answer}"
-                for item in recent_interactions
+        else:
+            recent_interactions = list(
+                AIInteraction.objects.filter(
+                    user_id=request.user.id,
+                    project_id__isnull=True,
+                ).order_by('-created_at', '-id')[:3]
             )
 
-            answer = answer_project_question(
-                project_id=target_project_id,
-                question=question,
-                authorization_header=authorization,
-                project_data=project_data,
-                conversation_history=history_text,
-            )
-
-            AIInteraction.objects.create(
-                user_id=request.user.id,
-                project_id=target_project_id,
-                question=question,
-                answer=answer,
-            )
-
-            return Response({
-                "answer": answer,
-                "mode": "project",
-                "project_id": target_project_id,
-            })
-
-        recent_interactions = list(
-            AIInteraction.objects.filter(
-                user_id=request.user.id,
-                project_id__isnull=True,
-            ).order_by('-created_at', '-id')[:3]
-        )
         recent_interactions.reverse()
         history_text = "\n".join(
             f"User: {item.question}\nAssistant: {item.answer}"
             for item in recent_interactions
         )
 
-        answer = answer_general_question(
-            question=question,
-            conversation_history=history_text,
-        )
+        # Handle streaming SSE response
+        if is_stream:
+            user_id = request.user.id
 
-        AIInteraction.objects.create(
-            user_id=request.user.id,
-            project_id=None,
-            question=question,
-            answer=answer,
-        )
+            def event_stream():
+                collected = []
+                try:
+                    if target_project_id:
+                        stream_gen = answer_project_question_stream(
+                            project_id=target_project_id,
+                            question=question,
+                            authorization_header=authorization,
+                            project_data=project_data,
+                            conversation_history=history_text,
+                        )
+                    else:
+                        stream_gen = answer_general_question_stream(
+                            question=question,
+                            conversation_history=history_text,
+                        )
 
-        return Response({
-            "answer": answer,
-            "mode": "general",
-        })
+                    for chunk in stream_gen:
+                        if chunk:
+                            collected.append(chunk)
+                            yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+
+                    full_answer = "".join(collected).strip()
+                    if full_answer:
+                        AIInteraction.objects.create(
+                            user_id=user_id,
+                            project_id=target_project_id,
+                            question=question,
+                            answer=full_answer,
+                        )
+
+                    yield f"data: {json.dumps({'done': True, 'mode': 'project' if target_project_id else 'general', 'project_id': target_project_id})}\n\n"
+                except Exception as err:
+                    logger.exception("AI streaming error: %s", err)
+                    yield f"data: {json.dumps({'error': str(err), 'done': True})}\n\n"
+
+            response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+            response["Cache-Control"] = "no-cache"
+            response["X-Accel-Buffering"] = "no"
+            return response
+
+        # Standard non-streaming JSON response
+        try:
+            if target_project_id:
+                answer = answer_project_question(
+                    project_id=target_project_id,
+                    question=question,
+                    authorization_header=authorization,
+                    project_data=project_data,
+                    conversation_history=history_text,
+                )
+                AIInteraction.objects.create(
+                    user_id=request.user.id,
+                    project_id=target_project_id,
+                    question=question,
+                    answer=answer,
+                )
+                return Response({
+                    "answer": answer,
+                    "mode": "project",
+                    "project_id": target_project_id,
+                })
+
+            answer = answer_general_question(
+                question=question,
+                conversation_history=history_text,
+            )
+            AIInteraction.objects.create(
+                user_id=request.user.id,
+                project_id=None,
+                question=question,
+                answer=answer,
+            )
+            return Response({
+                "answer": answer,
+                "mode": "general",
+            })
+        except LLMServiceError as err:
+            logger.warning("LLM service unavailable: %s", err)
+            return Response(
+                {
+                    "error": "The AI assistant service is temporarily unavailable. Please try again in a few moments.",
+                    "code": "AI_SERVICE_UNAVAILABLE"
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        except Exception as err:
+            logger.exception("Unexpected error during AI generation: %s", err)
+            return Response(
+                {
+                    "error": "An unexpected error occurred while generating the AI response.",
+                    "code": "AI_GENERATION_FAILED"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class AIInteractionHistoryView(ListAPIView):
     serializer_class = AIInteractionSerializer
