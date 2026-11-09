@@ -12,7 +12,11 @@ class ServiceJWTAuthentication(JWTAuthentication):
         class AuthenticatedUser:
             def __init__(self, user_id, role):
                 self.id = user_id
+                self.pk = user_id
                 self.role = role
                 self.is_authenticated = True
+
+            def __str__(self):
+                return f"User({self.id})"
 
         return AuthenticatedUser(user_id, role)

@@ -12,6 +12,12 @@ urlpatterns = [
         name='ai-ask-general'
     ),
     path(
+        'ask/stream/',
+        AskAssistantView.as_view(),
+        {'stream': True},
+        name='ai-ask-general-stream'
+    ),
+    path(
         'history/',
         AIInteractionHistoryView.as_view(),
         name='ai-history-general'
@@ -20,6 +26,12 @@ urlpatterns = [
         'projects/<int:project_id>/ask/',
         AskAssistantView.as_view(),
         name='ai-ask-project'
+    ),
+    path(
+        'projects/<int:project_id>/ask/stream/',
+        AskAssistantView.as_view(),
+        {'stream': True},
+        name='ai-ask-project-stream'
     ),
     path(
         'projects/<int:project_id>/history/',

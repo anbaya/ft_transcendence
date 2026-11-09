@@ -7,6 +7,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class LLMServiceError(Exception):
+    """Raised when all LLM providers, models, or network calls fail."""
+    pass
+
+
 def get_api_key():
     return os.environ.get("GEMINI_API_KEY", "").strip()
 
@@ -181,10 +186,7 @@ def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
                 break
 
     logger.error(f"All Gemini models and retries failed: {last_error}")
-    is_french = any(w in prompt.lower() for w in ["quel", "quelle", "combien", "est-ce", "projet", "bonjour", "équipe", "qui "])
-    if is_french:
-        return "Le service d'assistance IA est temporairement indisponible en raison d'une forte affluence. Veuillez réessayer dans quelques instants."
-    return "The AI assistant service is temporarily unavailable due to high demand. Please try again in a few moments."
+    raise LLMServiceError(f"All Gemini models and retries failed: {last_error}")
 
 
 def generate_answer_stream(prompt, max_output_tokens=800, temperature=0.2):
@@ -194,8 +196,7 @@ def generate_answer_stream(prompt, max_output_tokens=800, temperature=0.2):
     """
     client, error_msg = get_gemini_client()
     if not client:
-        yield error_msg, 0.0
-        return
+        raise LLMServiceError(error_msg or "Gemini client initialization failed")
 
     primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
     models_to_try = [primary_model] if primary_model else ["gemini-3.1-flash-lite"]
@@ -234,8 +235,9 @@ def generate_answer_stream(prompt, max_output_tokens=800, temperature=0.2):
             return
         except Exception as e:
             logger.warning(f"Streaming failed with {model_name}: {e}")
+            last_stream_error = e
 
-    yield "Le service d'assistance IA est temporairement indisponible.", 0.0
+    raise LLMServiceError(f"Streaming failed with all candidate models. Last error: {last_stream_error if 'last_stream_error' in locals() else 'unknown'}")
 
 
 def rewrite_followup_question(question, conversation_history):

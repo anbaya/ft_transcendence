@@ -9,7 +9,7 @@ import concurrent.futures
 from django.conf import settings
 from .models import DocumentChunk
 from .document_extractor import extract_text, clean_text
-from .gemini_service import generate_embedding, generate_embeddings_batch, generate_answer, rewrite_followup_question
+from .gemini_service import generate_embedding, generate_embeddings_batch, generate_answer, generate_answer_stream, rewrite_followup_question
 from .document_service import get_project_documents, download_document
 from .project_service import get_project, get_project_tasks, get_project_members
 
@@ -903,22 +903,35 @@ def build_context(chunks):
     return "\n\n---\n\n".join(parts)
 
 
-def answer_general_question(question, conversation_history=""):
+def build_general_prompt(question, conversation_history=""):
     history_section = ""
     if conversation_history:
         history_section = f"\nRecent Conversation History:\n{conversation_history}\n"
 
-    prompt = f"""You are a professional, helpful, and concise AI assistant.
-Answer the following question in a clear, well-structured, and accurate manner.
+    return f"""You are Timi, an AI Assistant.
+Your name is strictly Timi.
+Your role is to act as an AI Assistant for technical topics, programming, architecture design, and problem solving.
+If the user asks who you are, what your name is, or what you do (e.g. "t'es qui ?", "qui es-tu ?", "c'est quoi ton nom ?", "who are you?"), introduce yourself warmly as Timi, state your role as an AI Assistant, and answer in a clear, friendly, structured, and precise manner.
+
+Answer the question in a clear, well-structured, and accurate manner.
 
 Rules:
 - Always answer in the exact same language as the user's question (e.g., if asked in French, reply in French; if asked in English, reply in English).
 {history_section}
 User Question:
 {question}"""
+
+def answer_general_question(question, conversation_history=""):
+    prompt = build_general_prompt(question, conversation_history)
     return generate_answer(prompt)
 
-def answer_project_question(project_id, question, authorization_header, project_data=None, conversation_history=""):
+def answer_general_question_stream(question, conversation_history=""):
+    prompt = build_general_prompt(question, conversation_history)
+    for chunk, _ in generate_answer_stream(prompt):
+        if chunk:
+            yield chunk
+
+def build_project_prompt(project_id, question, authorization_header, project_data=None, conversation_history=""):
     search_query = question
     if conversation_history:
         search_query = rewrite_followup_question(question, conversation_history)
@@ -1023,7 +1036,11 @@ def answer_project_question(project_id, question, authorization_header, project_
     if conversation_history:
         history_section = f"\nRecent Conversation History:\n{conversation_history}\n"
 
-    prompt = f"""You are the collaborative AI assistant for project "{project_name}".
+    prompt = f"""You are Timi, an AI Assistant dedicated to the project "{project_name}".
+Your name is strictly Timi.
+Your role is to act as a project copilot: analyzing specifications, tracking tasks, team contributors, deadlines, and project documentation.
+If the user asks who you are, what your name is, or what you do (e.g. "t'es qui ?", "qui es-tu ?", "who are you?"), introduce yourself warmly as Timi, state your role as the project's AI Assistant, and explain how you can assist with tasks and documentation.
+
 Here is all available context regarding this project:
 
 Current Server Date: {current_date_str}
@@ -1057,4 +1074,14 @@ Instructions:
 - Temporal awareness: Today's date is {current_date_str}. When answering about overdue tasks, upcoming deadlines, or timeline progress, strictly compare each task or project deadline to this date ({current_date_str}).
 - Empty Documentation: If no documents or tasks exist for the question asked, explain politely that no related documentation or tasks are registered for this project."""
 
+    return prompt
+
+def answer_project_question(project_id, question, authorization_header, project_data=None, conversation_history=""):
+    prompt = build_project_prompt(project_id, question, authorization_header, project_data, conversation_history)
     return generate_answer(prompt)
+
+def answer_project_question_stream(project_id, question, authorization_header, project_data=None, conversation_history=""):
+    prompt = build_project_prompt(project_id, question, authorization_header, project_data, conversation_history)
+    for chunk, _ in generate_answer_stream(prompt):
+        if chunk:
+            yield chunk

@@ -6,7 +6,7 @@ export DATA_DIR := $(PWD)/data
 all: prepare up
 
 prepare:
-	@mkdir -p $(DATA_DIR)/mysql $(DATA_DIR)/elasticsearch $(DATA_DIR)/prometheus $(DATA_DIR)/grafana/dashboards
+	@mkdir -p $(DATA_DIR)/mysql $(DATA_DIR)/elasticsearch
 	@mkdir -p secrets
 	@test -f .env
 	@grep '^DB_PASSWORD=' .env | cut -d= -f2- > secrets/db_password.txt
@@ -28,7 +28,7 @@ fclean: clean
 	@echo "Full reset (including data volumes)..."
 	@docker system prune -f
 	@docker run --rm --user 0 -v $(DATA_DIR):/data alpine:3.20 sh -c 'find /data -mindepth 1 -maxdepth 1 -exec rm -rf {} +'
-	@mkdir -p $(DATA_DIR)/mysql $(DATA_DIR)/elasticsearch $(DATA_DIR)/prometheus $(DATA_DIR)/grafana/dashboards
+	@mkdir -p $(DATA_DIR)/mysql $(DATA_DIR)/elasticsearch
 
 re: fclean all
 

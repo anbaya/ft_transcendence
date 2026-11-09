@@ -14,6 +14,11 @@ services:
       dockerfile: auth/Dockerfile
     container_name: auth_service
     restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "tcp://127.0.0.1:5000"
+        tag: "{{.Name}}"
     env_file:
       - .env
     environment:
@@ -223,50 +228,6 @@ services:
     networks:
       - transcendence_net
 
-  prometheus:
-    image: prom/prometheus:v2.55.1
-    container_name: prometheus
-    restart: always
-    ports:
-      - "127.0.0.1:9090:9090"
-    volumes:
-      - ./srcs/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./srcs/monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-    networks:
-      - transcendence_net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/ready > /dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
-
-  grafana:
-    image: grafana/grafana:11.3.0
-    container_name: grafana
-    restart: always
-    ports:
-      - "127.0.0.1:3001:3000"
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./srcs/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./srcs/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    networks:
-      - transcendence_net
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health > /dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-
   elasticsearch:
     build:
       context: ./srcs/logging/elasticsearch
@@ -345,20 +306,6 @@ volumes:
       type: none
       o: bind
       device: ${DATA_DIR}/elasticsearch
-  prometheus-data:
-    name: transcendence_prometheus_data_bind
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR}/prometheus
-  grafana-data:
-    name: transcendence_grafana_data_bind
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR}/grafana
   document-data:
     name: transcendence_document_data
   ai-chroma-data:

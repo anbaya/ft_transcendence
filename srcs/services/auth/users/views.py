@@ -1,3 +1,6 @@
+import mimetypes
+from django.http import HttpResponse, FileResponse
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
@@ -25,6 +28,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
@@ -33,13 +37,13 @@ class MeView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         return self.request.user
 
     def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=['is_active'])
+        user_id = instance.id
 
         tokens = OutstandingToken.objects.filter(user=instance)
         for token in tokens:
@@ -50,7 +54,7 @@ class MeView(generics.RetrieveUpdateDestroyAPIView):
         try:
             import requests
             requests.delete(
-                f"{project_service_url}/internal/users/{instance.id}/",
+                f"{project_service_url}/internal/users/{user_id}/",
                 headers={
                     'X-Internal-Token': internal_token
                 },
@@ -60,8 +64,10 @@ class MeView(generics.RetrieveUpdateDestroyAPIView):
             import logging
             logging.getLogger(__name__).exception(
                 "Erreur lors de la notification de suppression de l'utilisateur %s à project-service",
-                instance.id
+                user_id
             )
+
+        instance.delete()
 
 class LogoutView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -159,3 +165,95 @@ class ChangePasswordView(generics.GenericAPIView):
             {"message": "Password changed successfully."},
             status=status.HTTP_200_OK
         )
+
+DEFAULT_AVATAR_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="64" fill="#E2E8F0"/>
+  <circle cx="64" cy="48" r="24" fill="#94A3B8"/>
+  <path d="M24 112c0-22.09 17.91-40 40-40s40 17.91 40 40z" fill="#94A3B8"/>
+</svg>'''
+
+class UserAvatarView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, user_id=None):
+        if user_id is None:
+            if not request.user or not request.user.is_authenticated:
+                return HttpResponse(DEFAULT_AVATAR_SVG, content_type="image/svg+xml")
+            user = request.user
+        else:
+            user = User.objects.filter(id=user_id).first()
+
+        if user and user.avatar:
+            try:
+                if os.path.exists(user.avatar.path):
+                    content_type = mimetypes.guess_type(user.avatar.name)[0] or 'application/octet-stream'
+                    return FileResponse(open(user.avatar.path, 'rb'), content_type=content_type)
+            except Exception:
+                pass
+
+        return HttpResponse(DEFAULT_AVATAR_SVG, content_type="image/svg+xml")
+
+class UserAvatarUploadView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        return UserAvatarView().get(request, user_id=request.user.id)
+
+    def post(self, request):
+        file = request.FILES.get('avatar') or request.FILES.get('file')
+        if not file:
+            return Response(
+                {"detail": "No image file provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if file.size > 5 * 1024 * 1024:
+            return Response(
+                {"detail": "File size must not exceed 5MB."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        ext = os.path.splitext(file.name)[1].lower()
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
+        if ext not in allowed_extensions:
+            return Response(
+                {"detail": "Invalid image format. Allowed formats: JPG, PNG, GIF, WEBP, SVG."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if hasattr(file, 'content_type') and file.content_type:
+            if not file.content_type.startswith('image/'):
+                return Response(
+                    {"detail": "Uploaded file is not a valid image."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        user = request.user
+        if user.avatar:
+            try:
+                if os.path.exists(user.avatar.path):
+                    os.remove(user.avatar.path)
+            except Exception:
+                pass
+
+        user.avatar = file
+        user.save(update_fields=['avatar'])
+
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        if user.avatar:
+            try:
+                if os.path.exists(user.avatar.path):
+                    os.remove(user.avatar.path)
+            except Exception:
+                pass
+            user.avatar = None
+            user.save(update_fields=['avatar'])
+
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)

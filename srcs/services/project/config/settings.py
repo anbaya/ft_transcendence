@@ -15,7 +15,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 INSTALLED_APPS = [
     'rest_framework',
     'projects',
-    'analytics',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -32,7 +31,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "config.middleware.RequestCountMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

@@ -20,6 +20,12 @@ class User(AbstractUser):
         default="USER"
     )
 
+    avatar = models.FileField(
+        upload_to="avatars/",
+        null=True,
+        blank=True
+    )
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
