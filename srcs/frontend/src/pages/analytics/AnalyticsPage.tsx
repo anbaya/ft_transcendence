@@ -207,7 +207,7 @@ export default function AnalyticsPage() {
         <>
           {/* Top Row: 4 Key Metric Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+            <Card variant="indigo">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
                 <ListTodo className="h-4 w-4 text-muted-foreground" />
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card variant="emerald">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
                 <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
@@ -238,7 +238,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card variant={analytics.tasks.overdue > 0 ? "rose" : "amber"}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Overdue Tasks</CardTitle>
                 <AlertCircle className="h-4 w-4 text-muted-foreground" />
@@ -254,7 +254,7 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card variant="purple">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Team Members</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />

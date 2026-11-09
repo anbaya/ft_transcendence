@@ -14,7 +14,6 @@ import {
   BarChart2,
   ChevronLeft,
   ChevronRight,
-  Hexagon,
   Shield,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -99,8 +98,8 @@ export function Sidebar() {
       <div className="flex h-16 shrink-0 items-center px-4 border-b border-border">
         {isSidebarExpanded ? (
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="brand-icon">
-              <Hexagon className="h-5 w-5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-slate-200/80 shadow-xs p-1">
+              <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
             </div>
             <div className="flex flex-col truncate">
               <span className="text-base font-bold text-slate-900 tracking-tight leading-tight">TeamUP</span>
@@ -109,8 +108,8 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="flex w-full items-center justify-center">
-            <div className="brand-icon">
-              <Hexagon className="h-5 w-5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-slate-200/80 shadow-xs p-1">
+              <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
             </div>
           </div>
         )}

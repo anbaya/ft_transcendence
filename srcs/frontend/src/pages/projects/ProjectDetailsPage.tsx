@@ -21,6 +21,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
+import { cn } from '@/utils/cn';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
 import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveProjectMemberModal';
 import { EditProjectModal } from '@/features/projects/components/EditProjectModal';
@@ -156,12 +157,12 @@ export default function ProjectDetailsPage() {
 
       {/* Tabs */}
       <Tabs.Root defaultValue="overview" className="flex flex-col w-full">
-        <Tabs.List className="flex shrink-0 border-b border-border overflow-x-auto hide-scrollbar">
+        <Tabs.List className="tabs-pills mb-6 overflow-x-auto hide-scrollbar">
           {tabs.map(({ id: tabId, label, Icon }) => (
             <Tabs.Trigger
               key={tabId}
               value={tabId}
-              className="flex h-11 items-center justify-center bg-transparent px-5 text-sm font-medium text-muted hover:text-primary data-[state=active]:border-b-2 data-[state=active]:border-secondary data-[state=active]:text-secondary outline-none transition-colors"
+              className="tab-pill whitespace-nowrap"
             >
               {Icon && <Icon className="mr-1.5 h-4 w-4" />}
               {label}
@@ -170,24 +171,24 @@ export default function ProjectDetailsPage() {
         </Tabs.List>
 
         {/* Overview Tab */}
-        <Tabs.Content value="overview" className="py-6 outline-none space-y-6">
+        <Tabs.Content value="overview" className="outline-none space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-lg border border-border bg-white p-5 shadow-sm">
-              <div className="flex items-center text-muted mb-2">
-                <CheckCircle2 className="h-5 w-5 mr-2 text-secondary" />
-                <h3 className="font-medium">Task Progress</h3>
+            <div className="card card-emerald p-5">
+              <div className="flex items-center text-emerald-800 mb-2">
+                <CheckCircle2 className="h-5 w-5 mr-2 text-emerald-600" />
+                <h3 className="font-semibold">Task Progress</h3>
               </div>
               <div className="text-2xl font-bold text-primary">{completedTasks} / {totalTasks}</div>
               <div className="mt-4 h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-secondary rounded-full transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-300" style={{ width: `${progressPercent}%` }} />
               </div>
-              <p className="text-xs text-muted mt-2">{progressPercent}% completed</p>
+              <p className="text-xs text-emerald-700 font-medium mt-2">{progressPercent}% completed</p>
             </div>
 
-            <div className="rounded-lg border border-border bg-white p-5 shadow-sm">
+            <div className={cn("card p-5", timeRemaining.isOverdue ? "card-rose" : "card-amber")}>
               <div className="flex items-center text-muted mb-2">
-                <Clock className={`h-5 w-5 mr-2 ${timeRemaining.isOverdue ? 'text-red-500' : 'text-warning'}`} />
-                <h3 className="font-medium">Time Remaining</h3>
+                <Clock className={`h-5 w-5 mr-2 ${timeRemaining.isOverdue ? 'text-red-500' : 'text-amber-600'}`} />
+                <h3 className="font-semibold text-slate-800">Time Remaining</h3>
               </div>
               <div className={`text-2xl font-bold ${timeRemaining.isOverdue ? 'text-red-600' : 'text-primary'}`}>
                 {timeRemaining.text}
@@ -197,10 +198,10 @@ export default function ProjectDetailsPage() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-white p-5 shadow-sm">
-              <div className="flex items-center text-muted mb-2">
-                <User className="h-5 w-5 mr-2 text-indigo-500" />
-                <h3 className="font-medium">Project Manager</h3>
+            <div className="card card-indigo p-5">
+              <div className="flex items-center text-indigo-800 mb-2">
+                <User className="h-5 w-5 mr-2 text-indigo-600" />
+                <h3 className="font-semibold">Project Manager</h3>
               </div>
               <div className="text-lg font-bold text-primary truncate">{pmName}</div>
               <p className="text-sm text-muted mt-1">{activeProjectMembers.length} active {activeProjectMembers.length === 1 ? 'contributor' : 'contributors'}</p>

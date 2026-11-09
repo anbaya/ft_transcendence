@@ -4,6 +4,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
+import { cn } from '@/utils/cn';
 import type { Project } from '@/types/project';
 
 interface ProjectCardProps {
@@ -31,11 +32,29 @@ export function ProjectCard({ project, onEdit, onDelete, onLeave }: ProjectCardP
     return status.replace('_', ' ');
   };
 
+  const getAccentClass = (status: string) => {
+    switch (status) {
+      case 'completed': return 'project-card-accent-completed';
+      case 'in_progress': return 'project-card-accent-in_progress';
+      case 'cancelled': return 'project-card-accent-cancelled';
+      default: return 'project-card-accent-default';
+    }
+  };
+
+  const getIconClass = (status: string) => {
+    switch (status) {
+      case 'completed': return 'project-icon-completed';
+      case 'in_progress': return 'project-icon-in_progress';
+      case 'cancelled': return 'project-icon-cancelled';
+      default: return 'project-icon-default';
+    }
+  };
+
   return (
-    <div className="flex flex-col justify-between rounded-lg border border-border bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-indigo-200 group">
+    <div className={cn("project-card", getAccentClass(project.status), "group")}>
       <div>
         <div className="flex items-start justify-between">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-secondary">
+          <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", getIconClass(project.status))}>
             <FolderKanban className="h-6 w-6" />
           </div>
           <div className="flex items-center gap-2">

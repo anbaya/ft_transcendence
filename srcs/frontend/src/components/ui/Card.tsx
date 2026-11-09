@@ -1,9 +1,46 @@
 import React from 'react';
 import { cn } from '@/utils/cn';
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('card', className)} {...props} />
+export type CardVariant =
+  | 'default'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'info'
+  | 'indigo'
+  | 'blue'
+  | 'purple'
+  | 'emerald'
+  | 'amber'
+  | 'rose'
+  | 'red'
+  | 'sky';
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: CardVariant;
+}
+
+const variants: Record<CardVariant, string> = {
+  default: '',
+  primary: 'card-primary',
+  success: 'card-success',
+  warning: 'card-warning',
+  error:   'card-error',
+  info:    'card-info',
+  indigo:  'card-indigo',
+  blue:    'card-blue',
+  purple:  'card-purple',
+  emerald: 'card-emerald',
+  amber:   'card-amber',
+  rose:    'card-rose',
+  red:     'card-rose',
+  sky:     'card-sky',
+};
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant = 'default', ...props }, ref) => (
+    <div ref={ref} className={cn('card', variants[variant], className)} {...props} />
   )
 );
 Card.displayName = 'Card';

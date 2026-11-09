@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { cn } from '@/utils/cn';
-import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, BookUser, Hexagon, Shield } from 'lucide-react';
+import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, BookUser, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 import { useAuthStore } from '@/stores/authStore';
@@ -72,8 +72,8 @@ export function MobileNav() {
       >
         <div className="flex h-16 shrink-0 items-center justify-between px-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-white">
-              <Hexagon className="h-5 w-5" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-200/80 shadow-xs p-1">
+              <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
             </div>
             <span className="text-sm font-bold text-primary">TeamUP</span>
           </div>

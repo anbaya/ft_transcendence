@@ -1,4 +1,3 @@
-import { Hexagon } from 'lucide-react';
 import { Outlet, Link } from 'react-router-dom';
 
 export function AuthLayout() {
@@ -18,8 +17,8 @@ export function AuthLayout() {
 
         {/* Content on top */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
-            <Hexagon className="h-6 w-6" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200/80 shadow-sm p-1.5">
+            <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
           </div>
           <span className="text-xl font-bold text-primary tracking-tight">TeamUP</span>
         </div>
@@ -53,8 +52,8 @@ export function AuthLayout() {
       <div className="flex w-full flex-col justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-8 xl:px-24">
         {/* Mobile Logo */}
         <div className="flex items-center justify-center gap-3 mb-8 lg:hidden">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
-            <Hexagon className="h-6 w-6" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200/80 shadow-sm p-1.5">
+            <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
           </div>
           <span className="text-2xl font-bold text-primary tracking-tight">TeamUP</span>
         </div>

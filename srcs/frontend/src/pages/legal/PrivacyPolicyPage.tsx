@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, ArrowLeft, Lock, CheckCircle2, UserCheck, HardDrive, Bot, Cookie, Mail, Hexagon } from 'lucide-react';
+import { Shield, ArrowLeft, Lock, CheckCircle2, UserCheck, HardDrive, Bot, Cookie, Mail } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function PrivacyPolicyPage() {
@@ -13,8 +13,8 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to={isAuthenticated ? '/dashboard' : '/auth/login'} className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-white shadow-sm">
-                <Hexagon className="h-5 w-5" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-slate-200/80 shadow-xs p-1">
+                <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
               </div>
               <span className="text-xl font-bold text-primary tracking-tight">TeamUP</span>
             </Link>
@@ -270,7 +270,9 @@ export default function PrivacyPolicyPage() {
       <footer className="bg-white border-t border-border mt-16 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
           <div className="flex items-center gap-2">
-            <Hexagon className="h-4 w-4 text-secondary" />
+            <div className="h-5 w-5">
+              <img src="/logo-icon.png" alt="TeamUP" className="h-full w-full object-contain" />
+            </div>
             <span className="font-semibold text-primary">TeamUP Workspace</span>
             <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
           </div>

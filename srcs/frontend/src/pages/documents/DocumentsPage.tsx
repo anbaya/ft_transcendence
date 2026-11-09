@@ -4,7 +4,6 @@ import { useDocumentStore } from '@/stores/documentStore';
 import { DocumentListTable } from '@/features/documents/components/DocumentListTable';
 import { DocumentDetailsPanel } from '@/features/documents/components/DocumentDetailsPanel';
 import type { Document } from '@/types/document';
-import { cn } from '@/utils/cn';
 
 type FilterType = 'All' | 'PDF' | 'Images' | 'Other';
 
@@ -57,17 +56,13 @@ export function DocumentsPage() {
       {/* Toolbar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
         {/* Filters */}
-        <div className="flex gap-2 border-b border-border sm:border-none pb-px sm:pb-0">
+        <div className="tabs-pills">
           {(['All', 'PDF', 'Images', 'Other'] as FilterType[]).map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={cn(
-                "px-3 py-1.5 text-sm font-medium sm:rounded-md transition-colors",
-                activeFilter === filter 
-                  ? "border-b-2 sm:border-none border-secondary text-secondary sm:bg-indigo-50" 
-                  : "border-b-2 sm:border-none border-transparent text-muted hover:text-primary hover:bg-slate-50"
-              )}
+              data-state={activeFilter === filter ? 'active' : 'inactive'}
+              className="tab-pill"
             >
               {filter}
             </button>
