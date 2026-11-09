@@ -8,6 +8,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.renderers import JSONRenderer, BaseRenderer
+
+class ServerSentEventsRenderer(BaseRenderer):
+    media_type = 'text/event-stream'
+    format = 'event-stream'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if isinstance(data, (dict, list)):
+            return json.dumps(data)
+        return data or ''
 
 from .models import AIInteraction
 from .serializers import AIInteractionSerializer
@@ -28,6 +38,7 @@ from .permissions import IsInternalService
 
 class AskAssistantView(APIView):
     throttle_classes = [AIRateThrottle]
+    renderer_classes = [JSONRenderer, ServerSentEventsRenderer]
 
     def post(self, request, project_id=None, stream=False):
         question = request.data.get("question", "").strip()
