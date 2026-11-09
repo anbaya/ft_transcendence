@@ -10,7 +10,6 @@ Jaafar owns the platform infrastructure:
 - Environment configuration
 - Centralized logging with Logstash and Elasticsearch
 - Kibana observability
-- Prometheus metrics collection and Grafana dashboards
 - Startup, healthchecks, and deployment validation
 
 ## Start the stack
@@ -29,9 +28,7 @@ The main entrypoint is `https://localhost:8443/`. The certificate is self-signed
 - HTTPS gateway: `https://localhost:8443`
 - Elasticsearch: `http://localhost:9200`
 - Logstash TCP input: `localhost:5000`
-- Kibana: `http://localhost:5601`u
-- Prometheus: `http://localhost:9090`
-- Grafana: `http://localhost:3001`
+- Kibana: `http://localhost:5601`
 
 ## Stop the stack
 
@@ -49,8 +46,6 @@ docker compose ps
 docker compose logs --tail=100
 curl -k https://localhost:8443/
 curl http://localhost:9200/_cluster/health
-curl http://localhost:9090/-/ready
-curl http://localhost:3001/api/health
 ```
 
-A healthy deployment should show all services running, Elasticsearch with `status: green`, Logstash with a healthy status, and both monitoring endpoints ready.
+A healthy deployment should show all application services running, Elasticsearch available, Logstash healthy, and Kibana reachable.
