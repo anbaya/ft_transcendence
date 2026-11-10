@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: syslog
+  options:
+    syslog-address: "tcp://127.0.0.1:5000"
+    tag: "{{.Name}}"
+
 services:
   frontend:
     build:
@@ -5,6 +11,10 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     restart: always
+    logging: *default-logging
+    depends_on:
+      logstash:
+        condition: service_healthy
     networks:
       - transcendence_net
 
@@ -14,15 +24,13 @@ services:
       dockerfile: auth/Dockerfile
     container_name: auth_service
     restart: always
-    logging:
-      driver: syslog
-      options:
-        syslog-address: "tcp://127.0.0.1:5000"
-        tag: "{{.Name}}"
+    logging: *default-logging
     env_file:
       - .env
     environment:
       DB_NAME: ${AUTH_DB_NAME}
+    volumes:
+      - avatar-data:/app/media
     depends_on:
       database-init:
         condition: service_completed_successfully
@@ -41,6 +49,7 @@ services:
       dockerfile: project/Dockerfile
     container_name: project_service
     restart: always
+    logging: *default-logging
     env_file:
       - .env
     environment:
@@ -63,6 +72,7 @@ services:
       dockerfile: task/Dockerfile
     container_name: task_service
     restart: always
+    logging: *default-logging
     env_file:
       - .env
     environment:
@@ -85,6 +95,7 @@ services:
       dockerfile: chat/Dockerfile
     container_name: chat_service
     restart: always
+    logging: *default-logging
     env_file:
       - .env
     environment:
@@ -107,6 +118,7 @@ services:
       dockerfile: document/Dockerfile
     container_name: document_service
     restart: always
+    logging: *default-logging
     env_file:
       - .env
     environment:
@@ -131,6 +143,7 @@ services:
       dockerfile: ai/Dockerfile
     container_name: ai_service
     restart: always
+    logging: *default-logging
     env_file:
       - .env
     environment:
@@ -153,6 +166,7 @@ services:
     image: mysql:8.4
     container_name: database
     restart: always
+    logging: *default-logging
     env_file:
       - .env
     environment:
@@ -165,7 +179,7 @@ services:
       - db_root_password
     depends_on:
       logstash:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - db_data_mysql:/var/lib/mysql
       - ./srcs/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -175,13 +189,14 @@ services:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u\"$${DB_USER}\" -p\"$$(cat /run/secrets/db_password)\" --silent"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 20s
+      retries: 20
+      start_period: 60s
 
   database-init:
     image: mysql:8.4
     container_name: database_init
     restart: "no"
+    logging: *default-logging
     env_file:
       - .env
     depends_on:
@@ -204,6 +219,7 @@ services:
       dockerfile: Dockerfile
     container_name: api_gateway
     restart: always
+    logging: *default-logging
     ports:
       - "8443:443"
     depends_on:
@@ -224,7 +240,7 @@ services:
       db:
         condition: service_healthy
       logstash:
-        condition: service_started
+        condition: service_healthy
     networks:
       - transcendence_net
 
@@ -310,6 +326,8 @@ volumes:
     name: transcendence_document_data
   ai-chroma-data:
     name: transcendence_ai_chroma_data
+  avatar-data:
+    name: transcendence_avatar_data
 
 networks:
   transcendence_net:
