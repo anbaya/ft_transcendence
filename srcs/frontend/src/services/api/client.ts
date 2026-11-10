@@ -19,6 +19,11 @@ apiClient.interceptors.request.use(
     // Let the browser set the multipart boundary when sending FormData
     if (config.data instanceof FormData && config.headers) {
       delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+      if (typeof (config.headers as any).delete === 'function') {
+        (config.headers as any).delete('Content-Type');
+        (config.headers as any).delete('content-type');
+      }
     }
     return config;
   },

@@ -9,6 +9,7 @@ export interface User {
   last_name: string;
   role?: string;
   avatar?: string;
+  has_avatar?: boolean;
 }
 
 interface AuthState {

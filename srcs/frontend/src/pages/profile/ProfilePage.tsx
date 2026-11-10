@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Modal, ModalPortal, ModalOverlay, ModalContent,
   ModalTitle, ModalDescription, ModalFooter, ModalClose
@@ -20,6 +20,37 @@ export default function ProfilePage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
+  const [hasAvatar, setHasAvatar] = useState<boolean>(Boolean(user?.has_avatar));
+  const [avatarTimestamp, setAvatarTimestamp] = useState<number>(Date.now());
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let isMounted = true;
+
+    const checkAvatar = async () => {
+      try {
+        const res = await apiClient.head(`/api/auth/users/${user.id}/avatar/?t=${Date.now()}`);
+        const disposition = res.headers['content-disposition'];
+        const contentType = String(res.headers['content-type'] || '');
+        const contentLength = res.headers['content-length'];
+        const isDefaultSvg = contentType.includes('image/svg+xml') && (String(contentLength) === '278');
+        const exists = Boolean(disposition || !isDefaultSvg);
+
+        if (isMounted) {
+          setHasAvatar(exists);
+          updateUser({ has_avatar: exists });
+        }
+      } catch {
+        // Fallback: preserve existing state
+      }
+    };
+
+    checkAvatar();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
@@ -48,6 +79,7 @@ export default function ProfilePage() {
     // Validate size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Avatar file size must not exceed 5MB.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -55,6 +87,7 @@ export default function ProfilePage() {
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
     if (!validTypes.includes(file.type)) {
       toast.error('Invalid image format. Allowed formats: JPG, PNG, GIF, WEBP, SVG.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -64,10 +97,18 @@ export default function ProfilePage() {
     setIsUploadingAvatar(true);
     try {
       const response = await apiClient.post('/api/auth/me/avatar/', payload);
-      updateUser(response.data);
+      const newTimestamp = Date.now();
+      setAvatarTimestamp(newTimestamp);
+      setHasAvatar(true);
+      updateUser({
+        ...response.data,
+        has_avatar: true,
+        avatar: `/api/auth/users/${user?.id}/avatar/?t=${newTimestamp}`,
+      });
       toast.success('Avatar updated successfully!');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to upload avatar.');
+    } finally {
       setIsUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -77,10 +118,18 @@ export default function ProfilePage() {
     setIsDeletingAvatar(true);
     try {
       const response = await apiClient.delete('/api/auth/me/avatar/');
-      updateUser(response.data);
+      const newTimestamp = Date.now();
+      setAvatarTimestamp(newTimestamp);
+      setHasAvatar(false);
+      updateUser({
+        ...response.data,
+        has_avatar: false,
+        avatar: `/api/auth/users/${user?.id}/avatar/?t=${newTimestamp}`,
+      });
       toast.success('Avatar removed successfully!');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to remove avatar.');
+    } finally {
       setIsDeletingAvatar(false);
     }
   };
@@ -164,6 +213,7 @@ export default function ProfilePage() {
                 title="Click to change avatar"
               >
                 <Avatar
+                  src={user?.id ? `/api/auth/users/${user.id}/avatar/?t=${avatarTimestamp}` : undefined}
                   userId={user?.id}
                   fallback={(formData.first_name?.[0] || formData.email?.[0] || 'U').toUpperCase()}
                   size="xl"
@@ -200,7 +250,8 @@ export default function ProfilePage() {
                   className="gap-1.5 text-xs text-error hover:bg-error/10 hover:text-error"
                   onClick={handleAvatarDelete}
                   isLoading={isDeletingAvatar}
-                  title="Reset to default avatar"
+                  disabled={!hasAvatar || isUploadingAvatar || isDeletingAvatar}
+                  title={hasAvatar ? "Reset to default avatar" : "No avatar to remove"}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Remove
