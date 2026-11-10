@@ -30,11 +30,7 @@ export default function ProfilePage() {
     const checkAvatar = async () => {
       try {
         const res = await apiClient.head(`/api/auth/users/${user.id}/avatar/?t=${Date.now()}`);
-        const disposition = res.headers['content-disposition'];
-        const contentType = String(res.headers['content-type'] || '');
-        const contentLength = res.headers['content-length'];
-        const isDefaultSvg = contentType.includes('image/svg+xml') && (String(contentLength) === '278');
-        const exists = Boolean(disposition || !isDefaultSvg);
+        const exists = Boolean(res.headers['content-disposition']);
 
         if (isMounted) {
           setHasAvatar(exists);
