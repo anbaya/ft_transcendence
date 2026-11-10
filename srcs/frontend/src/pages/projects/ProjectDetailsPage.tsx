@@ -286,7 +286,7 @@ export default function ProjectDetailsPage() {
                       {member.joined_at ? new Date(member.joined_at).toLocaleDateString() : '-'}
                     </div>
                     <div className="col-span-6 sm:col-span-4 md:col-span-1 text-right">
-                      {canManage && (
+                      {canManage && member.role !== 'PROJECT_MANAGER' && member.user_id !== project.created_by && member.user_id !== user?.id && (
                         <Button
                           variant="ghost"
                           className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"

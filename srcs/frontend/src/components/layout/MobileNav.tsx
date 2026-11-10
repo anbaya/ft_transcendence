@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { cn } from '@/utils/cn';
-import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BarChart2, BookUser, Shield } from 'lucide-react';
+import { X, LayoutDashboard, FolderKanban, CheckCircle2, MessageSquare, FileText, Bot, BookUser, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 import { useAuthStore } from '@/stores/authStore';
@@ -47,7 +47,6 @@ export function MobileNav() {
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Documents', href: '/documents', icon: FileText },
     { name: 'AI Assistant', href: '/ai', icon: Bot, isNew: true },
-    { name: 'Analytics', href: '/analytics', icon: BarChart2 },
     { name: 'Privacy Policy', href: '/privacy-policy', icon: Shield },
     { name: 'Terms of Service', href: '/terms-of-service', icon: BookUser },
   ], [pendingTasksCount]);

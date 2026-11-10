@@ -63,7 +63,7 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="font-semibold text-sm truncate">AI Assistant</h3>
+              <h3 className="font-semibold text-sm truncate">Timi</h3>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-medium">
                 {activeProject ? 'Project RAG' : 'General'}
               </span>

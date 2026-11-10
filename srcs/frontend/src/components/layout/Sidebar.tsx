@@ -11,7 +11,6 @@ import {
   MessageSquare,
   FileText,
   Bot,
-  BarChart2,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -51,7 +50,6 @@ export function Sidebar() {
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Documents', href: '/documents', icon: FileText },
     { name: 'AI Assistant', href: '/ai', icon: Bot, isNew: true },
-    { name: 'Analytics', href: '/analytics', icon: BarChart2 },
   ], [pendingTasksCount]);
 
   const renderNavItems = (items: typeof mainNavigation) => (
