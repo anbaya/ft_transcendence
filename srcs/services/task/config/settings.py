@@ -43,6 +43,14 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost:8443",
+    "https://127.0.0.1:8443",
+    "http://localhost:8443",
+    "http://127.0.0.1:8443",
+]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 

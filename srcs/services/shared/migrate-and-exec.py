@@ -72,6 +72,34 @@ def copy_legacy_project_data(connection):
             )
     connection.commit()
 
+
+def ensure_default_superuser():
+    admin_email = os.environ.get("DJANGO_SUPERUSER_EMAIL", "admin@transcendence.local")
+    admin_password = os.environ.get("DJANGO_SUPERUSER_PASSWORD", "Admin1234!")
+    script = (
+        "import os\n"
+        "from django.contrib.auth import get_user_model\n"
+        "User = get_user_model()\n"
+        f"email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '{admin_email}').strip()\n"
+        f"pwd = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '{admin_password}').strip()\n"
+        "if email and pwd:\n"
+        "    field = getattr(User, 'USERNAME_FIELD', 'username')\n"
+        "    if field == 'email':\n"
+        "        if not User.objects.filter(email=email).exists():\n"
+        "            User.objects.create_superuser(email=email, password=pwd)\n"
+        "            print(f'Default superuser created: {email}')\n"
+        "    else:\n"
+        "        username = 'admin'\n"
+        "        if not User.objects.filter(username=username).exists():\n"
+        "            User.objects.create_superuser(username=username, email=email, password=pwd)\n"
+        "            print(f'Default superuser created: {username}')\n"
+    )
+    try:
+        subprocess.run([sys.executable, "manage.py", "shell", "-c", script], check=False)
+    except Exception as e:
+        print(f"Failed to auto-create superuser: {e}")
+
+
 for attempt in range(60):
     try:
         connection = MySQLdb.connect(
@@ -96,6 +124,7 @@ try:
 
     subprocess.run([sys.executable, "manage.py", "migrate", "--noinput"], check=True)
     copy_legacy_project_data(connection)
+    ensure_default_superuser()
 finally:
     with connection.cursor() as cursor:
         cursor.execute("SELECT RELEASE_LOCK(%s)", (migration_lock,))

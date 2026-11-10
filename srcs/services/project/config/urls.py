@@ -17,6 +17,7 @@ def health(request):
 urlpatterns = [
     path("health", health),
 
+    path("admin/projects/", admin.site.urls),
     path("admin/", admin.site.urls),
     path("api/projects/", include("projects.urls")),
     path("internal/users/<int:user_id>/", InternalUserDeleteView.as_view(), name="internal-user-delete"),

@@ -22,6 +22,7 @@ def health(request):
 
 urlpatterns = [
     path('health', health),
+    path('admin/ai/', admin.site.urls),
     path('admin/', admin.site.urls),
     path('api/ai/', include('assistant.urls')),
     path('api/', include('assistant.urls')),
