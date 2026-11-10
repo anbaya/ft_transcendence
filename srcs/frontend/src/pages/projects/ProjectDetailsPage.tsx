@@ -21,6 +21,7 @@ import { useProjectStore } from '@/stores/projectStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
+import { Avatar } from '@/components/ui/Avatar';
 import { cn } from '@/utils/cn';
 import { AddProjectMemberModal } from '@/features/projects/components/AddProjectMemberModal';
 import { RemoveProjectMemberModal } from '@/features/projects/components/RemoveProjectMemberModal';
@@ -269,9 +270,12 @@ export default function ProjectDetailsPage() {
                 return (
                   <div key={member.id} className="grid grid-cols-12 gap-4 items-center px-6 py-4 hover:bg-slate-50/50">
                     <div className="col-span-6 sm:col-span-5 flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-bold shrink-0 text-sm">
-                        {initial}
-                      </div>
+                      <Avatar
+                        userId={member.user_id}
+                        fallback={initial}
+                        size="sm"
+                        className="h-9 w-9 shrink-0"
+                      />
                       <div className="overflow-hidden">
                         <p className="font-medium text-primary truncate">{displayName}</p>
                         {member.email && <p className="text-xs text-muted truncate">{member.email}</p>}

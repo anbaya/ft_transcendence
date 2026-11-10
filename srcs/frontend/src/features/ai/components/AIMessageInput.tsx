@@ -46,8 +46,8 @@ export function AIMessageInput() {
             onKeyDown={handleKeyDown}
             placeholder={
               selectedProjectId 
-                ? "Ask about tasks, members, or documents in this project..." 
-                : "Ask AI anything (code, debugging, concepts)..."
+                ? "Ask Timi about specifications, tasks, or documentation..." 
+                : "Ask Timi anything (code, architecture, problem solving)..."
             }
             className="w-full max-h-[200px] min-h-[52px] bg-transparent resize-none py-3.5 pl-4 pr-12 focus:outline-none text-sm leading-relaxed"
             rows={1}

@@ -85,7 +85,7 @@ export function ChatWindow({
                   message={msg}
                   isCurrentUser={isCurrentUser}
                   senderName={senderName}
-                  senderAvatarUrl={isCurrentUser ? undefined : conversation.avatarUrl}
+                  senderAvatarUrl={isCurrentUser ? undefined : `/api/auth/users/${msg.sender_id}/avatar/`}
                   showAvatar={!isCurrentUser && isLastInGroup}
                 />
               );

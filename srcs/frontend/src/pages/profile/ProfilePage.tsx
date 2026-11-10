@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Modal, ModalPortal, ModalOverlay, ModalContent,
   ModalTitle, ModalDescription, ModalFooter, ModalClose
@@ -8,15 +8,18 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
-import { Save, LogOut, Shield, Trash2, AlertTriangle } from 'lucide-react';
+import { Save, LogOut, Shield, Trash2, AlertTriangle, Camera, Upload, Loader2 } from 'lucide-react';
 import apiClient from '@/services/api/client';
 import { toast } from '@/stores/toastStore';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser } = useAuthStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
 
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
@@ -37,6 +40,50 @@ export default function ProfilePage() {
     setPasswordData((prev) => ({ ...prev, [key]: e.target.value }));
 
   const isPasswordReady = Object.values(passwordData).every(Boolean);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Avatar file size must not exceed 5MB.');
+      return;
+    }
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Invalid image format. Allowed formats: JPG, PNG, GIF, WEBP, SVG.');
+      return;
+    }
+
+    const payload = new FormData();
+    payload.append('avatar', file);
+
+    setIsUploadingAvatar(true);
+    try {
+      const response = await apiClient.post('/api/auth/me/avatar/', payload);
+      updateUser(response.data);
+      toast.success('Avatar updated successfully!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to upload avatar.');
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    setIsDeletingAvatar(true);
+    try {
+      const response = await apiClient.delete('/api/auth/me/avatar/');
+      updateUser(response.data);
+      toast.success('Avatar removed successfully!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to remove avatar.');
+      setIsDeletingAvatar(false);
+    }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,13 +150,63 @@ export default function ProfilePage() {
         <div className="md:col-span-4 space-y-6">
           <Card>
             <CardContent className="pt-6 flex flex-col items-center text-center">
-              <div className="relative group cursor-pointer">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarUpload}
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                className="hidden"
+              />
+
+              <div
+                className="relative group cursor-pointer mb-4"
+                onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                title="Click to change avatar"
+              >
                 <Avatar
-                  fallback={(formData.first_name?.[0] || 'A').toUpperCase()}
+                  userId={user?.id}
+                  fallback={(formData.first_name?.[0] || formData.email?.[0] || 'U').toUpperCase()}
                   size="xl"
-                  className="h-24 w-24 mb-4 ring-4 ring-white shadow-lg"
+                  className="h-28 w-28 ring-4 ring-white shadow-lg transition-transform group-hover:scale-105"
                 />
+                <div className="absolute inset-0 rounded-full bg-black/40 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isUploadingAvatar ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <>
+                      <Camera className="h-6 w-6 mb-1" />
+                      <span className="text-[10px] font-medium">Change</span>
+                    </>
+                  )}
+                </div>
               </div>
+
+              <div className="flex items-center gap-2 mb-4">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1.5 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  isLoading={isUploadingAvatar}
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  Upload Photo
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="gap-1.5 text-xs text-error hover:bg-error/10 hover:text-error"
+                  onClick={handleAvatarDelete}
+                  isLoading={isDeletingAvatar}
+                  title="Reset to default avatar"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Remove
+                </Button>
+              </div>
+
               <h3 className="font-semibold text-lg text-primary">{formData.first_name} {formData.last_name}</h3>
               <p className="text-sm text-muted mb-4">{formData.email}</p>
 

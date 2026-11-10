@@ -22,7 +22,7 @@ export function UserNav() {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <button className="flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2">
-          <Avatar fallback={fallback} size="sm" />
+          <Avatar userId={user.id} fallback={fallback} size="sm" />
         </button>
       </DropdownMenu.Trigger>
 
@@ -33,7 +33,7 @@ export function UserNav() {
           sideOffset={8}
         >
           <div className="flex items-center gap-3 p-3 border-b border-border mb-1">
-            <Avatar fallback={fallback} size="md" />
+            <Avatar userId={user.id} fallback={fallback} size="md" />
             <div className="flex flex-col space-y-0.5 min-w-0">
               <span className="text-sm font-semibold text-primary truncate">{displayName}</span>
               <span className="text-xs text-muted truncate">{user.email}</span>

@@ -65,11 +65,18 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
             <div className="flex items-center gap-1.5">
               <h3 className="font-semibold text-sm truncate">Timi</h3>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-medium">
-                {activeProject ? 'Project RAG' : 'General'}
+                AI Assistant
               </span>
+              {activeProject && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted border border-border text-muted-foreground font-medium truncate max-w-[140px]">
+                  📁 {activeProject.name}
+                </span>
+              )}
             </div>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {activeProject ? activeProject.name : 'Ask anything technical or project-related'}
+            <p className="text-[11px] text-muted-foreground truncate max-w-[280px]">
+              {activeProject
+                ? `${activeProject.name} — Your dedicated project copilot`
+                : 'Your technical assistant for code, architecture design, and problem solving.'}
             </p>
           </div>
         </div>
@@ -146,7 +153,7 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
                   <Globe className="w-4 h-4" />
                   <div className="truncate">
                     <div>General Mode</div>
-                    <div className="text-[10px] opacity-80">Direct knowledge</div>
+                    <div className="text-[10px] opacity-80">Technical Assistant</div>
                   </div>
                 </button>
               </div>
@@ -195,18 +202,26 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
                 </div>
               </div>
             ) : messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-75">
-                <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-4">
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-85">
+                <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-4 shadow-sm">
                   <Bot className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  {activeProject ? `Ask about "${activeProject.name}"` : 'How can I assist you today?'}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary text-xs font-semibold mb-3">
+                  AI Assistant
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  Hello! I'm Timi. How can I help you today?
                 </h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
+                <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
                   {activeProject 
-                    ? 'I can answer questions regarding tasks, team members, deadlines, and indexed documents for this project.'
-                    : 'I can assist you with programming, architecture design, general questions, and technical troubleshooting.'}
+                    ? 'Your dedicated project copilot — analyzing specifications, tracking tasks, and documentation.'
+                    : 'Your technical assistant for code, architecture design, and problem solving.'}
                 </p>
+                {activeProject && (
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-secondary/10 text-secondary font-medium">
+                    📁 Project: {activeProject.name}
+                  </span>
+                )}
               </div>
             ) : (
               <div className="flex flex-col space-y-4 pb-4">

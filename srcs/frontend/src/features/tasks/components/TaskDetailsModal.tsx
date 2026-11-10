@@ -4,6 +4,7 @@ import { ModalOverlay } from '@/components/ui/Modal';
 import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
+import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/stores/authStore';
 import type { Task, TaskStatus } from '@/types/task';
 
@@ -128,12 +129,24 @@ export function TaskDetailsModal({ open, onOpenChange, task, canManage: canManag
                   <User className="h-4 w-4 mr-2 text-muted" />
                   Assignee
                 </h3>
-                <p className="text-sm text-primary font-medium">
-                  {task.assignee_name || task.assignee_email || (task.assignee_id ? 'Team Member' : 'Unassigned')}
-                </p>
-                {task.assignee_email && task.assignee_name && (
-                  <p className="text-xs text-muted mt-0.5">{task.assignee_email}</p>
-                )}
+                <div className="flex items-center gap-2">
+                  {task.assignee_id && (
+                    <Avatar
+                      userId={task.assignee_id}
+                      fallback={(task.assignee_name?.[0] || task.assignee_email?.[0] || 'U').toUpperCase()}
+                      size="sm"
+                      className="h-7 w-7 shrink-0"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm text-primary font-medium truncate">
+                      {task.assignee_name || task.assignee_email || (task.assignee_id ? 'Team Member' : 'Unassigned')}
+                    </p>
+                    {task.assignee_email && task.assignee_name && (
+                      <p className="text-xs text-muted truncate">{task.assignee_email}</p>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <div>

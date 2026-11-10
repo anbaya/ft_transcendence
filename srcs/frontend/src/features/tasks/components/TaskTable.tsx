@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowUpDown, CheckCircle2, MoreHorizontal } from 'lucide-react';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Avatar } from '@/components/ui/Avatar';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import type { Task } from '@/types/task';
 
@@ -190,7 +191,19 @@ export function TaskTable({ tasks, showProjectName = false, isProjectManager = f
                 </Badge>
               </td>
               <td className="px-6 py-4 hidden md:table-cell text-muted">
-                {task.assignee_name || 'Unassigned'}
+                {task.assignee_id ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      userId={task.assignee_id}
+                      fallback={(task.assignee_name?.[0] || 'U').toUpperCase()}
+                      size="sm"
+                      className="h-6 w-6 text-[10px] shrink-0"
+                    />
+                    <span className="truncate">{task.assignee_name || 'Assigned'}</span>
+                  </div>
+                ) : (
+                  <span>Unassigned</span>
+                )}
               </td>
               <td className="px-6 py-4 hidden lg:table-cell text-muted">
                 {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}

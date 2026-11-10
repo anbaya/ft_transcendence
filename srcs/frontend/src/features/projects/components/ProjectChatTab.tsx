@@ -162,6 +162,7 @@ export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
                 message={msg}
                 isCurrentUser={isMe}
                 senderName={senderName}
+                senderAvatarUrl={isMe ? undefined : `/api/auth/users/${msg.sender_id}/avatar/`}
                 showAvatar={!isMe}
               />
             );

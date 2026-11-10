@@ -1,5 +1,7 @@
 import React from 'react';
-import { Bot, User, Copy, Check } from 'lucide-react';
+import { Bot, Copy, Check } from 'lucide-react';
+import { Avatar } from '@/components/ui/Avatar';
+import { useAuthStore } from '@/stores/authStore';
 import type { AIMessage } from '@/types/ai';
 import { cn } from '@/utils/cn';
 
@@ -8,6 +10,7 @@ interface AIMessageBubbleProps {
 }
 
 export function AIMessageBubble({ message }: AIMessageBubbleProps) {
+  const { user } = useAuthStore();
   const [copied, setCopied] = React.useState(false);
   const isUser = message.role === 'user';
 
@@ -23,12 +26,18 @@ export function AIMessageBubble({ message }: AIMessageBubbleProps) {
         
         {/* Avatar */}
         <div className="flex-shrink-0 flex items-start">
-          <div className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center text-white",
-            isUser ? "bg-secondary" : "bg-primary"
-          )}>
-            {isUser ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-          </div>
+          {isUser ? (
+            <Avatar
+              userId={user?.id}
+              fallback={(user?.first_name?.[0] || user?.email?.[0] || 'U').toUpperCase()}
+              size="sm"
+              className="w-8 h-8"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white bg-primary">
+              <Bot className="w-5 h-5" />
+            </div>
+          )}
         </div>
 
         {/* Message Content */}
@@ -36,6 +45,14 @@ export function AIMessageBubble({ message }: AIMessageBubbleProps) {
           "flex flex-col group relative",
           isUser ? "items-end" : "items-start"
         )}>
+          {!isUser && (
+            <div className="flex items-center gap-1.5 mb-1 ml-0.5">
+              <span className="text-xs font-semibold text-foreground">Timi</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-medium">
+                AI Assistant
+              </span>
+            </div>
+          )}
           <div className={cn(
             "px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap",
             isUser 

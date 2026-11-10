@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { resetAllStores } from './resetAllStores';
 
-interface User {
+export interface User {
   id: number;
   email: string;
   first_name: string;
   last_name: string;
   role?: string;
+  avatar?: string;
 }
 
 interface AuthState {
@@ -16,6 +17,7 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   login: (user: User, token: string, refreshToken?: string | null) => void;
+  updateUser: (fields: Partial<User>) => void;
   setToken: (token: string) => void;
   setRefreshToken: (refreshToken: string) => void;
   logout: () => void;
@@ -35,6 +37,11 @@ export const useAuthStore = create<AuthState>()(
           token,
           refreshToken: refreshToken !== undefined ? refreshToken : state.refreshToken,
           isAuthenticated: true,
+        }));
+      },
+      updateUser: (fields) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...fields } : null,
         }));
       },
       setToken: (token) => set({ token }),
