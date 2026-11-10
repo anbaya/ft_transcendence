@@ -576,8 +576,15 @@ def merge_with_fair_quota(doc_ranked_lists, top_k=8):
     selected_keys = set()
     remaining_by_doc = {}
 
-    # Round 1: Take up to base_quota per document
-    for doc_id, ranked_chunks in doc_ranked_lists.items():
+    sorted_doc_ids = sorted(
+        doc_ranked_lists.keys(),
+        key=lambda d: doc_ranked_lists[d][0].get("_rrf_score", 0.0) if doc_ranked_lists[d] else 0.0,
+        reverse=True
+    )
+
+    # Round 1: Take up to base_quota per document (prioritized by highest RRF relevance)
+    for doc_id in sorted_doc_ids:
+        ranked_chunks = doc_ranked_lists[doc_id]
         take_count = min(base_quota, len(ranked_chunks))
         for item in ranked_chunks[:take_count]:
             key = (item["document_id"], item["chunk_index"])
@@ -740,92 +747,74 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
             "Question embedding failed with gemini-embedding-001; skipping dense retrieval and relying solely on BM25."
         )
 
-    # Group chunks by document_id for per-document dense/sparse search & fair quotas
-    doc_chunks_map = {}
-    for c in project_chunks_qs:
-        doc_chunks_map.setdefault(c.document_id, []).append(c)
-
-    doc_ids = list(doc_chunks_map.keys())
-    num_docs = len(doc_ids)
-
     chroma_collection = get_chroma_collection()
     tokenized_query = tokenize_bm25(question)
-    doc_ranked_lists = {}
 
-    for doc_id, doc_chunks in doc_chunks_map.items():
-        # a) Dense Retrieval filtered by document_id
-        dense_results = []
-        if chroma_collection and question_embedding:
-            try:
-                where_clause = {
-                    "$and": [
-                        {"project_id": str(project_id)},
-                        {"document_id": str(doc_id)}
-                    ]
-                } if num_docs > 1 else {"project_id": str(project_id)}
-                query_res = chroma_collection.query(
-                    query_embeddings=[question_embedding],
-                    where=where_clause,
-                    n_results=min(top_k * 2, len(doc_chunks)),
-                )
-                if query_res and query_res["documents"] and query_res["documents"][0]:
-                    for doc_text, meta in zip(query_res["documents"][0], query_res["metadatas"][0]):
-                        doc_id_val = int(meta.get("document_id", doc_id))
-                        real_fname = doc_names_map.get(doc_id_val) or str(meta.get("filename") or f"Document #{doc_id_val}")
-                        dense_results.append({
-                            "document_id": doc_id_val,
-                            "chunk_index": int(meta.get("chunk_index", 0)),
-                            "filename": real_fname,
-                            "content": doc_text,
-                        })
-            except Exception as e:
-                logger.warning(f"Chroma query failed for doc {doc_id}: {e}")
+    # a) Dense Retrieval across project documents in ChromaDB
+    dense_results = []
+    if chroma_collection and question_embedding:
+        try:
+            where_clause = {"project_id": str(project_id)}
+            query_res = chroma_collection.query(
+                query_embeddings=[question_embedding],
+                where=where_clause,
+                n_results=min(top_k * 3, len(project_chunks_qs)),
+            )
+            if query_res and query_res["documents"] and query_res["documents"][0]:
+                for doc_text, meta in zip(query_res["documents"][0], query_res["metadatas"][0]):
+                    doc_id_val = int(meta.get("document_id", 0))
+                    real_fname = doc_names_map.get(doc_id_val) or str(meta.get("filename") or f"Document #{doc_id_val}")
+                    dense_results.append({
+                        "document_id": doc_id_val,
+                        "chunk_index": int(meta.get("chunk_index", 0)),
+                        "filename": real_fname,
+                        "content": doc_text,
+                    })
+        except Exception as e:
+            logger.warning(f"Chroma query failed: {e}")
 
-        if not dense_results and question_embedding:
-            scored = []
-            for c in doc_chunks:
-                if c.embedding:
-                    score = cosine_similarity(question_embedding, c.embedding)
-                    scored.append((score, c))
-            scored.sort(key=lambda item: item[0], reverse=True)
-            dense_results = [
-                {
-                    "document_id": c.document_id,
-                    "chunk_index": c.chunk_index,
-                    "filename": doc_names_map.get(c.document_id) or f"Document #{c.document_id}",
-                    "content": c.content,
-                }
-                for _, c in scored[:top_k * 2]
-            ]
-
-        # b) Sparse Retrieval (BM25) on this document's chunks alone
-        bm25_doc_model = doc_bm25_map.get(doc_id)
-        if not bm25_doc_model:
-            tokenized_doc_corpus = [tokenize_bm25(c.content) for c in doc_chunks]
-            bm25_doc_model = get_bm25_model(tokenized_doc_corpus)
-        doc_bm25_scores = bm25_doc_model.get_scores(tokenized_query)
-
-        scored_bm25 = [
-            (doc_bm25_scores[i], doc_chunks[i])
-            for i in range(len(doc_chunks))
-        ]
-        scored_bm25.sort(key=lambda item: item[0], reverse=True)
-
-        bm25_results = [
+    if not dense_results and question_embedding:
+        scored = []
+        for c in project_chunks_qs:
+            if c.embedding:
+                score = cosine_similarity(question_embedding, c.embedding)
+                scored.append((score, c))
+        scored.sort(key=lambda item: item[0], reverse=True)
+        dense_results = [
             {
                 "document_id": c.document_id,
                 "chunk_index": c.chunk_index,
                 "filename": doc_names_map.get(c.document_id) or f"Document #{c.document_id}",
                 "content": c.content,
             }
-            for _, c in scored_bm25[:top_k * 2]
+            for _, c in scored[:top_k * 3]
         ]
 
-        # c) RRF per document
-        doc_ranked_lists[doc_id] = reciprocal_rank_fusion(dense_results, bm25_results, k=60)
+    # b) Sparse Retrieval (BM25) across all project chunks
+    tokenized_corpus = [tokenize_bm25(c.content) for c in project_chunks_qs]
+    bm25_model = get_bm25_model(tokenized_corpus)
+    bm25_scores = bm25_model.get_scores(tokenized_query)
 
-    # d) Fusion with equitable quota per document
-    top_core = merge_with_fair_quota(doc_ranked_lists, top_k=top_k)
+    scored_bm25 = [
+        (bm25_scores[i], project_chunks_qs[i])
+        for i in range(len(project_chunks_qs))
+        if bm25_scores[i] != 0.0
+    ]
+    scored_bm25.sort(key=lambda item: item[0], reverse=True)
+
+    bm25_results = [
+        {
+            "document_id": c.document_id,
+            "chunk_index": c.chunk_index,
+            "filename": doc_names_map.get(c.document_id) or f"Document #{c.document_id}",
+            "content": c.content,
+        }
+        for _, c in scored_bm25[:top_k * 3]
+    ]
+
+    # c) Reciprocal Rank Fusion across all candidate chunks
+    fused_candidates = reciprocal_rank_fusion(dense_results, bm25_results, k=60)
+    top_core = fused_candidates[:top_k]
 
     chunk_lookup = {
         (c.document_id, c.chunk_index): {
@@ -875,9 +864,8 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
     while candidate_items and compute_context_len([x[0] for x in candidate_items]) > max_context_chars:
         candidate_items.pop()
 
-    # Déduplication par id déjà assurée par selected_map, puis tri par chunk_index
+    # Conserver l'ordre de pertinence (RRF score / priority) pour maximiser la précision de retrieval
     final_chunks = [x[0] for x in candidate_items]
-    final_chunks.sort(key=lambda item: (item["document_id"], item["chunk_index"]))
     return final_chunks
 
 def retrieve_relevant_chunks(project_id, question, top_k=8, authorization_header=None):
