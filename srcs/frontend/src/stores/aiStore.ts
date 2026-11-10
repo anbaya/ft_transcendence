@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import apiClient from '@/services/api/client';
+import { useAuthStore } from './authStore';
 import type { AIMessage, AIInteraction } from '@/types/ai';
 
 interface AIState {
@@ -16,7 +17,6 @@ interface AIState {
   fetchHistory: (projectId?: number | null) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   clearHistory: () => Promise<void>;
-  deleteConversation: () => Promise<void>;
   clearError: () => void;
   reset: () => void;
 }
@@ -83,7 +83,7 @@ export const useAIStore = create<AIState>((set, get) => ({
 
   sendMessage: async (content: string) => {
     const targetId = get().selectedProjectId;
-    
+
     const tempUserMsg: AIMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -98,33 +98,137 @@ export const useAIStore = create<AIState>((set, get) => ({
       error: null,
     }));
 
+    const assistantMsgId = `assistant-${Date.now()}`;
+
     try {
-      const body = {
-        question: content,
-        project_id: targetId,
+      const token = useAuthStore.getState().token;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream, application/json, */*',
       };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
-      const response = await apiClient.post<{
-        answer: string;
-        mode: string;
-        project_id?: number | null;
-      }>('/api/ai/ask/', body);
+      const response = await fetch('/api/ai/ask/?stream=true', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          question: content,
+          project_id: targetId,
+          stream: true,
+        }),
+      });
 
-      const assistantMsg: AIMessage = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: response.data.answer || 'No response returned.',
-        timestamp: new Date().toISOString(),
-        projectId: response.data.project_id ?? targetId,
-      };
+      // Handle Rate Limit (HTTP 429)
+      if (response.status === 429) {
+        let rateLimitMsg = 'Question limit reached. You have exceeded the allowed request quota. Please wait a moment before asking another question.';
+        try {
+          const errData = await response.json();
+          if (errData?.detail) {
+            rateLimitMsg = `Question limit reached: ${errData.detail}`;
+          } else if (errData?.error) {
+            rateLimitMsg = `Question limit reached: ${errData.error}`;
+          }
+        } catch (_) {}
 
-      set((state) => ({
-        messages: [...state.messages, assistantMsg],
-        isTyping: false,
-      }));
+        set({
+          isTyping: false,
+          error: rateLimitMsg,
+        });
+        return;
+      }
+
+      // Handle other non-200 responses
+      if (!response.ok) {
+        let errorMsg = 'Failed to generate AI response.';
+        try {
+          const errData = await response.json();
+          errorMsg = errData?.detail || errData?.error || errData?.message || errorMsg;
+        } catch (_) {}
+
+        set({
+          isTyping: false,
+          error: errorMsg,
+        });
+        return;
+      }
+
+      // Handle SSE Streaming response
+      if (!response.body) {
+        throw new Error('Response stream is unavailable.');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      let accumulated = '';
+      let hasReceivedChunk = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+
+          try {
+            const parsed = JSON.parse(trimmed.replace(/^data:\s*/, ''));
+            if (parsed.error) {
+              set({ error: parsed.error });
+            }
+            if (parsed.chunk) {
+              accumulated += parsed.chunk;
+
+              if (!hasReceivedChunk) {
+                hasReceivedChunk = true;
+                set((state) => ({
+                  messages: [
+                    ...state.messages,
+                    {
+                      id: assistantMsgId,
+                      role: 'assistant',
+                      content: accumulated,
+                      timestamp: new Date().toISOString(),
+                      projectId: targetId,
+                    },
+                  ],
+                  isTyping: false,
+                }));
+              } else {
+                set((state) => ({
+                  messages: state.messages.map((m) =>
+                    m.id === assistantMsgId ? { ...m, content: accumulated } : m
+                  ),
+                }));
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (!hasReceivedChunk) {
+        set((state) => ({
+          isTyping: false,
+          error: state.error || 'No response received from the server.',
+        }));
+      } else {
+        set({ isTyping: false });
+      }
     } catch (err: any) {
-      const errMsg = err?.response?.data?.error || err?.response?.data?.message || 'Failed to generate AI response.';
-      set({ isTyping: false, error: errMsg });
+      set((state) => ({
+        messages: state.messages.filter(
+          (m) => m.id !== assistantMsgId || m.content.length > 0
+        ),
+        isTyping: false,
+        error: err?.message || 'Failed to connect to the AI service.',
+      }));
     }
   },
 
@@ -145,10 +249,6 @@ export const useAIStore = create<AIState>((set, get) => ({
       const errMsg = err?.response?.data?.detail || err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to delete conversation.';
       set({ error: errMsg });
     }
-  },
-
-  deleteConversation: async () => {
-    return get().clearHistory();
   },
 
   clearError: () => set({ error: null }),
