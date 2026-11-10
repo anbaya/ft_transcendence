@@ -64,11 +64,11 @@ def generate_fallback_embedding(text, dimension=768):
 
 
 def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
-    primary_model = os.environ.get("GEMINI_MODEL", "gemini-flash-lite-latest").strip() or "gemini-flash-lite-latest"
-    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
+    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
+    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
 
     # correction: cascade de repli robuste pour eviter l'erreur 503 / 504 de haute affluence
-    candidate_names = [primary_model, fallback_model, "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+    candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
     seen = set()
     model_configs = []
     for name in candidate_names:
@@ -198,44 +198,57 @@ def generate_answer_stream(prompt, max_output_tokens=800, temperature=0.2):
     if not client:
         raise LLMServiceError(error_msg or "Gemini client initialization failed")
 
-    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
-    models_to_try = [primary_model] if primary_model else ["gemini-3.1-flash-lite"]
-    for fallback in ["gemini-3.1-flash-lite", "gemini-flash-lite-latest"]:
-        if fallback not in models_to_try:
-            models_to_try.append(fallback)
+    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
+    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
+    candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+    models_to_try = []
+    for m in candidate_names:
+        if m and m not in models_to_try:
+            models_to_try.append(m)
 
     for model_name in models_to_try:
-        try:
-            from google.genai import types
+        for use_thinking in [True, False]:
             try:
-                thinking_cfg = types.ThinkingConfig(thinking_budget=0)
-                gen_config = types.GenerateContentConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_output_tokens,
-                    thinking_config=thinking_cfg,
-                )
-            except Exception:
-                gen_config = types.GenerateContentConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_output_tokens,
-                )
+                from google.genai import types
+                if use_thinking:
+                    try:
+                        thinking_cfg = types.ThinkingConfig(thinking_budget=0)
+                        gen_config = types.GenerateContentConfig(
+                            temperature=temperature,
+                            max_output_tokens=max_output_tokens,
+                            thinking_config=thinking_cfg,
+                        )
+                    except Exception:
+                        gen_config = types.GenerateContentConfig(
+                            temperature=temperature,
+                            max_output_tokens=max_output_tokens,
+                        )
+                else:
+                    gen_config = types.GenerateContentConfig(
+                        temperature=temperature,
+                        max_output_tokens=max_output_tokens,
+                    )
 
-            t0 = time.perf_counter()
-            stream = client.models.generate_content_stream(
-                model=model_name,
-                contents=prompt,
-                config=gen_config,
-            )
-            ttft = None
-            for chunk in stream:
-                if ttft is None and chunk.text:
-                    ttft = time.perf_counter() - t0
-                if chunk.text:
-                    yield chunk.text, (ttft if ttft is not None else 0.0)
-            return
-        except Exception as e:
-            logger.warning(f"Streaming failed with {model_name}: {e}")
-            last_stream_error = e
+                t0 = time.perf_counter()
+                stream = client.models.generate_content_stream(
+                    model=model_name,
+                    contents=prompt,
+                    config=gen_config,
+                )
+                ttft = None
+                for chunk in stream:
+                    if ttft is None and chunk.text:
+                        ttft = time.perf_counter() - t0
+                    if chunk.text:
+                        yield chunk.text, (ttft if ttft is not None else 0.0)
+                return
+            except Exception as e:
+                err_str = str(e).lower()
+                if ("thinking" in err_str or "invalid argument" in err_str) and use_thinking:
+                    continue
+                logger.warning(f"Streaming failed with {model_name}: {e}")
+                last_stream_error = e
+                break
 
     raise LLMServiceError(f"Streaming failed with all candidate models. Last error: {last_stream_error if 'last_stream_error' in locals() else 'unknown'}")
 
@@ -357,9 +370,9 @@ def generate_embedding(text, task_type="RETRIEVAL_DOCUMENT", dimension=768, mode
     """
     is_query = (task_type == "RETRIEVAL_QUERY")
 
-    # Question embedding: only gemini-embedding-2-preview, no fallback model, no pseudo-vector
+    # Question embedding: gemini-embedding-001 or fallback
     if is_query:
-        cur_model = "gemini-embedding-2-preview"
+        cur_model = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001").strip() or "gemini-embedding-001"
         client, _ = get_gemini_client(timeout_ms=15000)
         if not client:
             logger.warning("No Gemini client available for question embedding.")
@@ -410,8 +423,8 @@ def generate_embedding(text, task_type="RETRIEVAL_DOCUMENT", dimension=768, mode
     if not client:
         return generate_fallback_embedding(text, dimension=dimension), True
 
-    chosen_model = model_name or os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2-preview").strip()
-    fallback_model = "gemini-embedding-001" if chosen_model != "gemini-embedding-001" else "gemini-embedding-2-preview"
+    chosen_model = model_name or os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001").strip()
+    fallback_model = "gemini-embedding-2" if chosen_model != "gemini-embedding-2" else "gemini-embedding-001"
     models_to_try = [chosen_model]
     if fallback_model not in models_to_try:
         models_to_try.append(fallback_model)
@@ -469,9 +482,9 @@ def generate_embeddings_batch(texts, task_type="RETRIEVAL_DOCUMENT", dimension=7
     if model_name:
         primary_model = model_name
     else:
-        primary_model = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2-preview").strip()
+        primary_model = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001").strip()
 
-    fallback_model = "gemini-embedding-001" if primary_model != "gemini-embedding-001" else "gemini-embedding-2-preview"
+    fallback_model = "gemini-embedding-2" if primary_model != "gemini-embedding-2" else "gemini-embedding-001"
     models_to_try = [primary_model]
     if fallback_model not in models_to_try:
         models_to_try.append(fallback_model)
@@ -539,11 +552,13 @@ def ocr_file_multimodal(file_bytes, mime_type="application/pdf"):
             "Output only the transcribed content verbatim."
         )
 
-        primary_model = os.environ.get("GEMINI_MODEL", "gemini-flash-lite-latest").strip()
-        models_to_try = [primary_model] if primary_model else ["gemini-flash-lite-latest"]
-        for fallback in ["gemini-flash-lite-latest", "gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3.5-flash"]:
-            if fallback not in models_to_try:
-                models_to_try.append(fallback)
+        primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
+        fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
+        candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+        models_to_try = []
+        for m in candidate_names:
+            if m and m not in models_to_try:
+                models_to_try.append(m)
 
         for model_name in models_to_try:
             try:

@@ -68,7 +68,7 @@ def delete_document_from_chroma(document_id):
     except Exception as e:
         logger.warning(f"Error deleting doc {document_id} from Chroma: {e}")
 
-def get_project_embedding_model(project_id, default="gemini-embedding-2-preview"):
+def get_project_embedding_model(project_id, default="gemini-embedding-001"):
     """
     Retrieves the embedding model name stored in Chroma metadata for this project.
     Guarantees that questions for a project are always embedded with the exact
@@ -231,7 +231,7 @@ def index_document(project_id, document_id, filename, file_bytes, file_hash=None
     DocumentChunk.objects.filter(document_id=document_id).delete()
     delete_document_from_chroma(document_id)
 
-    embedding_model = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2-preview").strip() or "gemini-embedding-2-preview"
+    embedding_model = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001").strip() or "gemini-embedding-001"
 
     for batch_idx in range(total_batches):
         batch_slice = deduped_chunks[batch_idx * batch_size : (batch_idx + 1) * batch_size]
@@ -733,11 +733,11 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
         question,
         task_type="RETRIEVAL_QUERY",
         dimension=768,
-        model_name="gemini-embedding-2-preview",
+        model_name="gemini-embedding-001",
     )
     if not question_embedding:
         logger.warning(
-            "Question embedding failed with gemini-embedding-2-preview; skipping dense retrieval and relying solely on BM25."
+            "Question embedding failed with gemini-embedding-001; skipping dense retrieval and relying solely on BM25."
         )
 
     # Group chunks by document_id for per-document dense/sparse search & fair quotas
