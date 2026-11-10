@@ -1,5 +1,6 @@
 import * as RadixAvatar from '@radix-ui/react-avatar';
 import { cn } from '@/utils/cn';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface AvatarProps {
   src?: string;
@@ -17,7 +18,15 @@ const sizeClasses = {
 };
 
 export function Avatar({ src, userId, fallback, size = 'md', className }: AvatarProps) {
-  const imageSrc = src || (userId ? `/api/auth/users/${userId}/avatar/` : undefined);
+  const currentUser = useAuthStore((state) => state.user);
+  const isCurrentUser = Boolean(userId && currentUser && String(currentUser.id) === String(userId));
+  const imageSrc =
+    src ||
+    (isCurrentUser && currentUser?.avatar
+      ? currentUser.avatar
+      : userId
+      ? `/api/auth/users/${userId}/avatar/`
+      : undefined);
 
   return (
     <RadixAvatar.Root className={cn('avatar', sizeClasses[size], className)}>
