@@ -37,8 +37,8 @@ The team established clear roles and responsibilities to organize development ef
 
 | Member | 42 Login | Role | Core Responsibilities & Assigned Services |
 |---|---|---|---|
-| **Douaa Eddaidi** | `deddaidi` | **Product Owner (PO)** & **Backend / AI Developer** | • **PO**: Defined product vision, feature requirements, user stories, module scope (26 pts), and final acceptance criteria.<br>• **Dev**: Implemented Project Service, Chat Service (WebSockets), and AI Service (Gemini LLM & Hybrid RAG). |
-| **Soukayna Chernane** | `schernan` | **Project Manager (PM) / Scrum Master** & **Backend Developer** | • **PM / Scrum**: Organized task distribution, sprint milestones, team syncs, and deadline monitoring.<br>• **Dev**: Implemented Auth Service (JWT, RBAC), Task Service and Document Service. |
+| **Douaa Eddaidi** | `deddaidi` | **Product Owner (PO)** & **Backend / AI Engineer** | • **PO**: Defined product vision, feature requirements, user stories, module scope (26 pts), and final acceptance criteria.<br>• **Dev**: Implemented Project Service, Chat Service (WebSockets), and AI Service (Gemini LLM & Hybrid RAG). |
+| **Soukayna Chernane** | `schernan` | **Project Manager (PM) / Scrum Master** & **Backend Engineer** | • **PM / Scrum**: Organized task distribution, sprint milestones, team syncs, and deadline monitoring.<br>• **Dev**: Implemented Auth Service (JWT, RBAC), Task Service and Document Service. |
 | **Anoir Baya** | `anbaya` | **Technical Lead / Architect** & **Lead Frontend Engineer** | • **Tech Lead / Architect**: Defined overall technical architecture, API communication contracts, code quality standards, and data modeling.<br>• **Frontend**: Engineered React 19 SPA, custom design system (10+ components), and Zustand stores. |
 | **Jaafar Loulidi** | `jaloulid` | **DevOps Engineer** & **Infrastructure Specialist** | • **DevOps**: Managed container orchestration (Docker Compose), networking, storage volumes, and service healthchecks.<br>• **Infra**: Configured Nginx API Gateway (SSL/TLS, reverse proxy) and centralized ELK observability stack. |
 
