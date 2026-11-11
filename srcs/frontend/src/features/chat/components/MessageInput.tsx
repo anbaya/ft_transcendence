@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Smile } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface MessageInputProps {
@@ -38,13 +38,6 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
   return (
     <div className="p-4 border-t border-border bg-white flex items-end gap-2">
       <div className="flex-1 bg-slate-50 border border-border rounded-xl flex items-end focus-within:ring-2 focus-within:ring-secondary/20 focus-within:border-secondary transition-all">
-        <button 
-          className="p-3 text-muted hover:text-primary transition-colors disabled:opacity-50"
-          disabled={disabled}
-        >
-          <Smile className="h-5 w-5" />
-        </button>
-        
         {/* Auto-resizing message input field */}
         <textarea
           ref={textareaRef}
