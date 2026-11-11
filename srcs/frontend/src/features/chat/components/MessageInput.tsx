@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '🔥', '🎉', '🚀', '👋', '✨', '😍', '👏', '🤔', '💯'];
 
 interface MessageInputProps {
   onSend: (content: string) => void;
@@ -9,7 +11,24 @@ interface MessageInputProps {
 
 export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
   const [content, setContent] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -24,7 +43,13 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
     if (content.trim() && !disabled) {
       onSend(content.trim());
       setContent('');
+      setShowEmojiPicker(false);
     }
+  };
+
+  const handleSelectEmoji = (emoji: string) => {
+    setContent((prev) => prev + emoji);
+    textareaRef.current?.focus();
   };
 
   // Submit message on Enter (without Shift for newlines)
@@ -38,6 +63,33 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
   return (
     <div className="p-4 border-t border-border bg-white flex items-end gap-2">
       <div className="flex-1 bg-slate-50 border border-border rounded-xl flex items-end focus-within:ring-2 focus-within:ring-secondary/20 focus-within:border-secondary transition-all">
+        <div className="relative" ref={emojiPickerRef}>
+          <button 
+            type="button"
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+            className="p-3 text-muted hover:text-primary transition-colors disabled:opacity-50"
+            disabled={disabled}
+            title="Add emoji"
+          >
+            <Smile className="h-5 w-5" />
+          </button>
+
+          {showEmojiPicker && (
+            <div className="absolute bottom-full left-0 mb-2 p-2 bg-white border border-border rounded-xl shadow-lg flex flex-wrap gap-1 w-56 z-50 animate-in fade-in-50 slide-in-from-bottom-2">
+              {QUICK_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => handleSelectEmoji(emoji)}
+                  className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-lg transition-transform hover:scale-125 cursor-pointer"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        
         {/* Auto-resizing message input field */}
         <textarea
           ref={textareaRef}
