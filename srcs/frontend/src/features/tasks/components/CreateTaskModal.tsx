@@ -66,7 +66,6 @@ export function CreateTaskModal({ open, onOpenChange, projectId, projectDeadline
         deadline: '',
       });
     } catch (error: any) {
-      console.error(error);
       toast.error(getApiErrorMessage(error, 'Failed to create task'));
     }
   };

@@ -29,7 +29,6 @@ export function LeaveProjectModal({ open, onOpenChange, projectName, projectId }
         navigate('/projects');
       }
     } catch (error: any) {
-      console.error(error);
       toast.error(getApiErrorMessage(error, 'Failed to leave project'));
     }
   };

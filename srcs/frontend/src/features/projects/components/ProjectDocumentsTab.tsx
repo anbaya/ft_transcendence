@@ -35,12 +35,17 @@ export function ProjectDocumentsTab({ projectId, canManage }: ProjectDocumentsTa
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size cannot exceed 10 MB.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     try {
       await uploadFile(file, numericProjectId);
       toast.success('Document uploaded successfully!');
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: any) {
-      console.error(err);
       const errMsg =
         err?.response?.data?.file?.[0] ||
         err?.response?.data?.name?.[0] ||

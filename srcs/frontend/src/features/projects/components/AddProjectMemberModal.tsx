@@ -5,9 +5,12 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useProjectStore } from '@/stores/projectStore';
+import { useAuthStore } from '@/stores/authStore';
 import { getApiErrorMessage } from '@/utils/errors';
 import { toast } from '@/stores/toastStore';
 import { useState } from 'react';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface AddProjectMemberModalProps {
   open: boolean;
@@ -19,18 +22,36 @@ export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProj
   const [email, setEmail] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { addProjectMember } = useProjectStore();
+  const { addProjectMember, activeProjectMembers } = useProjectStore();
+  const { user } = useAuthStore();
 
   const handleAdd = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
       setError('Please enter a user email address.');
       return;
     }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (user?.email && cleanEmail.toLowerCase() === user.email.toLowerCase()) {
+      setError('You are already a member of this project.');
+      return;
+    }
+    const alreadyMember = activeProjectMembers.some(
+      (m) => m.email?.toLowerCase() === cleanEmail.toLowerCase()
+    );
+    if (alreadyMember) {
+      setError('This user is already a member of this project.');
+      return;
+    }
+
     setIsAdding(true);
     setError(null);
     try {
-      await addProjectMember(projectId, email.trim());
+      await addProjectMember(projectId, cleanEmail);
       toast.success('Member added successfully');
       setEmail('');
       setError(null);

@@ -49,7 +49,6 @@ export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
         setMessages(msgRes.data);
       } catch (err: any) {
         if (!isMounted) return;
-        console.error('Failed to load project conversation/messages', err);
         setError(err.response?.data?.detail || 'Failed to load chat history.');
       } finally {
         if (isMounted) setIsLoading(false);
@@ -100,7 +99,6 @@ export function ProjectChatTab({ projectId }: ProjectChatTabProps) {
           return [...prev, res.data];
         });
       } catch (err: any) {
-        console.error('Failed to send message via REST', err);
         setError('Failed to deliver message.');
       }
     }

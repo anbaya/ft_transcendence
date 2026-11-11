@@ -27,7 +27,6 @@ export class ProjectWebSocketClient {
     this.isExplicitlyClosed = false;
     const token = useAuthStore.getState().token;
     if (!token) {
-      console.warn('Cannot connect to WebSocket without auth token');
       return;
     }
 
@@ -41,7 +40,6 @@ export class ProjectWebSocketClient {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log(`WebSocket connected for project ${this.projectId}`);
         this.reconnectAttempts = 0;
         this.onStatusChange?.('connected');
       };
@@ -62,8 +60,8 @@ export class ProjectWebSocketClient {
           } else {
             this.onMessageCallback(data);
           }
-        } catch (err) {
-          console.error('WebSocket parse error:', err);
+        } catch {
+          // Ignore malformed message frames silently
         }
       };
 
@@ -74,11 +72,10 @@ export class ProjectWebSocketClient {
         }
       };
 
-      this.ws.onerror = (err) => {
-        console.error(`WebSocket error for project ${this.projectId}:`, err);
+      this.ws.onerror = () => {
+        // Handled via onclose / reconnection logic
       };
-    } catch (err) {
-      console.error('Failed to instantiate WebSocket:', err);
+    } catch {
       this.handleReconnect();
     }
   }
@@ -97,8 +94,6 @@ export class ProjectWebSocketClient {
     if (this.ws?.readyState === WebSocket.OPEN) {
       // Backend expects { "message": "text" }
       this.ws.send(JSON.stringify({ message: text.trim() }));
-    } else {
-      console.error('Cannot send message: WebSocket is not open');
     }
   }
 

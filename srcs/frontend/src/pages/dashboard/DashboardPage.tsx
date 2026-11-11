@@ -43,31 +43,31 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Hero Banner with landscape */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-white p-6 sm:p-7 shadow-xs">
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-100/70 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-purple-50/20 p-6 sm:p-7 shadow-xs">
         {/* Background Scenic Landscape */}
         <div 
-          className="absolute inset-y-0 right-0 w-full sm:w-2/3 pointer-events-none select-none bg-cover bg-right bg-no-repeat opacity-85"
+          className="absolute inset-y-0 right-0 w-full sm:w-2/3 pointer-events-none select-none bg-cover bg-right bg-no-repeat opacity-90"
           style={{ backgroundImage: `url('/dashboard-banner.jpg')` }}
         >
           {/* Subtle gradient blend from card background into image */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/95 via-blue-50/40 to-transparent" />
         </div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="max-w-xl">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
-              {greeting}, {displayName}.
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary flex items-center gap-2">
+              <span>{greeting}, {displayName}.</span>
             </h1>
             <p className="text-sm font-medium text-slate-700 mt-2">
               {subText}
             </p>
             <p className="text-xs text-muted mt-1">
-              {pendingTasks > 0 ? statusText : "Great job keeping your workspace clear!"}
+              {statusText}
             </p>
           </div>
 
-          <span className="text-xs text-muted/80 font-medium hidden md:inline-block shrink-0 mt-1">
+          <span className="text-xs text-slate-500 font-medium hidden md:inline-block shrink-0 mt-1">
             Small steps. Big results.
           </span>
         </div>

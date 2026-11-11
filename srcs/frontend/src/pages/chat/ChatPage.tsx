@@ -55,8 +55,8 @@ export default function ChatPage() {
                 minute: '2-digit',
               });
             }
-          } catch (err) {
-            console.error(`Failed to load last message for conversation ${c.id}:`, err);
+          } catch {
+            // Silently keep lastMessageSnippet empty if history is unavailable
           }
 
           return {
@@ -72,7 +72,7 @@ export default function ChatPage() {
         setConversations(threads);
         if (threads.length > 0) setSelectedConvId(threads[0].id);
       }
-    }).catch(console.error);
+    }).catch(() => {});
 
     return () => {
       isMounted = false;
@@ -89,7 +89,7 @@ export default function ChatPage() {
     let isMounted = true;
     apiClient.get<Message[]>(`/api/conversations/${selectedConversation.id}/messages/`)
       .then((res) => isMounted && setMessages(res.data))
-      .catch(console.error);
+      .catch(() => {});
 
     const ws = createProjectWebSocket(selectedConversation.project_id, (msg) => {
       if (isMounted) pushMessage(msg);

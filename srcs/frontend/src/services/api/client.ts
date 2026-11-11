@@ -9,28 +9,25 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor: attach token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().token;
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    // Let the browser set the multipart boundary when sending FormData
-    if (config.data instanceof FormData && config.headers) {
-      delete config.headers['Content-Type'];
-      delete config.headers['content-type'];
-      if (typeof (config.headers as any).delete === 'function') {
-        (config.headers as any).delete('Content-Type');
-        (config.headers as any).delete('content-type');
-      }
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return true;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    // Proactively refresh if expired or expiring in less than 30 seconds
+    return !payload.exp || payload.exp * 1000 - Date.now() < 30 * 1000;
+  } catch {
+    return false;
   }
-);
+}
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -50,6 +47,67 @@ const processQueue = (error: unknown, token: string | null = null) => {
   });
   failedQueue = [];
 };
+
+// Request interceptor: attach token & proactive refresh before expiry
+apiClient.interceptors.request.use(
+  async (config) => {
+    let token = useAuthStore.getState().token;
+    const refreshToken = useAuthStore.getState().refreshToken;
+
+    const url = config.url || '';
+    const isAuthEndpoint =
+      url.includes('/api/auth/login') ||
+      url.includes('/api/auth/refresh') ||
+      url.includes('/api/auth/register');
+
+    if (token && refreshToken && !isAuthEndpoint && isTokenExpired(token)) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const refreshRes = await axios.post('/api/auth/refresh/', {
+            refresh: refreshToken,
+          });
+          const newToken = refreshRes.data.access;
+          token = newToken;
+          useAuthStore.getState().setToken(newToken);
+          if (refreshRes.data.refresh) {
+            useAuthStore.getState().setRefreshToken(refreshRes.data.refresh);
+          }
+          processQueue(null, newToken);
+        } catch (refreshErr) {
+          processQueue(refreshErr, null);
+          useAuthStore.getState().logout();
+          window.location.href = '/auth/login';
+          return Promise.reject(refreshErr);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        await new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject, config });
+        });
+        token = useAuthStore.getState().token;
+      }
+    }
+
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Let the browser set the multipart boundary when sending FormData
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+      if (typeof (config.headers as any).delete === 'function') {
+        (config.headers as any).delete('Content-Type');
+        (config.headers as any).delete('content-type');
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor: handle 401 with token refresh
 apiClient.interceptors.response.use(

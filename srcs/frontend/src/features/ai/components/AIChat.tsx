@@ -1,10 +1,16 @@
-import { useEffect, useRef } from 'react';
-import { X, Maximize2, Minimize2, Trash2, Bot, FolderGit2, Globe, Sparkles } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Maximize2, Minimize2, Trash2, Bot, FolderGit2, Globe, Sparkles, AlertTriangle } from 'lucide-react';
 import { useAIStore } from '@/stores/aiStore';
 import { useProjectStore } from '@/stores/projectStore';
 import { AIMessageBubble } from './AIMessageBubble';
 import { AIMessageInput } from './AIMessageInput';
 import { AITypingIndicator } from './AITypingIndicator';
+import {
+  Modal, ModalPortal, ModalOverlay, ModalContent,
+  ModalHeader, ModalTitle, ModalDescription, ModalFooter, ModalClose
+} from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { toast } from '@/stores/toastStore';
 import { cn } from '@/utils/cn';
 
 interface AIChatProps {
@@ -40,11 +46,19 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
   }, [messages, isTyping]);
 
   const activeProject = projects.find(p => p.id === selectedProjectId);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleClearHistory = () => {
-    const contextLabel = activeProject ? `project "${activeProject.name}"` : 'General Mode';
-    if (window.confirm(`Delete conversation for ${contextLabel}? All messages will be permanently removed.`)) {
-      clearHistory();
+  const handleDeleteConversation = async () => {
+    try {
+      setIsDeleting(true);
+      await clearHistory();
+      toast.success('Conversation deleted successfully');
+      setIsDeleteModalOpen(false);
+    } catch {
+      toast.error('Failed to delete conversation');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -100,7 +114,7 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
 
           {messages.length > 0 && (
             <button 
-              onClick={handleClearHistory}
+              onClick={() => setIsDeleteModalOpen(true)}
               className="p-1.5 rounded-md hover:bg-error/10 hover:text-error transition-colors"
               title="Delete Conversation"
             >
@@ -250,6 +264,37 @@ export function AIChat({ isFullScreen = false, onClose, onToggleFullScreen }: AI
         </div>
 
       </div>
+
+      {/* Delete Conversation Confirmation Modal */}
+      <Modal open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <ModalPortal>
+          <ModalOverlay className="z-[70]" />
+          <ModalContent className="z-[70]">
+            <ModalHeader>
+              <div className="flex items-center gap-2 text-error mb-2">
+                <AlertTriangle className="h-5 w-5" />
+                <ModalTitle>Delete Conversation</ModalTitle>
+              </div>
+              <ModalDescription>
+                Are you sure you want to delete the conversation for{' '}
+                <span className="font-medium text-primary">
+                  {activeProject ? activeProject.name : 'General Assistant'}
+                </span>
+                ? All messages will be permanently removed. This action cannot be undone.
+              </ModalDescription>
+            </ModalHeader>
+            <ModalFooter className="mt-4">
+              <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} disabled={isDeleting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteConversation} isLoading={isDeleting}>
+                Delete Conversation
+              </Button>
+            </ModalFooter>
+            <ModalClose disabled={isDeleting} />
+          </ModalContent>
+        </ModalPortal>
+      </Modal>
     </div>
   );
 }

@@ -114,11 +114,11 @@
     @apply flex items-center justify-between rounded-md px-3 py-2
            text-sm font-medium transition-colors;
   }
-  .nav-link-active   { @apply bg-slate-100 text-primary; }
+  .nav-link-active   { @apply bg-blue-50/90 text-blue-600 font-semibold shadow-2xs; }
   .nav-link-inactive { @apply text-muted hover:bg-slate-50 hover:text-primary; }
   .nav-section-label { @apply mb-2 px-3 text-xs font-semibold tracking-wider text-muted/70; }
-  .nav-badge         { @apply text-xs font-semibold text-muted bg-slate-100 py-0.5 px-2 rounded-full; }
-  .nav-link:hover .nav-badge { @apply bg-slate-200; }
+  .nav-badge         { @apply text-xs font-semibold text-blue-600 bg-blue-100/80 py-0.5 px-2 rounded-full; }
+  .nav-link:hover .nav-badge { @apply bg-blue-200/80; }
 
   /* Brand icon (sidebar logo box) */
   .brand-icon {
@@ -137,21 +137,31 @@
   .empty-state-icon  { @apply mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100; }
 
   /* ── Metric Card (dashboard) ──────────────────────────── */
-  .metric-card          { @apply rounded-xl border border-border bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md; }
-  .metric-card-indigo   { @apply border-indigo-200 bg-indigo-50 hover:border-indigo-300; }
-  .metric-card-blue     { @apply border-blue-200 bg-blue-50 hover:border-blue-300; }
-  .metric-card-purple   { @apply border-purple-200 bg-purple-50 hover:border-purple-300; }
-  .metric-card-emerald  { @apply border-emerald-200 bg-emerald-50 hover:border-emerald-300; }
-  .metric-card-amber    { @apply border-amber-200 bg-amber-50 hover:border-amber-300; }
-  .metric-card-rose     { @apply border-rose-200 bg-rose-50 hover:border-rose-300; }
+  .metric-card          { @apply relative overflow-hidden rounded-2xl border p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5; }
+  .metric-card-default  { @apply border-border bg-white; }
+  .metric-card-indigo,
+  .metric-card-primary  { @apply border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 via-white to-indigo-50/40; }
+  .metric-card-blue     { @apply border-blue-200/80 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/40; }
+  .metric-card-purple   { @apply border-purple-200/80 bg-gradient-to-br from-purple-50/90 via-white to-purple-50/40; }
+  .metric-card-emerald,
+  .metric-card-success  { @apply border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40; }
+  .metric-card-amber,
+  .metric-card-warning  { @apply border-amber-200/80 bg-gradient-to-br from-amber-50/90 via-white to-amber-50/40; }
+  .metric-card-rose,
+  .metric-card-error    { @apply border-rose-200/80 bg-gradient-to-br from-rose-50/90 via-white to-rose-50/40; }
 
-  .metric-card-icon         { @apply flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-secondary; }
-  .metric-card-icon-indigo  { @apply bg-indigo-100 text-indigo-700; }
-  .metric-card-icon-blue    { @apply bg-blue-100 text-blue-700; }
-  .metric-card-icon-purple  { @apply bg-purple-100 text-purple-700; }
-  .metric-card-icon-emerald { @apply bg-emerald-100 text-emerald-700; }
-  .metric-card-icon-amber   { @apply bg-amber-100 text-amber-700; }
-  .metric-card-icon-rose    { @apply bg-rose-100 text-rose-700; }
+  .metric-card-icon         { @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full; }
+  .metric-card-icon-default { @apply bg-indigo-50 text-secondary; }
+  .metric-card-icon-indigo,
+  .metric-card-icon-primary { @apply bg-indigo-500 text-white shadow-xs; }
+  .metric-card-icon-blue    { @apply bg-blue-500 text-white shadow-xs; }
+  .metric-card-icon-purple  { @apply bg-purple-100 text-purple-700 border border-purple-200 shadow-xs; }
+  .metric-card-icon-emerald,
+  .metric-card-icon-success { @apply bg-emerald-500 text-white shadow-xs; }
+  .metric-card-icon-amber,
+  .metric-card-icon-warning { @apply bg-amber-500 text-white shadow-xs; }
+  .metric-card-icon-rose,
+  .metric-card-icon-error   { @apply bg-rose-500 text-white shadow-xs; }
 
   /* ── Project Card ──────────────────────────────────────── */
   .project-card                    { @apply flex flex-col justify-between rounded-xl border border-border/80 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md; }

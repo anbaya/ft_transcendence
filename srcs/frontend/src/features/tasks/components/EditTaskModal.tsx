@@ -73,7 +73,6 @@ export function EditTaskModal({ open, onOpenChange, task, projectDeadline }: Edi
       onOpenChange(false);
       toast.success('Task updated successfully!');
     } catch (error: any) {
-      console.error(error);
       toast.error(getApiErrorMessage(error, 'Failed to update task'));
     }
   };

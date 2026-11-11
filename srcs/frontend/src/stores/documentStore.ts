@@ -62,7 +62,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       }));
       return response.data;
     } catch (error: any) {
-      console.error('Upload failed:', error);
       set({ isUploading: false, uploadProgress: 0, error: error.message || 'Upload failed' });
       throw error;
     }
@@ -76,7 +75,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
         myDocuments: state.myDocuments.filter((doc) => doc.id !== id),
       }));
     } catch (error: any) {
-      console.error('Failed to delete document:', error);
       throw error;
     }
   },
@@ -87,7 +85,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       const response = await apiClient.get<Document[]>(`/api/documents/projects/${projectId}/documents/`);
       set({ documents: response.data, isLoading: false });
     } catch (error: any) {
-      console.error('Failed to fetch documents:', error);
       set({ isLoading: false, error: error.message || 'Failed to fetch documents' });
     }
   },
@@ -98,7 +95,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       const response = await apiClient.get<Document[]>('/api/documents/my/');
       set({ myDocuments: response.data, isLoading: false });
     } catch (error: any) {
-      console.error('Failed to fetch my documents:', error);
       set({ isLoading: false, error: error.message || 'Failed to fetch your documents' });
     }
   },
@@ -120,7 +116,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
         window.URL.revokeObjectURL(url);
       }, 1000);
     } catch (error: any) {
-      console.error('Authenticated download failed:', error);
       toast.error('Failed to download file. Please check your permissions.');
     }
   },

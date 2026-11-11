@@ -26,7 +26,25 @@ export function MainLayout() {
         
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col justify-between">
-          <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8 w-full flex-1">
+          {/* Ambient Background Wave in bottom-right */}
+          <div className="fixed bottom-0 right-0 w-[550px] h-[380px] pointer-events-none select-none overflow-hidden z-0 opacity-45">
+            <svg viewBox="0 0 550 380" fill="none" className="w-full h-full" preserveAspectRatio="none">
+              <path d="M120 380 C 240 280, 300 330, 400 230 C 480 150, 480 210, 560 160 L 560 380 Z" fill="url(#main-wave-1)" />
+              <path d="M200 380 C 290 310, 360 350, 450 270 C 510 220, 530 250, 560 220 L 560 380 Z" fill="url(#main-wave-2)" opacity="0.6" />
+              <defs>
+                <linearGradient id="main-wave-1" x1="120" y1="160" x2="550" y2="380">
+                  <stop stopColor="#93c5fd" stopOpacity="0.45"/>
+                  <stop offset="1" stopColor="#c084fc" stopOpacity="0.25"/>
+                </linearGradient>
+                <linearGradient id="main-wave-2" x1="200" y1="220" x2="550" y2="380">
+                  <stop stopColor="#c4b5fd" stopOpacity="0.5"/>
+                  <stop offset="1" stopColor="#818cf8" stopOpacity="0.2"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8 w-full flex-1 relative z-10">
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>

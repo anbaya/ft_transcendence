@@ -5,6 +5,7 @@ import { TaskTable } from '@/features/tasks/components/TaskTable';
 import { EditTaskModal } from '@/features/tasks/components/EditTaskModal';
 import { DeleteTaskModal } from '@/features/tasks/components/DeleteTaskModal';
 import { TaskDetailsModal } from '@/features/tasks/components/TaskDetailsModal';
+import { toast } from '@/stores/toastStore';
 import type { Task, TaskStatus } from '@/types/task';
 
 export default function TasksPage() {
@@ -46,8 +47,9 @@ export default function TasksPage() {
   const handleStatusChange = async (taskId: number, newStatus: TaskStatus) => {
     try {
       await updateTaskStatus(taskId, newStatus);
-    } catch (err) {
-      console.error('Failed to update status', err);
+      setSelectedTask((prev) => (prev && prev.id === taskId ? { ...prev, status: newStatus } : prev));
+    } catch {
+      toast.error('Failed to update task status');
     }
   };
 

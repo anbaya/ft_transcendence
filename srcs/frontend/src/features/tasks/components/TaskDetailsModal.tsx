@@ -1,11 +1,13 @@
+import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ModalOverlay } from '@/components/ui/Modal';
-import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban, ChevronDown } from 'lucide-react';
+import { X, CheckCircle2, Clock, User, Calendar, Edit, Trash2, FolderKanban, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/stores/authStore';
+import { cn } from '@/utils/cn';
 import type { Task, TaskStatus } from '@/types/task';
 
 interface TaskDetailsModalProps {
@@ -22,7 +24,28 @@ export function TaskDetailsModal({ open, onOpenChange, task, canManage: canManag
   const { user } = useAuthStore();
   const canManage = canManageProp !== undefined ? canManageProp : (user?.role === 'ADMIN' || user?.role === 'PROJECT_MANAGER');
 
+  const [currentStatus, setCurrentStatus] = useState<TaskStatus>(task?.status ?? 'TODO');
+
+  useEffect(() => {
+    if (task?.status) {
+      setCurrentStatus(task.status);
+    }
+  }, [task?.id, task?.status]);
+
   if (!task) return null;
+
+  const handleStatusSelect = async (newStatus: TaskStatus) => {
+    if (newStatus === currentStatus) return;
+    const previousStatus = currentStatus;
+    setCurrentStatus(newStatus);
+    if (onStatusChange) {
+      try {
+        await onStatusChange(task.id, newStatus);
+      } catch (err) {
+        setCurrentStatus(previousStatus);
+      }
+    }
+  };
 
   const getStatusVariant = (status: string): BadgeVariant => {
     switch (status) {
@@ -73,8 +96,8 @@ export function TaskDetailsModal({ open, onOpenChange, task, canManage: canManag
               <div className="flex items-center gap-2 mb-3">
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger className="outline-none">
-                    <Badge variant={getStatusVariant(task.status)} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
-                      {formatStatus(task.status)}
+                    <Badge variant={getStatusVariant(currentStatus)} className="cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1">
+                      {formatStatus(currentStatus)}
                       <ChevronDown className="h-3 w-3" />
                     </Badge>
                   </DropdownMenu.Trigger>
@@ -83,14 +106,14 @@ export function TaskDetailsModal({ open, onOpenChange, task, canManage: canManag
                       {statuses.map((status) => (
                         <DropdownMenu.Item
                           key={status}
-                          className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100"
-                          onClick={async () => {
-                            if (task.status !== status && onStatusChange) {
-                              await onStatusChange(task.id, status);
-                            }
-                          }}
+                          className={cn(
+                            "relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2.5 py-1.5 text-sm outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100",
+                            currentStatus === status && "font-semibold text-primary bg-slate-50"
+                          )}
+                          onClick={() => handleStatusSelect(status)}
                         >
-                          {formatStatus(status)}
+                          <span>{formatStatus(status)}</span>
+                          {currentStatus === status && <Check className="h-3.5 w-3.5 text-primary" />}
                         </DropdownMenu.Item>
                       ))}
                     </DropdownMenu.Content>

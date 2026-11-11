@@ -28,7 +28,6 @@ export function RemoveProjectMemberModal({ open, onOpenChange, memberId, project
       toast.success('Member removed from project');
       onOpenChange(false);
     } catch (err: any) {
-      console.error(err);
       toast.error(err.response?.data?.detail || err.message || 'Failed to remove member');
     } finally {
       setIsDeleting(false);

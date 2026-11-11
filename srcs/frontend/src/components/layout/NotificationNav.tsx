@@ -3,23 +3,29 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Bell, Check, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useAuthStore } from '@/stores/authStore';
 import { formatDistanceToNow } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 
 export function NotificationNav() {
   const { notifications, unreadCount, markAllAsRead, markAsRead, fetchNotifications } = useNotificationStore();
+  const { token, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const NOTIFICATION_POLL_INTERVAL_MS = 15000; // 15 seconds
 
   useEffect(() => {
+    if (!token || !isAuthenticated) return;
+
     fetchNotifications();
     
     const intervalId = setInterval(() => {
+      const auth = useAuthStore.getState();
+      if (!auth.token || !auth.isAuthenticated) return;
       fetchNotifications();
     }, NOTIFICATION_POLL_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
-  }, [fetchNotifications]);
+  }, [fetchNotifications, token, isAuthenticated]);
 
   const handleNotificationClick = (id: number, link?: string) => {
     markAsRead(id);

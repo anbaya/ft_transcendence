@@ -59,7 +59,6 @@ export function EditProjectModal({ open, onOpenChange, project }: EditProjectMod
       onOpenChange(false);
       toast.success('Project updated successfully!');
     } catch (error: any) {
-      console.error(error);
       toast.error(getApiErrorMessage(error, 'Failed to update project'));
     }
   };

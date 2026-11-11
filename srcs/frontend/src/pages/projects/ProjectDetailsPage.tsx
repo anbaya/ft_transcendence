@@ -338,7 +338,10 @@ export default function ProjectDetailsPage() {
         canManage={canManage}
         onEditClick={() => taskModal?.task && setTaskModal({ type: 'edit', task: taskModal.task })}
         onDeleteClick={() => taskModal?.task && setTaskModal({ type: 'delete', task: taskModal.task })}
-        onStatusChange={(taskId, status) => updateTaskStatus(taskId, status)}
+        onStatusChange={async (taskId, status) => {
+          await updateTaskStatus(taskId, status);
+          setTaskModal((prev) => (prev?.task && prev.task.id === taskId ? { ...prev, task: { ...prev.task, status } } : prev));
+        }}
       />
       <EditTaskModal
         key={taskModal?.task?.id ? `task-${taskModal.task.id}` : 'edit-modal'}

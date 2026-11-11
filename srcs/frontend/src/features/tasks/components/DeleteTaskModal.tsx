@@ -25,7 +25,6 @@ export function DeleteTaskModal({ open, onOpenChange, taskTitle, taskId }: Delet
       toast.success('Task deleted successfully');
       onOpenChange(false);
     } catch (error: any) {
-      console.error(error);
       toast.error(getApiErrorMessage(error, 'Failed to delete task'));
     }
   };

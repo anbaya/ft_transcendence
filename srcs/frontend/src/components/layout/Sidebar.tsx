@@ -123,6 +123,7 @@ export function Sidebar() {
         </div>
       </div>
 
+
       {/* Bottom Section */}
       <div className="border-t border-border p-3 space-y-1">
         {renderNavItems(helpNavigation)}

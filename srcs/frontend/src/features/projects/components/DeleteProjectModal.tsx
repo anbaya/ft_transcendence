@@ -25,7 +25,6 @@ export function DeleteProjectModal({ open, onOpenChange, projectName, projectId 
         onOpenChange(false);
       }
     } catch (error) {
-      console.error(error);
       toast.error('Failed to delete project');
     }
   };

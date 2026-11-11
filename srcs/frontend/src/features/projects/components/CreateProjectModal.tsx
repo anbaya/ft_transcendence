@@ -46,7 +46,6 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
       toast.success('Project created successfully!');
       setFormData({ name: '', description: '', status: 'planned', priority: 'medium', deadline: '' });
     } catch (error: any) {
-      console.error(error);
       toast.error(getApiErrorMessage(error, 'Failed to create project'));
     }
   };
