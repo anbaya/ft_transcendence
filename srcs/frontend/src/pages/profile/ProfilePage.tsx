@@ -23,25 +23,21 @@ export default function ProfilePage() {
   const [hasAvatar, setHasAvatar] = useState<boolean>(Boolean(user?.has_avatar));
   const [avatarTimestamp, setAvatarTimestamp] = useState<number>(Date.now());
 
+  // Fetch fresh profile and check avatar on mount
   useEffect(() => {
+    apiClient.get('/api/auth/me/').then((res) => updateUser(res.data)).catch(() => {});
+
     if (!user?.id) return;
     let isMounted = true;
-
-    const checkAvatar = async () => {
-      try {
-        const res = await apiClient.head(`/api/auth/users/${user.id}/avatar/?t=${Date.now()}`);
-        const exists = Boolean(res.headers['content-disposition']);
-
+    apiClient.head(`/api/auth/users/${user.id}/avatar/?t=${Date.now()}`)
+      .then((res) => {
         if (isMounted) {
+          const exists = Boolean(res.headers['content-disposition']);
           setHasAvatar(exists);
           updateUser({ has_avatar: exists });
         }
-      } catch {
-        // Fallback: preserve existing state
-      }
-    };
-
-    checkAvatar();
+      })
+      .catch(() => {});
 
     return () => {
       isMounted = false;
@@ -53,6 +49,17 @@ export default function ProfilePage() {
     last_name: user?.last_name || '',
     email: user?.email || '',
   });
+
+  // Keep form inputs synced when user profile changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        email: user.email || '',
+      });
+    }
+  }, [user?.first_name, user?.last_name, user?.email]);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -135,8 +142,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const response = await apiClient.patch('/api/auth/me/', formData);
-      const { token, refreshToken, login } = useAuthStore.getState();
-      if (token) login(response.data, token, refreshToken);
+      updateUser(response.data);
       toast.success('Profile updated successfully!');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to update profile');

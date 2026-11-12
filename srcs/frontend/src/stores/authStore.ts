@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Sync logout and account deletion across all open browser tabs and windows
+// Sync across open browser tabs and windows
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key === 'auth-storage' || e.key === null) {
@@ -66,6 +66,8 @@ if (typeof window !== 'undefined') {
       if (!raw || !JSON.parse(raw)?.state?.isAuthenticated) {
         useAuthStore.getState().logout();
         window.location.href = '/auth/login';
+      } else {
+        useAuthStore.persist.rehydrate();
       }
     }
   });
