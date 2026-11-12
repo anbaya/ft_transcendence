@@ -64,11 +64,11 @@ def generate_fallback_embedding(text, dimension=768):
 
 
 def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
-    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
-    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
+    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
+    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
 
     # correction: cascade de repli robuste pour eviter l'erreur 503 / 504 de haute affluence
-    candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+    candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
     seen = set()
     model_configs = []
     for name in candidate_names:
@@ -198,9 +198,9 @@ def generate_answer_stream(prompt, max_output_tokens=800, temperature=0.2):
     if not client:
         raise LLMServiceError(error_msg or "Gemini client initialization failed")
 
-    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
-    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
-    candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+    primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
+    fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
+    candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
     models_to_try = []
     for m in candidate_names:
         if m and m not in models_to_try:
@@ -552,9 +552,9 @@ def ocr_file_multimodal(file_bytes, mime_type="application/pdf"):
             "Output only the transcribed content verbatim."
         )
 
-        primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
-        fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
-        candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]
+        primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
+        fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
+        candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
         models_to_try = []
         for m in candidate_names:
             if m and m not in models_to_try:
