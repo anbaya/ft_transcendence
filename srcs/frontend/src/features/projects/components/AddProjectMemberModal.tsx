@@ -56,6 +56,7 @@ export function AddProjectMemberModal({ open, onOpenChange, projectId }: AddProj
       setEmail('');
       setError(null);
       onOpenChange(false);
+      setIsAdding(false);
     } catch (err: any) {
       const msg = getApiErrorMessage(err, 'Failed to add member');
       setError(msg);
