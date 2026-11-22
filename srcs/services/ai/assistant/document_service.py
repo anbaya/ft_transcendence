@@ -59,7 +59,6 @@ def download_document(document_id, authorization_header=None):
     if internal_token:
         headers["X-Internal-Token"] = internal_token
 
-    # 1. Try internal download endpoint (bypasses user auth)
     try:
         url_internal = f"{settings.DOCUMENT_SERVICE_URL.rstrip('/')}/internal/documents/{document_id}/download/"
         response = requests.get(url_internal, headers=headers, timeout=10)
@@ -68,7 +67,6 @@ def download_document(document_id, authorization_header=None):
     except Exception:
         pass
 
-    # 2. Try standard document service endpoints
     urls_to_try = [
         f"{settings.DOCUMENT_SERVICE_URL.rstrip('/')}/api/documents/documents/{document_id}/download/",
         f"{settings.DOCUMENT_SERVICE_URL.rstrip('/')}/api/documents/{document_id}/download/",

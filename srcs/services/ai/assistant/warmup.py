@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-WARMUP_STATUS = "idle"  # "idle" -> "warming_up" -> "ready" (or "failed")
+WARMUP_STATUS = "idle"
 _warmup_lock = threading.Lock()
 _warmup_started = False
 
@@ -35,13 +35,11 @@ def _run_warmup():
     time.sleep(1.0)
 
     try:
-        # 1. Warm ChromaDB collection and query
         try:
             from .rag import get_chroma_collection
             coll = get_chroma_collection()
             if coll:
                 try:
-                    # Use query_embeddings with dummy vector to avoid downloading default Chroma ONNX model
                     dummy_vec = [0.0] * 768
                     coll.query(query_embeddings=[dummy_vec], n_results=1)
                 except Exception:
@@ -50,7 +48,6 @@ def _run_warmup():
         except Exception as e:
             logger.warning(f"ChromaDB warmup warning: {e}")
 
-        # 2. Warm Gemini Embedding
         try:
             from .gemini_service import generate_embedding
             generate_embedding("warmup ping", task_type="RETRIEVAL_QUERY", dimension=768)
@@ -58,7 +55,6 @@ def _run_warmup():
         except Exception as e:
             logger.warning(f"Gemini Embedding warmup warning: {e}")
 
-        # 3. Warm Gemini LLM generation (thinking_budget=0, small output)
         try:
             from .gemini_service import generate_answer
             generate_answer("ping", max_output_tokens=5)
@@ -66,7 +62,6 @@ def _run_warmup():
         except Exception as e:
             logger.warning(f"Gemini LLM generation warmup warning: {e}")
 
-        # 4. Pre-build BM25 indexes for all existing projects
         try:
             from .rag import warm_bm25_cache_for_all_projects
             warm_bm25_cache_for_all_projects()

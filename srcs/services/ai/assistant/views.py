@@ -160,7 +160,6 @@ class AskAssistantView(APIView):
             response["X-Accel-Buffering"] = "no"
             return response
 
-        # Standard non-streaming JSON response
         try:
             if target_project_id:
                 answer = answer_project_question(

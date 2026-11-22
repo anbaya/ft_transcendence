@@ -139,7 +139,6 @@ def extract_xlsx(file_bytes):
         return ""
 
 
-# correction: extracteur de texte pour images (png, jpg, jpeg, webp) via OCR multimodal
 def extract_image(file_bytes, extension):
     """
     Extracts text from image files (png, jpg, jpeg, webp) using Gemini Multimodal OCR.
@@ -167,7 +166,6 @@ def extract_text(file_bytes, filename):
 
     extension = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
 
-    # correction: support de l'OCR pour les formats d'images (PNG, JPG, JPEG, WEBP)
     if extension in ("png", "jpg", "jpeg", "webp"):
         return extract_image(file_bytes, extension)
 

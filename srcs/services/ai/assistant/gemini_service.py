@@ -67,7 +67,6 @@ def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
     primary_model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite").strip() or "gemini-3.5-flash-lite"
     fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite").strip() or "gemini-3.1-flash-lite"
 
-    # correction: cascade de repli robuste pour eviter l'erreur 503 / 504 de haute affluence
     candidate_names = [primary_model, fallback_model, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
     seen = set()
     model_configs = []
@@ -93,7 +92,7 @@ def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
             continue
 
         attempt = 0
-        while attempt < 2:  # at most 2 attempts (initial + 1 retry if eligible)
+        while attempt < 2:
             attempt += 1
             t_start = time.perf_counter()
             try:
@@ -156,7 +155,6 @@ def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
                     or elapsed >= (timeout_ms / 1000.0 - 0.5)
                 )
 
-                # Règle 1: en cas de timeout, bascule immédiatement sur le modèle de secours, sans réessayer le même modèle
                 if is_timeout:
                     logger.warning(
                         f"Model {model_name} timed out after {elapsed:.2f}s (timeout={timeout_ms/1000}s). "
@@ -164,7 +162,6 @@ def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
                     )
                     break
 
-                # Règle 2: réessaie le même modèle une seule fois seulement pour une erreur rapide (429/503 retournée en moins de 3 s)
                 is_transient_error = (
                     "429" in err_str or "resource_exhausted" in err_str
                     or "503" in err_str or "unavailable" in err_str
@@ -179,7 +176,6 @@ def generate_answer(prompt, max_output_tokens=800, temperature=0.2):
                     time.sleep(1.0)
                     continue
 
-                # Autre erreur ou tentative épuisée: bascule vers le modèle suivant
                 logger.warning(
                     f"Model {model_name} error ({e}) in {elapsed:.2f}s (attempt {attempt}). Switching model."
                 )
@@ -278,7 +274,6 @@ def rewrite_followup_question(question, conversation_history):
     if not (has_pronoun or is_short_followup):
         return question
 
-    # Extract recent subject topic from previous User prompt for fast/reliable heuristic grounding
     history_context = conversation_history.strip()
     last_user_query = ""
     for line in reversed(history_context.splitlines()):
@@ -286,7 +281,6 @@ def rewrite_followup_question(question, conversation_history):
             last_user_query = line.split(":", 1)[1].strip()
             break
 
-    # Build fallback topic keywords from last user query
     stopwords = {
         "what", "is", "are", "the", "a", "an", "in", "on", "at", "for", "of", "to", "and", "or",
         "list", "all", "please", "can", "you", "tell", "me", "about", "show", "give",
@@ -299,8 +293,7 @@ def rewrite_followup_question(question, conversation_history):
     ]
     fallback_topic = " ".join(fallback_topic_words[:6])
 
-    # correction: inject follow-up qualifier (minor/major) from current question into fallback topic
-    # so "and the minor ones" becomes "minor AI modules" instead of just "AI"
+
     _QUALIFIER_MAP = {
         "minor": "minor modules",
         "mineurs": "modules mineurs",
@@ -355,7 +348,6 @@ Standalone Search Query:"""
     except Exception as e:
         logger.warning(f"Failed to rewrite follow-up question with LLM: {e}")
 
-    # Fallback when LLM rewriting fails or times out: ground the follow-up with the previous topic
     if fallback_topic:
         return f"{question} {fallback_topic}".strip()
 
@@ -532,7 +524,6 @@ def generate_embeddings_batch(texts, task_type="RETRIEVAL_DOCUMENT", dimension=7
     return results
 
 
-# correction: fonction OCR multimodale supportant PDF scannes et images (PNG, JPG, WEBP)
 def ocr_file_multimodal(file_bytes, mime_type="application/pdf"):
     """
     Extracts text from scanned PDFs or images (PNG, JPG, WEBP) using Gemini's native multimodal capabilities.
@@ -586,24 +577,3 @@ def ocr_pdf_multimodal(file_bytes):
     return ocr_file_multimodal(file_bytes, mime_type="application/pdf")
 
 
-def classify_question(question):
-    client, _ = get_gemini_client()
-    if not client:
-        return "PROJECT"
-
-    prompt = f"""Classify the following question. Return exactly one word:
-PROJECT - if the question asks about the specific project, its tasks, documents, status, deadlines, members, or requirements.
-GENERAL - if it is a general programming, technical, conceptual, or general knowledge question.
-
-Question: {question}"""
-
-    try:
-        result = generate_answer(prompt).strip().upper()
-        if "PROJECT" in result:
-            return "PROJECT"
-        if "GENERAL" in result:
-            return "GENERAL"
-    except Exception:
-        pass
-
-    return "PROJECT"

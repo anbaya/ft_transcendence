@@ -138,7 +138,6 @@ def split_text(text, chunk_size=1200, overlap=200):
                 chunks.append(chunk)
             break
 
-        # Search for boundary in the end region of the window
         search_start = max(start, end - 350)
         boundary = text.rfind("\n\n", search_start, end)
         if boundary == -1 or boundary <= start:
@@ -159,7 +158,6 @@ def split_text(text, chunk_size=1200, overlap=200):
                 chunks.append(chunk)
             next_start = end - overlap
 
-        # Absolute guarantee that start strictly increases
         if next_start <= start:
             next_start = start + 1
         start = next_start
@@ -208,7 +206,6 @@ def index_document(project_id, document_id, filename, file_bytes, file_hash=None
         logger.warning(f"No chunks produced for document {document_id} ({filename})")
         return
 
-    # Deduplicate chunks while preserving order, filtering out Table of Contents / List of Tables / Figures chunks
     deduped_chunks = []
     seen_hashes = set()
     for chunk in chunks:
@@ -227,7 +224,6 @@ def index_document(project_id, document_id, filename, file_bytes, file_hash=None
         f"in {total_batches} batches of up to {batch_size}."
     )
 
-    # Clean existing data for this document before inserting new version
     DocumentChunk.objects.filter(document_id=document_id).delete()
     delete_document_from_chroma(document_id)
 
@@ -282,10 +278,8 @@ def index_document(project_id, document_id, filename, file_bytes, file_hash=None
                     }
                 })
 
-        # Save batch to MySQL
         DocumentChunk.objects.bulk_create(db_records)
 
-        # Save batch to ChromaDB
         if chroma_records:
             index_chunks_in_chroma(chroma_records)
 
@@ -582,7 +576,6 @@ def merge_with_fair_quota(doc_ranked_lists, top_k=8):
         reverse=True
     )
 
-    # Round 1: Take up to base_quota per document (prioritized by highest RRF relevance)
     for doc_id in sorted_doc_ids:
         ranked_chunks = doc_ranked_lists[doc_id]
         take_count = min(base_quota, len(ranked_chunks))
@@ -593,7 +586,6 @@ def merge_with_fair_quota(doc_ranked_lists, top_k=8):
                 selected_keys.add(key)
         remaining_by_doc[doc_id] = list(ranked_chunks[take_count:])
 
-    # Round 2: Redistribute unused slots to documents with remaining chunks
     while len(selected) < top_k:
         best_doc = None
         best_score = -1.0
@@ -626,7 +618,7 @@ def cosine_similarity(vector_a, vector_b):
         return 0.0
     return dot_product / (norm_a * norm_b)
 
-_bm25_project_cache = {}  # {project_id: {"version": (count, max_id), "bm25": ..., "doc_bm25_map": ..., "project_chunks_qs": ..., "doc_chunks_map": ..., "doc_names_map": ...}}
+_bm25_project_cache = {}
 
 def get_project_chunks_version(project_id):
     """
@@ -750,7 +742,6 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
     chroma_collection = get_chroma_collection()
     tokenized_query = tokenize_bm25(question)
 
-    # a) Dense Retrieval across project documents in ChromaDB
     dense_results = []
     if chroma_collection and question_embedding:
         try:
@@ -790,7 +781,6 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
             for _, c in scored[:top_k * 3]
         ]
 
-    # b) Sparse Retrieval (BM25) across all project chunks
     tokenized_corpus = [tokenize_bm25(c.content) for c in project_chunks_qs]
     bm25_model = get_bm25_model(tokenized_corpus)
     bm25_scores = bm25_model.get_scores(tokenized_query)
@@ -812,7 +802,6 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
         for _, c in scored_bm25[:top_k * 3]
     ]
 
-    # c) Reciprocal Rank Fusion across all candidate chunks
     fused_candidates = reciprocal_rank_fusion(dense_results, bm25_results, k=60)
     top_core = fused_candidates[:top_k]
 
@@ -832,8 +821,7 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
         key = (chunk["document_id"], chunk["chunk_index"])
         selected_map[key] = (chunk, float(rank))
 
-    # 1. Expansion par chunk PRÉCÉDENT seulement pour le top 3 (rank 0, 1, 2)
-    # Priorité 20.0 + rank pour être élagué en premier si le plafond est atteint
+
     for rank, chunk in enumerate(top_core[:3]):
         doc_id = chunk["document_id"]
         c_idx = chunk["chunk_index"]
@@ -841,8 +829,7 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
         if p_key in chunk_lookup and p_key not in selected_map:
             selected_map[p_key] = (chunk_lookup[p_key], 20.0 + rank)
 
-    # 2. Expansion par chunk SUIVANT pour TOUS les chunks retenus (rank 0..top_k-1)
-    # Priorité rank + 0.5 (suit immédiatement son chunk parent)
+  
     for rank, chunk in enumerate(top_core):
         doc_id = chunk["document_id"]
         c_idx = chunk["chunk_index"]
@@ -855,16 +842,12 @@ def hybrid_retrieve_chunks(project_id, question, top_k=8, authorization_header=N
     def compute_context_len(items):
         return sum(len(f"[Document: {it.get('filename')}]:\n{it.get('content', '').strip()}\n\n") for it in items)
 
-    # Tri par priorité croissante : les priorités les plus élevées (voisins les moins bien classés) en fin de liste
     candidate_items.sort(key=lambda x: x[1])
 
-    # 5. Plafond de caractères : permet d'intégrer les chunks voisins (ex: suite d'une section)
-    # sans les tronquer prématurément (35000 pour requêtes larges/globales, 25000 pour requêtes standards)
     max_context_chars = 35000 if top_k > 8 else 25000
     while candidate_items and compute_context_len([x[0] for x in candidate_items]) > max_context_chars:
         candidate_items.pop()
 
-    # Conserver l'ordre de pertinence (RRF score / priority) pour maximiser la précision de retrieval
     final_chunks = [x[0] for x in candidate_items]
     return final_chunks
 
@@ -935,8 +918,7 @@ def build_project_prompt(project_id, question, authorization_header, project_dat
     def fetch_members():
         return get_project_members(project_id, authorization_header)
 
-    # correction: extended is_broad detection to also trigger on "minor/major" listing questions
-    # and also checks the rewritten search_query (not only the raw question)
+
     _BROAD_KEYWORDS = [
         "all", "tous", "toutes", "chaque", "every", "each",
         "all categories", "toutes les categories",

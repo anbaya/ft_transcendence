@@ -13,7 +13,6 @@ class ServiceJWTAuthentication(JWTAuthentication):
         if user_id is None:
             raise AuthenticationFailed("Token does not contain user_id.")
 
-        # Verify user still exists in auth-service
         auth_url = getattr(settings, "AUTH_SERVICE_URL", "http://auth-service:8000") or os.environ.get("AUTH_SERVICE_URL", "http://auth-service:8000")
         internal_token = getattr(settings, "INTERNAL_SERVICE_TOKEN", "") or os.environ.get("INTERNAL_SERVICE_TOKEN", "")
         try:
